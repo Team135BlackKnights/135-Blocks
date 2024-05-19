@@ -8,6 +8,8 @@ import java.util.Map;
 
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation3d;
+import edu.wpi.first.math.geometry.Transform3d;
+import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.util.Units;
 import frc.robot.utils.drive.DriveConstants;
 
@@ -70,11 +72,21 @@ public final class Constants {
 		map.put(DriveConstants.kFrontLeftTurningPort, "frontLeftTurn");
 		map.put(DriveConstants.kFrontRightDrivePort, "frontRightDrive");
 		map.put(DriveConstants.kFrontRightTurningPort, "frontRightTurn");
-
 		return map;
 	}
-	public static class DriveSimConstants{
+
+	public static class DriveSimConstants {
 		//id 1 is topmost leftmost. goes in order down, right.
+		//Speaker translations
+		public static Translation3d blueShootLocation = new Translation3d(
+				0.225, 5.55, 2.1);
+		public static Translation3d redShootLocation = new Translation3d(
+				16.317, 5.55, 2.1); //in meters!
+		public static double shotSpeed = 15;
+		public static double intakeSpeed = 3;
+		//Launcher position compared to the robot
+		public static Transform3d launcherTransform = new Transform3d(0.292, 0, 0.1225,
+				new Rotation3d(0, 0, 0.0));
 		public static Pose3d[] fieldPieceTranslations = new Pose3d[] {
 				new Pose3d(Units.inchesToMeters(325.625), Units.inchesToMeters(162),
 						Units.inchesToMeters(1), new Rotation3d(0, 0, 0)), //center
