@@ -2,11 +2,8 @@ package frc.robot.utils;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
-import edu.wpi.first.math.geometry.Rotation3d;
-import edu.wpi.first.math.geometry.Transform3d;
-import edu.wpi.first.math.geometry.Translation3d;
+
 import edu.wpi.first.wpilibj.DriverStation;
-import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -26,31 +23,38 @@ import java.util.ArrayList;
 // the array by 1, which will crash the program at the last Piece on the field.
 // I'm not fixing this, because it'd require a lot of time, and is a VERY
 // one-off scenario.
+/**
+ * Simulate interactions with elements on the field. Automatically puts back all
+ * pieces in the event none are left on the field. Must provide translations to
+ * shoot locations, if that's being used that year. (blue/redShootLocation) Must
+ * provide shoot speed and intake speed in meters, if being used. Must provide
+ * launcherTransform, for where the MANIPULATOR brings the game pieces. Found in
+ * Constants
+ */
 public class SimGamePiece {
-	//Speaker translations
-	private static final Translation3d blueShootLocation = new Translation3d(0.225,5.55, 2.1);
-	private static final Translation3d redShootLocation = new Translation3d(16.317,5.55, 2.1); //in meters!
-	private static final double shotSpeed = 15;
-	private static final double intakeSpeed = 3;
 	private static Supplier<Pose2d> robotPoseSupplier = () -> new Pose2d();
-	//Launcher position compared to the robot
-	static Transform3d launcherTransform = new Transform3d(0.292, 0, 0.1225,
-			new Rotation3d(0, 0, 0.0));
 
 	//Returns the robot pose
 	public static void setRobotPoseSupplier(Supplier<Pose2d> supplier) {
 		robotPoseSupplier = supplier;
 	}
 
+	//contains all game pieces
 	public static ArrayList<Pose3d> currentPieces = new ArrayList<Pose3d>();
-	static Pose3d heldPiecePos = new Pose3d(robotPoseSupplier.get()).transformBy(launcherTransform);
-	static public boolean firstIntakeCycle = true, hasPiece = false, firstOutake = true;
+	//contains the currently held Piece pose. If multiple game pieces can be held, this must be rewritten.
+	static Pose3d heldPiecePos = new Pose3d(robotPoseSupplier.get())
+			.transformBy(Constants.DriveSimConstants.launcherTransform);
+	static public boolean firstIntakeCycle = true, hasPiece = false,
+			firstOutake = true;
 
-	public static void resesPieces() {
+	public static void resetPieces() {
 		currentPieces.clear();
+		//add all game pieces
 		for (int i = 0; i < Constants.DriveSimConstants.fieldPieceTranslations.length; i++) {
-			currentPieces.add(Constants.DriveSimConstants.fieldPieceTranslations[i]);
+			currentPieces
+					.add(Constants.DriveSimConstants.fieldPieceTranslations[i]);
 		}
+		//if allowed a starting game piece, put it in the robot's spot.
 		if (Constants.currentMatchState == FRCMatchState.AUTO) {
 			currentPieces.add(0, heldPiecePos);
 			hasPiece = true;
@@ -58,40 +62,47 @@ public class SimGamePiece {
 	}
 
 	public static void intake(int index) {
-		new ScheduleCommand( // Branch off and exit immediately
+		new ScheduleCommand( // Branch off and exit immediately, but run this.
 				Commands.defer(() -> {
-					launcherTransform = new Transform3d(0.3, 0, 0.36,
-							new Rotation3d(0,
-									0,
-									0.0));
+					// get our start pose for the shot, and end pose.
 					final Pose3d startPose = currentPieces.get(index);
 					final Pose3d endPose = new Pose3d(robotPoseSupplier.get())
-							.transformBy(launcherTransform);
+							.transformBy(
+									Constants.DriveSimConstants.launcherTransform);
+					//set our duration via how long the action will take
 					final double duration = startPose.getTranslation()
-							.getDistance(endPose.getTranslation()) / intakeSpeed;
+							.getDistance(endPose.getTranslation())
+							/ Constants.DriveSimConstants.intakeSpeed;
 					final Timer timer = new Timer();
 					timer.start();
+					//to make it add the new location on first run, then remove the old and put new, use a debounce.
 					firstIntakeCycle = true;
-					if (!hasPiece) {
+					if (!hasPiece) { //confirm not getting two pieces, CHANGE IF ALLOWED
 						currentPieces.remove(index);
 						return Commands.run(() -> {
 							if (SimGamePiece.firstIntakeCycle) {
-								currentPieces.add(0, startPose.interpolate(endPose, timer.get() / duration));
+								currentPieces.add(0, startPose.interpolate(endPose,
+										timer.get() / duration)); //put piece first in array.
 								SimGamePiece.firstIntakeCycle = false;
 							} else {
-								currentPieces.remove(0);
-								currentPieces.add(0, startPose.interpolate(endPose, timer.get() / duration));
+								currentPieces.remove(0); //remove old piece
+								currentPieces.add(0, startPose.interpolate(endPose,
+										timer.get() / duration)); //put new piece
 							}
-						}).until(() -> timer.hasElapsed(duration)).finallyDo(() -> {
-							//currentPieces.remove(0);
-							hasPiece = true;
+						}).until(() -> timer.hasElapsed(duration)).finallyDo(() -> { //until action done
+							hasPiece = true; //for other code to read when this is done
 						});
 					} else {
 						return new InstantCommand();
 					}
-				}, Set.of()).ignoringDisable(true)).schedule();
+				}, Set.of()).ignoringDisable(true)).schedule(); //run command branch
 	}
 
+	/**
+	 * Convert the SimGamePiece array to a Pose3d[]
+	 * 
+	 * @return Pose3d[] of all game pieces currently existing anywhere.
+	 */
 	public static Pose3d[] getState() {
 		Pose3d[] translator = new Pose3d[currentPieces.size()];
 		for (int i = 0; i < currentPieces.size(); i++) {
@@ -100,15 +111,15 @@ public class SimGamePiece {
 		return translator;
 	}
 
+	/**
+	 * Needs to be called every perodic by robot. (is default)
+	 */
 	public static void updateStates() {
 		Pose3d[] translator = new Pose3d[currentPieces.size()];
-		launcherTransform = new Transform3d(0.3, 0, 0.36,
-				new Rotation3d(0, 0,
-				 0.0));
 		heldPiecePos = new Pose3d(robotPoseSupplier.get())
-				.transformBy(launcherTransform);
-		for (int i = 0; i < currentPieces.size(); i++) {
-			if (i == 0 && hasPiece) {
+				.transformBy(Constants.DriveSimConstants.launcherTransform);
+		for (int i = 0; i < currentPieces.size(); i++) { //for all notes
+			if (i == 0 && hasPiece) { //if is zero, and we have a note, make that location the held Note relative to bot
 				translator[i] = heldPiecePos;
 			} else {
 				translator[i] = currentPieces.get(i);
@@ -117,17 +128,34 @@ public class SimGamePiece {
 		Logger.recordOutput("GamePieceVisualizer", translator);
 	}
 
+	/**
+	 * Returns whether the alliance is red.
+	 */
+	public static boolean getAlliance() {
+		// Boolean supplier that controls when the path will be mirrored for the red alliance
+		// This will flip the path being followed to the red side of the field.
+		// THE ORIGIN WILL REMAIN ON THE BLUE SIDE
+		var alliance = DriverStation.getAlliance();
+		if (alliance.isPresent()) {
+			return alliance.get() == DriverStation.Alliance.Red;
+		}
+		return false;
+	}
+
 	public static Command shoot() {
 		return new ScheduleCommand( // Branch off and exit immediately
 				Commands.defer(() -> {
 					//Initial starting point
 					final Pose3d startPose = heldPiecePos;
-					final boolean isRed = DriverStation.getAlliance().isPresent()
-							&& DriverStation.getAlliance().get().equals(Alliance.Red);
+					final boolean isRed = getAlliance();
 					final Pose3d endPose = new Pose3d(
-							isRed ? redShootLocation : blueShootLocation, startPose.getRotation());
+							isRed ? Constants.DriveSimConstants.redShootLocation
+									: Constants.DriveSimConstants.blueShootLocation,
+							startPose.getRotation()); //Go to proper shoot location relative to team
+					//Below, refer to Intake()
 					final double duration = startPose.getTranslation()
-							.getDistance(endPose.getTranslation()) / shotSpeed;
+							.getDistance(endPose.getTranslation())
+							/ Constants.DriveSimConstants.shotSpeed;
 					final Timer timer = new Timer();
 					timer.start();
 					firstOutake = true;
@@ -139,15 +167,15 @@ public class SimGamePiece {
 						} else {
 							indexChanger = 2;
 						}
-						return Commands.run(() -> 
-						{
+						return Commands.run(() -> {
 							if (SimGamePiece.firstOutake && indexChanger == 2) {
 								currentPieces.remove(0);
 								currentPieces.add(currentPieces.size() - 1, startPose
 										.interpolate(endPose, timer.get() / duration));
 								SimGamePiece.firstOutake = false;
 							} else {
-								currentPieces.remove(currentPieces.size() - indexChanger);
+								currentPieces
+										.remove(currentPieces.size() - indexChanger);
 								if (indexChanger == 2) {
 									currentPieces.add(currentPieces.size() - 1, startPose
 											.interpolate(endPose, timer.get() / duration));
@@ -156,8 +184,7 @@ public class SimGamePiece {
 											.interpolate(endPose, timer.get() / duration));
 								}
 							}
-						}).until(() -> timer.hasElapsed(duration)).finallyDo(() -> 
-						{
+						}).until(() -> timer.hasElapsed(duration)).finallyDo(() -> {
 							currentPieces.remove(currentPieces.size() - indexChanger);
 						});
 					} else {

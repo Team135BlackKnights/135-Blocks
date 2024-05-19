@@ -25,7 +25,6 @@ import edu.wpi.first.units.Measure;
 import edu.wpi.first.units.Time;
 import edu.wpi.first.units.Velocity;
 import edu.wpi.first.units.Voltage;
-import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.SerialPort.Port;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -215,7 +214,7 @@ public class SwerveS extends SubsystemBase {
 						DriveConstants.kMaxSpeedMetersPerSecond, // Max module speed, in m/s
 						DriveConstants.kDriveBaseRadius, // Drive base radius in meters. Distance from robot center to furthest module.
 						new ReplanningConfig(true, true) // Default path replanning config. See the API for the options here
-				), SwerveS::getAlliance, this // Reference to this subsystem to set requirements
+				), SimGamePiece::getAlliance, this // Reference to this subsystem to set requirements
 		);
 		
 		/*kP = DriveConstants.kP;
@@ -239,7 +238,7 @@ public class SwerveS extends SubsystemBase {
 
 	public static double getHeading() {
 		return -1 * Math
-				.IEEEremainder(gyro.getAngle() + (getAlliance() ? 180 : 0), 360); //modulus
+				.IEEEremainder(gyro.getAngle() + (SimGamePiece.getAlliance() ? 180 : 0), 360); //modulus
 	}
 
 	public static Rotation2d getRotation2d() {
@@ -260,8 +259,9 @@ public class SwerveS extends SubsystemBase {
 			// NavX expects clockwise positive, but sim outputs clockwise negative
 			angle.set(Math.IEEEremainder(-Units.radiansToDegrees(m_simYaw), 360));
 			//m_pigeon.getSimCollection().setRawHeading(-Units.radiansToDegrees(m_simYaw));
+			SimGamePiece.updateStates(); //update position of gamePieces
 		}
-		redIsAlliance = getAlliance();
+		redIsAlliance = SimGamePiece.getAlliance();
 
 		//puts values to smartDashboard
 		//SmartDashboard.putBoolean("Auto Lock", autoLock);
@@ -340,19 +340,7 @@ public class SwerveS extends SubsystemBase {
 
 	public ChassisSpeeds getChassisSpeeds() { return m_ChassisSpeeds; }
 
-	/**
-	 * Returns whether the alliance is red.
-	 */
-	public static boolean getAlliance() {
-		// Boolean supplier that controls when the path will be mirrored for the red alliance
-		// This will flip the path being followed to the red side of the field.
-		// THE ORIGIN WILL REMAIN ON THE BLUE SIDE
-		var alliance = DriverStation.getAlliance();
-		if (alliance.isPresent()) {
-			return alliance.get() == DriverStation.Alliance.Red;
-		}
-		return false;
-	}
+	
 
 	public void resetPose(Pose2d pose) {
 		// LIST MODULES IN THE SAME EXACT ORDER USED WHEN DECLARING SwerveDriveKinematics

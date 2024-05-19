@@ -13,6 +13,7 @@ import org.littletonrobotics.junction.networktables.NT4Publisher;
 import org.littletonrobotics.junction.wpilog.WPILOGReader;
 import org.littletonrobotics.junction.wpilog.WPILOGWriter;
 import frc.robot.Constants.FRCMatchState;
+import frc.robot.utils.SimGamePiece;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj.DataLogManager;
@@ -29,7 +30,7 @@ public class Robot extends LoggedRobot {
 	private Command m_autonomousCommand;
 	private RobotContainer m_robotContainer;
 	final Timer endgameTimer = new Timer();
-
+	private boolean hasBeenEnabled;
 	/**
 	 * This function is run when the robot is first started up and should be used
 	 * for any initialization code.
@@ -180,5 +181,13 @@ public class Robot extends LoggedRobot {
 
 	/** This function is called periodically whilst in simulation. */
 	@Override
-	public void simulationPeriodic() {}
+	public void simulationPeriodic() {
+		if (Constants.currentMatchState == Constants.FRCMatchState.AUTO && !hasBeenEnabled) {
+			SimGamePiece.resetPieces();
+			hasBeenEnabled = true;
+		} else if (Constants.currentMatchState == Constants.FRCMatchState.DISABLED) {
+			hasBeenEnabled = false;
+		}
+		DataHandler.updateHandlerState();
+	}
 }
