@@ -13,7 +13,11 @@ import frc.robot.utils.vision.VisionConstants;
 import frc.robot.utils.vision.VisionConstants.PVCameras;
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.apriltag.AprilTagFields;
+import edu.wpi.first.math.Matrix;
+import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.numbers.N1;
+import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -23,7 +27,7 @@ import frc.robot.subsystems.drive.SwerveS;
 import frc.robot.Constants;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
-public class PhotonVisionS extends SubsystemBase{
+public class PhotonVisionS extends SubsystemBase {
 	public static VisionSystemSim visionSim;
 	//These estimate pose based on april tag location
 	public final PhotonPoseEstimator rightEstimator,
@@ -37,7 +41,7 @@ public class PhotonVisionS extends SubsystemBase{
 	public double frontLastEstTimestamp = 0f, rightLastEstTimestamp = 0f,
 			leftLastEstTimestamp = 0f, backLastEstTimestamp = 0f;
 	//Used for aligning with a particular aprilTag
-	public static double backCamXError = 0f;
+	public static double camXError = 0f;
 	static double distance = 0;
 	@SuppressWarnings("unused")
 	private static PhotonCamera frontCam, rightCam, leftCam, backCam;
@@ -84,15 +88,13 @@ public class PhotonVisionS extends SubsystemBase{
 		//Puts the estimators in an array to iterate through them efficiently
 		camEstimates = new PhotonPoseEstimator[] { rightEstimator,
 				backEstimator/*,
-					frontEstimator,
-					leftEstimator */
+									frontEstimator,
+									leftEstimator */
 		};
 		//Same process for cameras
-		cams = new PhotonCamera[] { 
-			rightCam, 
-			backCam/*,
-			leftCam,
-			frontCam */
+		cams = new PhotonCamera[] { rightCam, backCam/*,
+																	leftCam,
+																	frontCam */
 		};
 		//Create PhotonVision camera simulations if the robot is in sim
 		if (Constants.currentMode == Mode.SIM) {
@@ -111,8 +113,8 @@ public class PhotonVisionS extends SubsystemBase{
 			SimCameraProperties[] properties = new SimCameraProperties[] {
 					SimCameraProperties.LL2_960_720(),
 					SimCameraProperties.LL2_960_720()/*,
-					SimCameraProperties.LL2_960_720(),
-					SimCameraProperties.LL2_960_720(),
+																SimCameraProperties.LL2_960_720(),
+																SimCameraProperties.LL2_960_720(),
 																*/
 			};
 			//Adds each camera present in the previous array to the visionSim. 
@@ -126,8 +128,7 @@ public class PhotonVisionS extends SubsystemBase{
 			}
 		}
 	}
-	
-	
+
 	/**
 	 * Computes the distance in inches from the limelight network table entry
 	 * 
@@ -229,7 +230,6 @@ public class PhotonVisionS extends SubsystemBase{
 		boolean newResult = false;
 		//Figure out what camera it is
 		PVCameras cameraVal;
-
 		switch (camera.getName()) {
 		case VisionConstants.frontCamName:
 			newResult = Math.abs(latestTimestamp - frontLastEstTimestamp) > 1e-5;
@@ -261,10 +261,153 @@ public class PhotonVisionS extends SubsystemBase{
 		}
 		return visionEst;
 	}
-	/**Returns the field as seen by photonVision */
+
+	/** Returns the field as seen by photonVision */
 	public static Field2d getEstimatedField() {
 		return visionSim.getDebugField();
 	}
 
-}
+	@Override
+	public void periodic() {
+		//If code's in sim update the simulated pose estimator
+		if (Constants.currentMode == Mode.SIM) {
+			visionSim.update(SwerveS.getPose());
+		}
+		//Update the global pose for each camera
+		for (int i = 0; i < cams.length; i++) {
+			PhotonPoseEstimator cEstimator = camEstimates[i];
+			PhotonCamera cCam = cams[i];
+			var visionEst = getEstimatedGlobalPose(cEstimator, cCam,
+					SwerveS.getPose());
+			visionEst.ifPresent(est -> {
+				Pose2d estPose = est.estimatedPose.toPose2d();
+				// Change our trust in the measurement based on the tags we can see
+				Matrix<N3, N1> estStdDevs = getEstimationStdDevs(estPose,
+						cEstimator, cCam);
+				SmartDashboard.putString("CAMERAUPDATE", cCam.getName());
+				addVisionMeasurement(est.estimatedPose.toPose2d(),
+						est.timestampSeconds, estStdDevs);
+			});
+		}
+	}
 
+	/**
+	 * Uses one particular camera to check the x distance (in degrees) of the
+	 * robot to a particular AprilTag, and saves it in the double called
+	 * camXError. Should be called in periodic. If you want to check for tags
+	 * based on alliance, surround this in robot.getAlliance and adjust the
+	 * parameters as such
+	 * 
+	 * @param camera Camera to use
+	 * @param tagIDs the tag ID to look for
+	 */
+	public void checkAutoLock(PhotonCamera camera, int tagID) {
+		//Get a list of all sighted targets
+		var targets = camera.getLatestResult().getTargets();
+		//By default it can't see the speaker to avoid unintended behavior
+		boolean hasSpeaker = false;
+		for (var target : targets) {
+			/*If the tagID is there, set the xError to the horizontal distance in degrees*/
+			if (target.getFiducialId() == tagID) {
+				hasSpeaker = true;
+				camXError = -target.getBestCameraToTarget().getY(); //Y is distance from CENTER, left Right. 
+			}
+		}
+		//If we don't have the ID set the x Error to zero to make it obvious that we don't have access to it
+		if (!hasSpeaker) {
+			camXError = 0;
+		}
+	}
+
+	/**
+	 * Adds the vision measurement to the poseEstimator. This is the same as the
+	 * default poseEstimator function, we just do it this way to fit our block
+	 * template structure
+	 */
+	public void addVisionMeasurement(Pose2d pose, double timestamp,
+			Matrix<N3, N1> estStdDevs) {
+		SwerveS.poseEstimator.addVisionMeasurement(pose, timestamp, estStdDevs);
+	}
+
+	/**
+	 * Compute the standard deviation based on the parameters given.
+	 * 
+	 * @param estimatedPose   the estimated pose that is being returned
+	 * @param photonEstimator the pose estimator to use
+	 * @param cam             the camera to use
+	 * @return A matrix of the standard deviations
+	 */
+	public Matrix<N3, N1> getEstimationStdDevs(Pose2d estimatedPose,
+			PhotonPoseEstimator photonEstimator, PhotonCamera cam) {
+		//Default Std deviation
+		var estStdDevs = VisionConstants.kSingleTagStdDevs;
+		//All the targets that have been pulled from a camera
+		var targets = cam.getLatestResult().getTargets();
+		//Number of tags and average distance
+		int numTags = 0;
+		double avgDist = 0;
+		//Iterate through each target
+		for (var tgt : targets) {
+			//Return the distance from the individual tag and the number of tags
+			var tagPose = photonEstimator.getFieldTags()
+					.getTagPose(tgt.getFiducialId());
+			if (tagPose.isEmpty())
+				continue;
+			if (tgt.getPoseAmbiguity() > .2)
+				continue; //give zero F's about bad tags
+			numTags++;
+			avgDist += tagPose.get().toPose2d().getTranslation()
+					.getDistance(estimatedPose.getTranslation());
+		}
+		//If no tags present, measurement is useless, so we make the deviations as big as we can so the poseEstimator ignores it
+		if (numTags == 0)
+			return VecBuilder.fill(Double.MAX_VALUE, Double.MAX_VALUE,
+					Double.MAX_VALUE); //BIG.
+		//Compute the average distance 
+		avgDist /= numTags;
+		// Decrease std devs if multiple targets are visible
+		if (numTags > 1)
+			estStdDevs = VisionConstants.kMultiTagStdDevs;
+		// Increase std devs based on (average) distance
+		if (numTags == 1 && avgDist > 4)
+			estStdDevs = VecBuilder.fill(Double.MAX_VALUE, Double.MAX_VALUE,
+					Double.MAX_VALUE);
+		else
+			//This is some stats nonsense. Essentially trying to make the sample deviation equal to what it would be if we had 30 tags (i think) to make the normal curve
+			estStdDevs = estStdDevs.times(1 + (avgDist * avgDist / 30));
+		return estStdDevs;
+	}
+
+	/**
+	 * Returns x error (in degrees). We used this as as an input to a PID loop to
+	 * automatically face a speaker in 2024.
+	 * 
+	 * @return the x error in degrees
+	 */
+	public static double getXError() {
+		// bounds xError between -5 and 5 (normal range of xError is -30 to 30)
+		return PhotonVisionS.camXError;
+	}
+
+	/**
+	 * Computes the distance of the robot from the specified target. If you want
+	 * to use this in an alliance based way, surround it with
+	 * Constants.getAlliance()
+	 * 
+	 * @param targetLocation The target you want to get the distance from. Pose
+	 *                          should be in meters and degrees.
+	 * @return the distance from the robot to the speaker, in meters
+	 */
+	public static double getDistanceFromSpeakerUsingRobotPose(
+			Pose2d targetLocation) {
+		return SwerveS.robotPosition.getTranslation()
+				.getDistance(targetLocation.getTranslation());
+	}
+
+	/**
+	 * updates the xError double by using the robot's pose. This assumes that left is negative.
+	 */	
+	public double updateXErrorWithPose(Pose2d targetPose) {
+		return targetPose.getRotation().getDegrees()-SwerveS.getPose().getRotation().getDegrees();
+	}
+}

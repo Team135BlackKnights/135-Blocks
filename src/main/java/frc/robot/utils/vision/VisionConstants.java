@@ -3,9 +3,13 @@ package frc.robot.utils.vision;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.apriltag.AprilTagFields;
+import edu.wpi.first.math.Matrix;
+import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation3d;
+import edu.wpi.first.math.numbers.N1;
+import edu.wpi.first.math.numbers.N3;
 import frc.robot.utils.drive.DriveConstants;
 
 public class VisionConstants {
@@ -96,7 +100,7 @@ public class VisionConstants {
 			Math.toRadians(180));
 
 		//Transforms, used in the camera declarations
-		@SuppressWarnings("unused")
+
 		public static Transform3d 
 		robotToFront = new Transform3d(frontPos, frontRot),
 		robotToRight = new Transform3d(rightPos, rightRot),
@@ -115,4 +119,10 @@ public class VisionConstants {
 		
 		//For limelightHelpers
 		public static String limelightName = "limelight-swerve";
+		
+		//Std Devs for PhotonVision Cameras
+		public static final Matrix<N3, N1> kSingleTagStdDevs = VecBuilder.fill(4,
+				4, 8);
+		public static final Matrix<N3, N1> kMultiTagStdDevs = VecBuilder.fill(0.5,
+				0.5, 1);
 }
