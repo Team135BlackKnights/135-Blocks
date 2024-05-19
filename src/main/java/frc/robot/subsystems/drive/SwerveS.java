@@ -214,7 +214,7 @@ public class SwerveS extends SubsystemBase {
 						DriveConstants.kMaxSpeedMetersPerSecond, // Max module speed, in m/s
 						DriveConstants.kDriveBaseRadius, // Drive base radius in meters. Distance from robot center to furthest module.
 						new ReplanningConfig(true, true) // Default path replanning config. See the API for the options here
-				), SimGamePiece::getAlliance, this // Reference to this subsystem to set requirements
+				), Constants::getAlliance, this // Reference to this subsystem to set requirements
 		);
 		
 		/*kP = DriveConstants.kP;
@@ -238,7 +238,7 @@ public class SwerveS extends SubsystemBase {
 
 	public static double getHeading() {
 		return -1 * Math
-				.IEEEremainder(gyro.getAngle() + (SimGamePiece.getAlliance() ? 180 : 0), 360); //modulus
+				.IEEEremainder(gyro.getAngle() + (Constants.getAlliance() ? 180 : 0), 360); //modulus
 	}
 
 	public static Rotation2d getRotation2d() {
@@ -261,7 +261,7 @@ public class SwerveS extends SubsystemBase {
 			//m_pigeon.getSimCollection().setRawHeading(-Units.radiansToDegrees(m_simYaw));
 			SimGamePiece.updateStates(); //update position of gamePieces
 		}
-		redIsAlliance = SimGamePiece.getAlliance();
+		redIsAlliance = Constants.getAlliance();
 
 		//puts values to smartDashboard
 		//SmartDashboard.putBoolean("Auto Lock", autoLock);
