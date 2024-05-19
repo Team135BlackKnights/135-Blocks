@@ -81,7 +81,7 @@ public class DataHandler {
 			SmartDashboard.putString("DataHandler","initialized!");
 		}
 		else {
-			if (Robot.isReal()){
+			if (Constants.currentMode == Constants.Mode.REAL){
 				createLogFileOnRIOUSB();
 			}else{
 				setSimDisk(simDiskDirectory);

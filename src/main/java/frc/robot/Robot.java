@@ -28,7 +28,6 @@ import edu.wpi.first.wpilibj.DriverStation;
 public class Robot extends LoggedRobot {
 	private Command m_autonomousCommand;
 	private RobotContainer m_robotContainer;
-	public static boolean isReal;
 	final Timer endgameTimer = new Timer();
 
 	/**
@@ -41,8 +40,6 @@ public class Robot extends LoggedRobot {
 		//Redundancy is redundant
 		endgameTimer.reset();
 		endgameTimer.start();
-		//Redunancy but still
-		isReal = Robot.isReal();
 		// Instantiate our RobotContainer.  This will perform all our button bindings, and put our
 		// autonomous chooser on the dashboard
 		Logger.recordMetadata("ProjectName", "The Chef"); // Set a metadata value
@@ -70,9 +67,9 @@ public class Robot extends LoggedRobot {
 		Logger.registerURCL(URCL.startExternal(Constants.manCanIdsToNames()));
 		Logger.start();
 		m_robotContainer = new RobotContainer();
-		if (Robot.isReal()) {
+		if (Constants.currentMode == Constants.Mode.REAL) {
 			DataHandler.createLogFileOnRIOUSB();
-		} else if (Robot.isSimulation()) {
+		} else if (Constants.currentMode == Constants.Mode.SIM) {
 			DataHandler.startHandler(false, "C:");
 		}
 	}
