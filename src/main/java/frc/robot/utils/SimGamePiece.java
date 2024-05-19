@@ -3,7 +3,6 @@ package frc.robot.utils;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 
-import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -128,26 +127,12 @@ public class SimGamePiece {
 		Logger.recordOutput("GamePieceVisualizer", translator);
 	}
 
-	/**
-	 * Returns whether the alliance is red.
-	 */
-	public static boolean getAlliance() {
-		// Boolean supplier that controls when the path will be mirrored for the red alliance
-		// This will flip the path being followed to the red side of the field.
-		// THE ORIGIN WILL REMAIN ON THE BLUE SIDE
-		var alliance = DriverStation.getAlliance();
-		if (alliance.isPresent()) {
-			return alliance.get() == DriverStation.Alliance.Red;
-		}
-		return false;
-	}
-
 	public static Command shoot() {
 		return new ScheduleCommand( // Branch off and exit immediately
 				Commands.defer(() -> {
 					//Initial starting point
 					final Pose3d startPose = heldPiecePos;
-					final boolean isRed = getAlliance();
+					final boolean isRed = Constants.getAlliance();
 					final Pose3d endPose = new Pose3d(
 							isRed ? Constants.DriveSimConstants.redShootLocation
 									: Constants.DriveSimConstants.blueShootLocation,
