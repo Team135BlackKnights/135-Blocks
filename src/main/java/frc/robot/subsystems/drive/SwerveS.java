@@ -32,7 +32,9 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
-import frc.robot.Robot;
+import frc.robot.Constants;
+
+import frc.robot.Constants.Mode;
 import static edu.wpi.first.units.Units.Seconds;
 import static edu.wpi.first.units.Units.Volts;
 import java.util.HashMap;
@@ -40,10 +42,11 @@ import java.util.Map;
 
 import frc.robot.utils.drive.DriveConstants;
 import frc.robot.utils.drive.DriveConstants.SwerveConstants.ModulePosition;
+import java.util.function.Supplier;
+import frc.robot.utils.SimGamePiece;
 
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
-
 
 /* uncomment for autolock
  * import edu.wpi.first.math.controller.PIDController;
@@ -51,6 +54,9 @@ import org.littletonrobotics.junction.Logger;
  */
 
 public class SwerveS extends SubsystemBase {
+	private Supplier<Pose2d> pose2dSupplier = () -> {
+		return getPose();
+	};
 	private final static HashMap<ModulePosition, SwerveModule> m_swerveModules = new HashMap<>(
 			Map.of(ModulePosition.FRONT_LEFT,
 					new SwerveModule(DriveConstants.kFrontLeftDrivePort,
@@ -221,6 +227,9 @@ public class SwerveS extends SubsystemBase {
 		SmartDashboard.putNumber("D Gain AutoLock", kD);
 		SmartDashboard.putNumber("Distance AutoLock", kDistanceMultipler);
 		autoLockController = new PIDController(kP, kI, kD);*/
+		if (Constants.currentMode == Constants.Mode.SIM){
+			SimGamePiece.setRobotPoseSupplier(pose2dSupplier);
+		}
 	}
 
 	public void zeroHeading() {
@@ -241,7 +250,7 @@ public class SwerveS extends SubsystemBase {
 
 	@Override
 	public void periodic() {
-		if (Robot.isSimulation()) {
+		if (Constants.currentMode == Mode.SIM) {
 			ChassisSpeeds chassisSpeed = DriveConstants.kDriveKinematics
 					.toChassisSpeeds(getModuleStates());
 			m_simYaw += chassisSpeed.omegaRadiansPerSecond * 0.02;

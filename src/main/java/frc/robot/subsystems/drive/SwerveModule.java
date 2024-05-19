@@ -16,11 +16,12 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.system.plant.DCMotor;
+
 // import
 // edu.wpi.first.wpilibj.AnalogInput;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import frc.robot.Robot;
+import frc.robot.Constants;
 import frc.robot.utils.drive.DriveConstants;
 
 public class SwerveModule extends SubsystemBase {
@@ -106,7 +107,7 @@ public class SwerveModule extends SubsystemBase {
 		//makes the value loop around
 		turningPIDController.enableContinuousInput(-Math.PI, Math.PI);
 		drivePIDController = new PIDController(driveKpKsKvKa[0], 0, 0);
-		if (Robot.isSimulation()) {
+		if (Constants.currentMode == Constants.Mode.SIM) {
 			REVPhysicsSim.getInstance().addSparkMax(driveMotor, DCMotor.getNEO(1));
 			REVPhysicsSim.getInstance().addSparkMax(turningMotor,
 					DCMotor.getNEO(1));
@@ -115,7 +116,7 @@ public class SwerveModule extends SubsystemBase {
 
 	public double getDrivePosition() {
 		//returns the position of the drive wheel
-		if (Robot.isReal()) {
+		if (Constants.currentMode == Constants.Mode.REAL) {
 			return driveEncoder.getPosition();
 		} else {
 			return m_simDriveEncoderPosition;
@@ -124,7 +125,7 @@ public class SwerveModule extends SubsystemBase {
 
 	public double getTurningPosition() {
 		//returns the heading of the swerve module (turning motor position)
-		if (Robot.isReal()) {
+		if (Constants.currentMode == Constants.Mode.REAL) {
 			return getAbsoluteEncoderRad();
 		} else {
 			return m_currentAngle;
@@ -139,7 +140,7 @@ public class SwerveModule extends SubsystemBase {
 
 	public double getDriveVelocity() {
 		//returns velocity of drive wheel
-		if (Robot.isReal()) {
+		if (Constants.currentMode == Constants.Mode.REAL) {
 			return driveEncoder.getVelocity();
 		} else {
 			return m_simDriveEncoderVelocity;
@@ -215,7 +216,7 @@ public class SwerveModule extends SubsystemBase {
 				.calculate(getAbsoluteEncoderRad(), state.angle.getRadians());
 		//        final double turnFeedforward =
 		//         turningFeedForward.calculate(turningPIDController.getSetpoint().velocity);
-		if (Robot.isReal()) {
+		if (Constants.currentMode == Constants.Mode.REAL) {
 			driveMotor.setVoltage(driveOutput + driveFeedforward);
 			turningMotor.set(turnOutput);
 		} else {
