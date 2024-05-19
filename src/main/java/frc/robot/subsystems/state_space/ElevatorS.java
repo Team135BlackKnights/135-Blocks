@@ -33,7 +33,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.Constants;
-import frc.robot.Robot;
+import frc.robot.Constants.Mode;
 import frc.robot.utils.drive.DriveConstants;
 import frc.robot.utils.state_space.StateSpaceConstants;
 import static edu.wpi.first.units.Units.Seconds;
@@ -267,7 +267,7 @@ public class ElevatorS extends SubsystemBase {
 		m_loop.setNextR(m_lastProfiledReference.position,
 				m_lastProfiledReference.velocity); //Tell our motors to get there
 		// Correct our Kalman filter's state vector estimate with encoder data ONLY if real
-		if (Robot.isReal()) {
+		if (Constants.currentMode == Mode.REAL) {
 			m_loop.correct(VecBuilder.fill(getDistance()));
 		}
 		// Update our LQR to generate new voltage commands and use the voltages to predict the next
