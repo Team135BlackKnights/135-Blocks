@@ -4,18 +4,20 @@
 package frc.robot;
 
 import org.littletonrobotics.urcl.URCL;
-
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj.Timer;
 import org.littletonrobotics.junction.LogFileUtil;
 import org.littletonrobotics.junction.LoggedRobot;
 import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.NT4Publisher;
 import org.littletonrobotics.junction.wpilog.WPILOGReader;
 import org.littletonrobotics.junction.wpilog.WPILOGWriter;
-
+import frc.robot.Constants.FRCMatchState;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj.DriverStation;
+
 /**
  * The VM is configured to automatically run this class, and to call the
  * functions corresponding to each mode, as described in the TimedRobot
@@ -27,6 +29,7 @@ public class Robot extends LoggedRobot {
 	private Command m_autonomousCommand;
 	private RobotContainer m_robotContainer;
 	public static boolean isReal;
+	final Timer endgameTimer = new Timer();
 
 	/**
 	 * This function is run when the robot is first started up and should be used
@@ -34,6 +37,11 @@ public class Robot extends LoggedRobot {
 	 */
 	@Override
 	public void robotInit() {
+		//To check for endgame
+		//Redundancy is redundant
+		endgameTimer.reset();
+		endgameTimer.start();
+		//Redunancy but still
 		isReal = Robot.isReal();
 		// Instantiate our RobotContainer.  This will perform all our button bindings, and put our
 		// autonomous chooser on the dashboard
@@ -53,7 +61,8 @@ public class Robot extends LoggedRobot {
 			setUseTiming(false); // Run as fast as possible
 			String logPath = LogFileUtil.findReplayLog();
 			Logger.setReplaySource(new WPILOGReader(logPath));
-			Logger.addDataReceiver(new WPILOGWriter(LogFileUtil.addPathSuffix(logPath, "_sim")));
+			Logger.addDataReceiver(
+					new WPILOGWriter(LogFileUtil.addPathSuffix(logPath, "_sim")));
 			break;
 		}
 		DataLogManager.start();
@@ -78,6 +87,9 @@ public class Robot extends LoggedRobot {
 	 */
 	@Override
 	public void robotPeriodic() {
+		DataHandler.updateHandlerState();
+		SmartDashboard.putString("Match State",
+				Constants.currentMatchState.name());
 		// Runs the Scheduler.  This is responsible for polling buttons, adding newly-scheduled
 		// commands, running already-scheduled commands, removing finished or interrupted commands,
 		// and running subsystem periodic() methods.  This must be called from the robot's periodic
@@ -87,7 +99,12 @@ public class Robot extends LoggedRobot {
 
 	/** This function is called once each time the robot enters Disabled mode. */
 	@Override
-	public void disabledInit() {}
+	public void disabledInit() {
+		Constants.currentMatchState = FRCMatchState.DISABLED;
+		if (DriverStation.getMatchTime() == 0){
+			Constants.currentMatchState = FRCMatchState.MATCHOVER;
+		}
+	}
 
 	@Override
 	public void disabledPeriodic() {}
@@ -98,6 +115,7 @@ public class Robot extends LoggedRobot {
 	 */
 	@Override
 	public void autonomousInit() {
+		Constants.currentMatchState = FRCMatchState.AUTOINIT;
 		m_autonomousCommand = m_robotContainer.getAutonomousCommand();
 		// schedule the autonomous command (example)
 		if (m_autonomousCommand != null) {
@@ -107,10 +125,13 @@ public class Robot extends LoggedRobot {
 
 	/** This function is called periodically during autonomous. */
 	@Override
-	public void autonomousPeriodic() {}
+	public void autonomousPeriodic() {
+		Constants.currentMatchState = FRCMatchState.AUTO;
+	}
 
 	@Override
 	public void teleopInit() {
+		Constants.currentMatchState = FRCMatchState.TELEOPINIT;
 		// This makes sure that the autonomous stops running when
 		// teleop starts running. If you want the autonomous to
 		// continue until interrupted by another command, remove
@@ -122,26 +143,45 @@ public class Robot extends LoggedRobot {
 
 	/** This function is called periodically during operator control. */
 	@Override
-	public void teleopPeriodic() {}
+	public void teleopPeriodic() {
+		/*An FRC teleop period takes 2 minutes and 15 seconds (135 seconds). Endgame occurs during the last 20 seconds.
+		Based on this, endgame should initialize at 115 seconds and end at 135 seconds. */
+		if (DriverStation.isFMSAttached()){
+			if (DriverStation.getMatchTime() > 30) {
+				Constants.currentMatchState = FRCMatchState.TELEOP;
+			} else if (DriverStation.getMatchTime() == 30) {
+				Constants.currentMatchState = FRCMatchState.ENDGAMEINIT;
+			} else if (DriverStation.getMatchTime() < 30
+					&& DriverStation.getMatchTime() > 0) {
+				Constants.currentMatchState = FRCMatchState.ENDGAME;
+			}
+		}else{
+			Constants.currentMatchState = FRCMatchState.TELEOP;
+		}
+
+	}
 
 	@Override
 	public void testInit() {
+		Constants.currentMatchState = FRCMatchState.TESTINIT;
 		// Cancels all running commands at the start of test mode.
 		CommandScheduler.getInstance().cancelAll();
 	}
 
 	/** This function is called periodically during test mode. */
 	@Override
-	public void testPeriodic() {}
+	public void testPeriodic() {
+		Constants.currentMatchState = FRCMatchState.TEST;
+	}
 
 	/** This function is called once when the robot is first started up. */
 	@Override
 	public void simulationInit() {
+		/*We don't assign a match state for either simulation function because we most likely would want to test features that occur
+		at different game periods like tele and auto in simulation*/
 	}
 
 	/** This function is called periodically whilst in simulation. */
 	@Override
-	public void simulationPeriodic() {
-		DataHandler.updateHandlerState();
-	}
+	public void simulationPeriodic() {}
 }
