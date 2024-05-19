@@ -17,11 +17,13 @@ public class StateSpaceConstants {
 		 * Right trigger is used for arm Speed 0-0 1-maxArmSpeed.
 		 */
 		public static double kDeadband = 0.1, kArmDeadband = 0.1,
-				armMoveSpeed = .01;
+				armMoveSpeed = .01, elevatorMoveSpeed = 1;
 		public static JoystickButton setButton = new JoystickButton(
 				RobotContainer.manipController, 3), //x
 				go45Button = new JoystickButton(RobotContainer.manipController, 1), //a
-				go0Button = new JoystickButton(RobotContainer.manipController, 2); //b
+				go0Button = new JoystickButton(RobotContainer.manipController, 2), //b
+				go2ftButton = new JoystickButton(RobotContainer.manipController, 3), //x
+				go0ftButton = new JoystickButton(RobotContainer.manipController, 4); //y
 	}
 
 	public class Flywheel {
@@ -58,7 +60,7 @@ public class StateSpaceConstants {
 		public static boolean inverted = false;
 		public static IdleMode mode = IdleMode.kBrake;
 		public static int kMotorID = 40;
-		public static MotorConstantContainer armValueHolder = new MotorConstantContainer(
+		public static MotorConstantContainer elevatorValueHolder = new MotorConstantContainer(
 				.001, .001, .001, 0, 0); //must have position set in SysId
 		public static double m_KalmanModelPosition = Units.inchesToMeters(1),
 				m_KalmanModelVelocity = Units.inchesToMeters(40), m_KalmanEncoder = 0.001,

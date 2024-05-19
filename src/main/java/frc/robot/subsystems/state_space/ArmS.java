@@ -151,7 +151,7 @@ public class ArmS extends SubsystemBase {
 			StateSpaceConstants.Arm.physicalX, StateSpaceConstants.Arm.physicalY);
 	private final MechanismLigament2d m_arm = m_armPivot.append(
 			new MechanismLigament2d("Arm", StateSpaceConstants.Arm.armLength,
-					m_position, 1, new Color8Bit(Color.kYellow)));
+					Units.radiansToDegrees(m_lastProfiledReference.position), 1, new Color8Bit(Color.kYellow)));
 
 	public ArmS() {
 		//initalize arm motor
@@ -289,15 +289,6 @@ public class ArmS extends SubsystemBase {
 	@Override
 	public void periodic() {
 		updateEncoders();
-		if (StateSpaceConstants.debug) {
-			SmartDashboard.putNumber("Angle Error", getError());
-			SmartDashboard.putNumber("SETPOINT",
-					Units.radiansToDegrees(goal.position));
-			SmartDashboard.putNumber("CURRENT WANTED SPOT",
-					Units.radiansToDegrees(m_lastProfiledReference.position));
-			SmartDashboard.putNumber("pos according",
-					Units.radiansToDegrees(m_position));
-		}
 		m_lastProfiledReference = m_profile.calculate(dtSeconds,
 				m_lastProfiledReference, goal); //calculate where it SHOULD be.
 		m_loop.setNextR(m_lastProfiledReference.position,
@@ -325,6 +316,15 @@ public class ArmS extends SubsystemBase {
 		//calcualate arm pose
 		var armPose = new Pose3d(StateSpaceConstants.Arm.simX, StateSpaceConstants.Arm.simY, StateSpaceConstants.Arm.simZ,
 				new Rotation3d(0, -m_lastProfiledReference.position, 0.0));
-		Logger.recordOutput("Mechanism3d/", armPose);
+		Logger.recordOutput("Mechanism3d/Arm/", armPose);
+		if (StateSpaceConstants.debug) {
+			SmartDashboard.putNumber("Angle Error ARM", getError());
+			SmartDashboard.putNumber("SETPOINT ARM",
+					Units.radiansToDegrees(goal.position));
+			SmartDashboard.putNumber("CURRENT WANTED ARM",
+					Units.radiansToDegrees(m_lastProfiledReference.position));
+			SmartDashboard.putNumber("pos ARM",
+					Units.radiansToDegrees(m_position));
+		}
 	}
 }

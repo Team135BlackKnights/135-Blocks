@@ -66,6 +66,10 @@ public class ElevatorS extends SubsystemBase {
 	 * Elevator StateSpace is given a position and velocity, in Meters and Meters per second
 	 * It gets inputted with Volts, and outputs position in Meters.
 	 */
+	/*Once the robot is physically made, run tests, and use the identifyPositionSystem. This will be accurate to the robot rather than CAD. 
+	private final LinearSystem<N2, N1, N1> m_elevatorPlant = LinearSystemId
+			.identifyPositionSystem(StateSpaceConstants.Elevator.elevatorValueHolder.getKv(),StateSpaceConstants.Elevator.elevatorValueHolder.getKa());
+	*/
 	private final LinearSystem<N2, N1, N1> m_elevatorPlant = LinearSystemId
 			.createElevatorSystem(DCMotor.getNEO(1),
 					StateSpaceConstants.Elevator.carriageMass,
@@ -253,9 +257,9 @@ public class ElevatorS extends SubsystemBase {
 	public void periodic() {
 		updateEncoders();
 		if (StateSpaceConstants.debug) {
-			SmartDashboard.putNumber("Position Error", getError());
-			SmartDashboard.putNumber("SETPOINT", goal.position);
-			SmartDashboard.putNumber("CURRENT WANTED SPOT",
+			SmartDashboard.putNumber("Position Error Ele.", getError());
+			SmartDashboard.putNumber("SETPOINT Ele.", goal.position);
+			SmartDashboard.putNumber("CURRENT WANTED Ele.",
 					m_lastProfiledReference.position);
 		}
 		m_lastProfiledReference = m_profile.calculate(dtSeconds,
@@ -285,6 +289,6 @@ public class ElevatorS extends SubsystemBase {
 		//calcualate arm pose
 		var elevatorPose = new Pose3d(StateSpaceConstants.Elevator.simX, StateSpaceConstants.Elevator.simY, StateSpaceConstants.Elevator.simZ,
 				new Rotation3d(0, 0, 0.0));
-		Logger.recordOutput("Mechanism3d/", elevatorPose);
+		Logger.recordOutput("Mechanism3d/Elevator/", elevatorPose);
 	}
 }

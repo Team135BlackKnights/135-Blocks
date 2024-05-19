@@ -5,9 +5,11 @@ package frc.robot;
 
 import frc.robot.commands.drive.SwerveC;
 import frc.robot.commands.state_space.ArmC;
+import frc.robot.commands.state_space.ElevatorC;
 import frc.robot.commands.state_space.FlywheelC;
 import frc.robot.subsystems.drive.SwerveS;
 import frc.robot.subsystems.state_space.ArmS;
+import frc.robot.subsystems.state_space.ElevatorS;
 import frc.robot.subsystems.state_space.FlywheelS;
 
 import com.pathplanner.lib.auto.AutoBuilder;
@@ -30,6 +32,7 @@ public class RobotContainer {
 	private final SwerveS swerveS = new SwerveS();
 	private final FlywheelS flywheelS = new FlywheelS();
 	private final ArmS armS = new ArmS();
+	private final ElevatorS elevatorS = new ElevatorS();
 	private final SendableChooser<Command> autoChooser;
 
 	public static XboxController driveController = new XboxController(0);
@@ -55,6 +58,8 @@ public class RobotContainer {
 		swerveS.setDefaultCommand(new SwerveC(swerveS));
 		flywheelS.setDefaultCommand(new FlywheelC(flywheelS));
 		armS.setDefaultCommand(new ArmC(armS));
+		elevatorS.setDefaultCommand(new ElevatorC(elevatorS));
+
 		autoChooser = AutoBuilder.buildAutoChooser();
 		SmartDashboard.putData("Auto Chooser", autoChooser);
 		// Configure the trigger bindings
