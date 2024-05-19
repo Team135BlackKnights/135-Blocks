@@ -1,21 +1,34 @@
 package frc.robot.utils.vision;
 
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.apriltag.AprilTagFieldLayout;
+import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation3d;
 import frc.robot.utils.drive.DriveConstants;
 
 public class VisionConstants {
+	//Field layout, fed to the PV cameras in order to work properly
+	public static final AprilTagFieldLayout kTagLayout = AprilTagFields.kDefaultField.loadAprilTagLayoutField();
+
+	//We put the cameras into an enum to make iteration easier
+	public static enum PVCameras{
+		Front_Camera,
+		Back_Camera,
+		Left_Camera,
+		Right_Camera
+	}
+
 	//We used 2 cameras for our 2024 year, adjust these accordingly by removing camera names (there are two extra cameras here)
 	//Camera names, from photonVision web interface
-	public static String 
-		frontCamName = "Front_Camera", backCamName = "Back_Camera", 
-		leftCamName = "Left_Camera", rightCamName = "Right_Camera";
-	public static String[] camNameStrings = new String[] 
-	{ frontCamName, backCamName, 
-	  leftCamName, rightCamName
-	};
+
+	//This is a goofy declaration but we use case statements later on and this is the only form of input they accept
+	public final static String 
+		frontCamName = "Front_Camera", 
+		backCamName = "Back_Camera",
+		leftCamName = "Left_Camera",
+		rightCamName = "Right_Camera";
 	//offset of each cam from robot center, in meters
 	//To figure out what these should be, look at the WPILIB Coordinate System
 
@@ -91,6 +104,15 @@ public class VisionConstants {
 		robotToBack = new Transform3d(backPos, backRot);
 
 		//Put in an array for easier iterating
-		Transform3d[] camTranslations = new Transform3d[] { robotToRight, robotToBack };
+		public static Transform3d[] camTranslations = new Transform3d[] { robotToRight, robotToBack };
 
+		//Used for distance calculations for AI stuff
+		//Offset of your limelight (0 being perpendicular, negative meaning camera lens down)
+		public static double limeLightAngleOffsetDegrees = -40,
+		
+		//Height from floor to limelight
+		limelightLensHeightoffFloorInches = 22.5;
+		
+		//For limelightHelpers
+		public static String limelightName = "limelight-swerve";
 }
