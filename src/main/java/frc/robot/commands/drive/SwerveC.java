@@ -3,7 +3,7 @@ package frc.robot.commands.drive;
 import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj2.command.Command;
-import frc.robot.Constants;
+import frc.robot.Robot;
 import frc.robot.RobotContainer;
 import frc.robot.subsystems.drive.SwerveS;
 import frc.robot.utils.drive.DriveConstants;
@@ -83,7 +83,7 @@ public class SwerveC extends Command {
 				* DriveConstants.kMaxSpeedMetersPerSecond;
 		turningSpeed = turningLimiter.calculate(turningSpeed)
 				* DriveConstants.kMaxTurningSpeedRadPerSec;
-		if (Constants.getAlliance()) {
+		if (Robot.isRed) {
 			xSpeed *= -1;
 			ySpeed *= -1;
 			turningSpeed *= 1;

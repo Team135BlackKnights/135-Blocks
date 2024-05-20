@@ -34,6 +34,8 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.Constants;
 
 import frc.robot.Constants.Mode;
+import frc.robot.Robot;
+
 import static edu.wpi.first.units.Units.Seconds;
 import static edu.wpi.first.units.Units.Volts;
 import java.util.HashMap;
@@ -214,7 +216,7 @@ public class SwerveS extends SubsystemBase {
 						DriveConstants.kMaxSpeedMetersPerSecond, // Max module speed, in m/s
 						DriveConstants.kDriveBaseRadius, // Drive base radius in meters. Distance from robot center to furthest module.
 						new ReplanningConfig(true, true) // Default path replanning config. See the API for the options here
-				), Constants::getAlliance, this // Reference to this subsystem to set requirements
+				), () -> Robot.isRed, this // Reference to this subsystem to set requirements
 		);
 		
 		/*kP = DriveConstants.kP;
@@ -238,7 +240,7 @@ public class SwerveS extends SubsystemBase {
 
 	public static double getHeading() {
 		return -1 * Math
-				.IEEEremainder(gyro.getAngle() + (Constants.getAlliance() ? 180 : 0), 360); //modulus
+				.IEEEremainder(gyro.getAngle() + (Robot.isRed ? 180 : 0), 360); //modulus
 	}
 
 	public static Rotation2d getRotation2d() {
@@ -261,8 +263,6 @@ public class SwerveS extends SubsystemBase {
 			//m_pigeon.getSimCollection().setRawHeading(-Units.radiansToDegrees(m_simYaw));
 			SimGamePiece.updateStates(); //update position of gamePieces
 		}
-		redIsAlliance = Constants.getAlliance();
-
 		//puts values to smartDashboard
 		//SmartDashboard.putBoolean("Auto Lock", autoLock);
 		SmartDashboard.putNumber("Robot Heading (getPose)",
