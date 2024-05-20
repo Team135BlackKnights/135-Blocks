@@ -103,14 +103,14 @@ public class SwerveS extends SubsystemBase {
 	private static AHRS gyro = new AHRS(Port.kUSB1);
 	public static boolean fieldOriented = true;
 
-	static Pose2d robotPosition = new Pose2d(0, 0, getRotation2d());
+	public static Pose2d robotPosition = new Pose2d(0, 0, getRotation2d());
 	Field2d robotField = new Field2d();
 	// LIST MODULES IN THE SAME EXACT ORDER USED WHEN DECLARING SwerveDriveKinematics
 	ChassisSpeeds m_ChassisSpeeds = DriveConstants.kDriveKinematics
 			.toChassisSpeeds(getModuleStates());
 	static Vector<N3> stateStdDevs = VecBuilder.fill(0.1, 0.1, 0.1);
 	static Vector<N3> visionStdDevs = VecBuilder.fill(1, 1, 1);
-	static SwerveDrivePoseEstimator poseEstimator = new SwerveDrivePoseEstimator(
+	public static SwerveDrivePoseEstimator poseEstimator = new SwerveDrivePoseEstimator(
 			DriveConstants.kDriveKinematics, getRotation2d(),
 			getModulePositions(), robotPosition, stateStdDevs, visionStdDevs);
 			

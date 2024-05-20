@@ -35,8 +35,7 @@ import java.util.ArrayList;
  */
 public class SimGamePiece {
 	private static Supplier<Pose2d> robotPoseSupplier = () -> new Pose2d();
-	@SuppressWarnings("unused")
-	private static int closestPieceIndex;
+	public static int closestPieceIndex;
 	//Returns the robot pose
 	public static void setRobotPoseSupplier(Supplier<Pose2d> supplier) {
 		robotPoseSupplier = supplier;
@@ -121,8 +120,8 @@ public class SimGamePiece {
 		Pose3d[] translator = new Pose3d[currentPieces.size()];
 		heldPiecePos = new Pose3d(robotPoseSupplier.get())
 				.transformBy(Constants.DriveSimConstants.launcherTransform);
-		for (int i = 0; i < currentPieces.size(); i++) { //for all notes
-			if (i == 0 && hasPiece) { //if is zero, and we have a note, make that location the held Note relative to bot
+		for (int i = 0; i < currentPieces.size(); i++) { //for all pieces
+			if (i == 0 && hasPiece) { //if is zero, and we have a pieces, make that location the held piece relative to bot
 				translator[i] = heldPiecePos;
 			} else {
 				translator[i] = currentPieces.get(i);
