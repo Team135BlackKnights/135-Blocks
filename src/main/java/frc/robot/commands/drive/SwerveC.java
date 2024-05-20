@@ -44,7 +44,8 @@ public class SwerveC extends Command {
 
 	@Override
 	public void execute() {
-		// Get desired ChassisSpeeds from controller
+		if (!SwerveS.takeOver){
+			// Get desired ChassisSpeeds from controller
 		double xSpeed = -RobotContainer.driveController.getLeftY();
 		double ySpeed = -RobotContainer.driveController.getLeftX();
 		double turningSpeed = -RobotContainer.driveController.getRightX();
@@ -98,6 +99,8 @@ public class SwerveC extends Command {
 		// set modules to proper speeds
 		swerveS.setChassisSpeeds(chassisSpeeds);
 	}
+		}
+		
 
 	/*Use this link to compute the regression model:https://planetcalc.com/5992/#google_vignette 
 	 Each of the files has an x and y output so put those in the respective lists, or use a ti-84 stats bar*/

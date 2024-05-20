@@ -12,13 +12,11 @@ import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.hal.SimDouble;
 import edu.wpi.first.hal.simulation.SimDeviceDataJNI;
-import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.Vector;
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
-import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.Measure;
@@ -101,8 +99,10 @@ public class SwerveS extends SubsystemBase {
 							DriveConstants.SwerveConstants.overallTurnkPkSkVkAkD)));
 
 	private static AHRS gyro = new AHRS(Port.kUSB1);
-	public static boolean fieldOriented = true;
-
+	//Whether the robot should be field oriented
+	public static boolean fieldOriented = true,
+	//Whether the swerve drivetrain should be taken over by our auto drive to note feature (in the Vision branch)
+	takeOver = false;
 	static Pose2d robotPosition = new Pose2d(0, 0, getRotation2d());
 	Field2d robotField = new Field2d();
 	// LIST MODULES IN THE SAME EXACT ORDER USED WHEN DECLARING SwerveDriveKinematics
@@ -383,14 +383,5 @@ public class SwerveS extends SubsystemBase {
 			debounce = -1;
 			fieldOriented = false;
 		}
-	}
-
-	public static void addVisionMeasurement(Pose2d visionMeasurement, double timestampSeconds) {
-		poseEstimator.addVisionMeasurement(visionMeasurement, timestampSeconds);
-	}
-
-	public static void addVisionMeasurement(Pose2d visionMeasurement, double timestampSeconds, Matrix<N3, N1> stdDevs) {
-		poseEstimator.addVisionMeasurement(visionMeasurement, timestampSeconds,
-				stdDevs);
 	}
 }
