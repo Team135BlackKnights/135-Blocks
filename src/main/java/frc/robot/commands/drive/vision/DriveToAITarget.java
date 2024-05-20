@@ -70,32 +70,7 @@ public class DriveToAITarget extends Command {
 		ty = 0;
 	}
 
-	public static double closerAngleToZero(double angle) {
-		// Normalize the angle to be within the range of -180 to 180 degrees
-		double normalizedAngle = angle % 360;
-		if (normalizedAngle > 180) {
-			normalizedAngle -= 360;
-		} else if (normalizedAngle < -180) {
-			normalizedAngle += 360;
-		}
-		// Return the closer angle to zero
-		return (Math.abs(normalizedAngle) <= 180)
-				? normalizedAngle
-				: -normalizedAngle;
-	}
-
-	public static double speedMapper(double x) {
-		// Define the parameters for the sigmoid function
-		double x0 = 25; // Inches where the function starts to rise significantly
-		double k = 0.1; // Steepness of the curve
-		// Apply the sigmoid function to map x to the range [0, 1]
-		double y = 1 / (1 + Math.exp(-k * (x - x0)));
-		// Adjust the output to meet your specific points
-		if (x >= 50) {
-			y = 1;
-		}
-		return y;
-	}
+	
 
 	@Override
 	public void execute() {
@@ -129,7 +104,7 @@ public class DriveToAITarget extends Command {
 			desiredHeading = angleToTarget;
 			currentHeading = SwerveS.getHeading();
 			error = -1 * (currentHeading - desiredHeading);
-			error = closerAngleToZero(error);
+			error = PhotonVisionS.closerAngleToZero(error);
 		} else {
 			//when done, set timer.start().. and delayTimer.stop();
 			//THESE ARE IN D E G R E E S 
@@ -162,7 +137,7 @@ public class DriveToAITarget extends Command {
 			speeds = new ChassisSpeeds(0, 0, 0.1
 					* DriveConstants.kMaxTurningSpeedRadPerSec);
 		} else if (loaded == false && close == false) {
-			double speedMapperVal = speedMapper(distance);
+			double speedMapperVal = PhotonVisionS.speedMapper(distance);
 			double moveSpeed = DriveConstants.kMaxSpeedMetersPerSecond
 					* speedMapperVal;
 			double trueError = error;

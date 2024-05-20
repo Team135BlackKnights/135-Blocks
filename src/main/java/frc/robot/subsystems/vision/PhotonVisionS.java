@@ -410,4 +410,39 @@ public class PhotonVisionS extends SubsystemBase {
 	public double updateXErrorWithPose(Pose2d targetPose) {
 		return targetPose.getRotation().getDegrees()-SwerveS.getPose().getRotation().getDegrees();
 	}
+	/**
+	 * Works similar to swerveS.optimize but for any angle 
+	 * @param angle the angle to check
+	 * @return the optimized distance to rotate to reach an ideal angle
+	 */
+	public static double closerAngleToZero(double angle) {
+		// Normalize the angle to be within the range of -180 to 180 degrees
+		double normalizedAngle = angle % 360;
+		if (normalizedAngle > 180) {
+			normalizedAngle -= 360;
+		} else if (normalizedAngle < -180) {
+			normalizedAngle += 360;
+		}
+		// Return the closer angle to zero
+		return (Math.abs(normalizedAngle) <= 180)
+				? normalizedAngle
+				: -normalizedAngle;
+	}
+	/**
+	 * Modified PID Controller, but for our DriveToAITarget 
+	 * @param x the x distance from target
+	 * @return the x speed
+	 */
+	public static double speedMapper(double x) {
+		// Define the parameters for the sigmoid function
+		double x0 = 25; // Inches where the function starts to rise significantly
+		double k = 0.1; // Steepness of the curve
+		// Apply the sigmoid function to map x to the range [0, 1]
+		double y = 1 / (1 + Math.exp(-k * (x - x0)));
+		// Adjust the output to meet your specific points
+		if (x >= 50) {
+			y = 1;
+		}
+		return y;
+	}
 }
