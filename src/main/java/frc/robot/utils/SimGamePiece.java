@@ -12,7 +12,7 @@ import edu.wpi.first.wpilibj2.command.ScheduleCommand;
 import java.util.Set;
 import frc.robot.Constants;
 import frc.robot.Constants.FRCMatchState;
-import frc.robot.subsystems.drive.SwerveS;
+import frc.robot.Robot;
 
 import java.util.function.Supplier;
 import org.littletonrobotics.junction.Logger;
@@ -134,7 +134,7 @@ public class SimGamePiece {
 				Commands.defer(() -> {
 					//Initial starting point
 					final Pose3d startPose = heldPiecePos;
-					final boolean isRed = Constants.getAlliance();
+					final boolean isRed = Robot.isRed;
 					final Pose3d endPose = new Pose3d(
 							isRed ? Constants.DriveSimConstants.redShootLocation
 									: Constants.DriveSimConstants.blueShootLocation,

@@ -30,6 +30,7 @@ public class Robot extends LoggedRobot {
 	private Command m_autonomousCommand;
 	private RobotContainer m_robotContainer;
 	final Timer endgameTimer = new Timer();
+	public static boolean isRed;
 	private boolean hasBeenEnabled;
 	/**
 	 * This function is run when the robot is first started up and should be used
@@ -88,6 +89,9 @@ public class Robot extends LoggedRobot {
 		DataHandler.updateHandlerState();
 		SmartDashboard.putString("Match State",
 				Constants.currentMatchState.name());
+		isRed = DriverStation.getAlliance().isPresent()
+				? DriverStation.getAlliance().get() == DriverStation.Alliance.Red
+				: false;
 		// Runs the Scheduler.  This is responsible for polling buttons, adding newly-scheduled
 		// commands, running already-scheduled commands, removing finished or interrupted commands,
 		// and running subsystem periodic() methods.  This must be called from the robot's periodic
