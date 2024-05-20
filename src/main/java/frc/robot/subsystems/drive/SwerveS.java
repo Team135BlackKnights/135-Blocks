@@ -104,8 +104,7 @@ public class SwerveS extends SubsystemBase {
 	public static boolean fieldOriented = true,
 	//Whether the swerve drivetrain should be taken over by our auto drive to note feature (in the Vision branch)
 	takeOver = false;
-	static Pose2d robotPosition = new Pose2d(0, 0, getRotation2d());
-
+	public static Pose2d robotPosition = new Pose2d(0, 0, getRotation2d());
 	Field2d robotField = new Field2d();
 	// LIST MODULES IN THE SAME EXACT ORDER USED WHEN DECLARING SwerveDriveKinematics
 	ChassisSpeeds m_ChassisSpeeds = DriveConstants.kDriveKinematics
