@@ -125,4 +125,6 @@ public class VisionConstants {
 				4, 8);
 		public static final Matrix<N3, N1> kMultiTagStdDevs = VecBuilder.fill(0.5,
 				0.5, 1);
+		//For use in drivetoAITarget (PLACEHOLDER VALUE)
+		public static double DriveToAITargetKp = .1;
 }
