@@ -12,7 +12,6 @@ import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.utils.vision.LimelightHelpers;
 import frc.robot.utils.vision.VisionConstants;
 import frc.robot.Constants;
-import frc.robot.Robot;
 import frc.robot.Constants.FRCMatchState;
 import frc.robot.Constants.Mode;
 import frc.robot.subsystems.vision.PhotonVisionS;
@@ -59,7 +58,7 @@ public class DriveToAITarget extends Command {
 		timer.reset();
 		timer.start();
 		close = false;
-		takeOver = true;
+		takeOver = true; //stop user control
 		ty = 0;
 	}
 
@@ -71,6 +70,7 @@ public class DriveToAITarget extends Command {
 		double tx, ty, distance = 0;
 		boolean tv;
 		if (Constants.currentMode == Mode.SIM) {
+			//In sim, we simply grab the 
 			//Computing distance
 			currentPose = SwerveS.getPose();
 			//THESE ARE IN M E T E R S 
@@ -107,21 +107,21 @@ public class DriveToAITarget extends Command {
 			ty = LimelightHelpers.getTY(
 					VisionConstants.limelightName);
 			error = -tx; //tx is negative
-			distance = PhotonVisionS.calculateDistanceFromtY(ty);
+			distance = PhotonVisionS.calculateDistanceFromtY(ty); //returns inches
 		}
-		SmartDashboard.putNumber("ANGLE ERROR", error);
-		SmartDashboard.putNumber("DISTANCE", distance);
+		if (VisionConstants.debug){
+			SmartDashboard.putNumber("ANGLE ERROR", error);
+			SmartDashboard.putNumber("DISTANCE", distance);
+		}
 		// SmartDashboard.putBoolean("Piece Loaded?", IntakeS.PieceIsLoaded());
 		if (Constants.currentMode == Mode.REAL) {
 			if (PhotonVisionS.calculateDistanceFromtY(ty) <= 4.5) { //less than 4.5 inches away, STOP!
 				close = true;
 			}
 			if (Constants.currentMatchState == FRCMatchState.AUTO && timer.get() > VisionConstants.DriveToAIMaxAutoTime){
-				isFinished = true;
+				isFinished = true; //if in auto, and greater than max time, STOP ENTIRE COMMAND
 			}
 		} else {
-			SmartDashboard.putNumber("SIMDISTANCE ",
-					Units.metersToInches(distance));
 			if (distance <= 4.5) {
 				close = true;
 			}
@@ -131,17 +131,17 @@ public class DriveToAITarget extends Command {
 			// We don't see the target, seek for the target by spinning in place at a safe speed.
 			speeds = new ChassisSpeeds(0, 0, 0.1
 					* DriveConstants.kMaxTurningSpeedRadPerSec);
-		} else if (loaded == false && close == false) {
-			double speedMapperVal = PhotonVisionS.speedMapper(distance);
+		} else if (loaded == false && close == false) { //We see a target, and we're not close.
+			double speedMapperVal = PhotonVisionS.speedMapper(distance); //change speed based on distance
 			double moveSpeed = DriveConstants.kMaxSpeedMetersPerSecond
 					* speedMapperVal;
-			double trueError = error;
+			double trueError = error; //Add/subtract from this for any tweaking from where camera placed for actual robot error
 			double turnSpeed = Units.degreesToRadians(trueError)
-					* VisionConstants.DriveToAITargetKp * DriveConstants.kMaxTurningSpeedRadPerSec* (2*speedMapperVal);
+					* VisionConstants.DriveToAITargetKp * DriveConstants.kMaxTurningSpeedRadPerSec* (2*speedMapperVal);//Make turning relative to distance, and a Kp
 			speeds = new ChassisSpeeds(moveSpeed, 0,
 					turnSpeed);
 		} else {
-			speeds = new ChassisSpeeds(0, 0, 0);
+			speeds = new ChassisSpeeds(0, 0, 0); //We either have it, or are close enough to start just intaking, so stop.
 		}
 		swerveS.setChassisSpeeds(speeds);
 	}
@@ -154,8 +154,8 @@ public class DriveToAITarget extends Command {
 		timer.reset();
 		speeds = new ChassisSpeeds(0, 0, 0);
 		swerveS.setChassisSpeeds(speeds);
-		if (Robot.isSimulation() && close) {
-			if (SimGamePiece.currentPieces.get(0).getZ() > Units.inchesToMeters(1)) {
+		if (Constants.currentMode == Mode.SIM && close) {
+			if (SimGamePiece.currentPieces.get(0).getZ() > Units.inchesToMeters(1)) { //if another game piece is off the ground, properly update the simArray
 				SimGamePiece.intake(SimGamePiece.closestPieceIndex - 1);
 			} else {
 				SimGamePiece.intake(SimGamePiece.closestPieceIndex);
