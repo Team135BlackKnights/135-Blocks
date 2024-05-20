@@ -1,7 +1,6 @@
 package frc.robot.commands.drive.vision;
 
 
-import java.util.function.BooleanSupplier;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Translation2d;
@@ -14,44 +13,38 @@ import frc.robot.utils.vision.LimelightHelpers;
 import frc.robot.utils.vision.VisionConstants;
 import frc.robot.Constants;
 import frc.robot.Robot;
+import frc.robot.Constants.FRCMatchState;
 import frc.robot.Constants.Mode;
 import frc.robot.subsystems.vision.PhotonVisionS;
 import frc.robot.subsystems.drive.SwerveS;
 import frc.robot.utils.SimGamePiece;
 import frc.robot.utils.drive.DriveConstants;
-
+/**
+ * Implementation of this command is a little different.
+ * You must have a way to detect a game piece within the robot, or however you END this command.
+ * For an example methodology on this, please refer to the GITHUB 135 Crescendo2024 for IntakeS, and read through the ways we detected game pieces (color sensor because the object was a bright color!)
+ * Beyond that, the distance value must be changed within Constants, where that value is in INCHES.
+ */
 public class DriveToAITarget extends Command {
 	private final SwerveS swerveS;
 	private boolean isFinished = false;
-	private boolean loaded = false;
-	public static boolean allClear = false;
-	public static boolean takeOver = false;
-	private static boolean close = false;
-	private Translation2d targetPieceLocation = null;
+	private boolean loaded = false; //do we have game Piece?
+	public static boolean takeOver = false; //to stop driver input
+	private static boolean close = false; //when close, stop moving
+	private Translation2d targetPieceLocation = null; //no target known unless in SIM
 	private Pose2d currentPose;
 	private ChassisSpeeds speeds;
-	double ty;
+	double ty; //pitch
 	Timer timer = new Timer();
-	Timer delayTimer = new Timer();
 	double desiredHeading, currentHeading, error;
 
 	/*
 	 * Call this in all cases but
 	 * simulation autonomous
 	 */
-	public DriveToAITarget(SwerveS swerveS, BooleanSupplier piecePickedUp) {
+	public DriveToAITarget(SwerveS swerveS) {
 		this.swerveS = swerveS;
 
-	}
-
-	/*
-	 * Call this for simulation
-	 * autonomous only
-	 */
-	public DriveToAITarget(BooleanSupplier piecePickedUp, SwerveS swerveS,
-			Translation2d fieldPiecePose) {
-		this.swerveS = swerveS;
-		this.targetPieceLocation = fieldPiecePose;
 	}
 
 	@Override
@@ -63,8 +56,8 @@ public class DriveToAITarget extends Command {
 		isFinished = false;
 		LimelightHelpers.setPipelineIndex(
 				VisionConstants.limelightName, 1);
-		delayTimer.reset();
-		allClear = false;
+		timer.reset();
+		timer.start();
 		close = false;
 		takeOver = true;
 		ty = 0;
@@ -82,9 +75,9 @@ public class DriveToAITarget extends Command {
 			currentPose = SwerveS.getPose();
 			//THESE ARE IN M E T E R S 
 			tx = targetPieceLocation.getX()
-					- currentPose.getX();// -0.307975;
+					- currentPose.getX(); 
 			ty = targetPieceLocation.getY()
-					- currentPose.getY();// -0.307975;
+					- currentPose.getY();
 			distance = Math
 					.sqrt(Math.pow(tx, 2) + Math.pow(ty, 2));
 			distance -= DriveConstants.kChassisLength;
@@ -106,7 +99,6 @@ public class DriveToAITarget extends Command {
 			error = -1 * (currentHeading - desiredHeading);
 			error = PhotonVisionS.closerAngleToZero(error);
 		} else {
-			//when done, set timer.start().. and delayTimer.stop();
 			//THESE ARE IN D E G R E E S 
 			tx = LimelightHelpers.getTX(
 					VisionConstants.limelightName);
@@ -114,15 +106,18 @@ public class DriveToAITarget extends Command {
 					VisionConstants.limelightName);
 			ty = LimelightHelpers.getTY(
 					VisionConstants.limelightName);
-			error = -tx; //tx is neg apparently -docs
+			error = -tx; //tx is negative
 			distance = PhotonVisionS.calculateDistanceFromtY(ty);
 		}
 		SmartDashboard.putNumber("ANGLE ERROR", error);
 		SmartDashboard.putNumber("DISTANCE", distance);
 		// SmartDashboard.putBoolean("Piece Loaded?", IntakeS.PieceIsLoaded());
-		if (Robot.isReal()) {
-			if (PhotonVisionS.calculateDistanceFromtY(ty) <= 4.5) { //less than twelve inches away, tune down!
+		if (Constants.currentMode == Mode.REAL) {
+			if (PhotonVisionS.calculateDistanceFromtY(ty) <= 4.5) { //less than 4.5 inches away, STOP!
 				close = true;
+			}
+			if (Constants.currentMatchState == FRCMatchState.AUTO && timer.get() > VisionConstants.DriveToAIMaxAutoTime){
+				isFinished = true;
 			}
 		} else {
 			SmartDashboard.putNumber("SIMDISTANCE ",
@@ -157,8 +152,6 @@ public class DriveToAITarget extends Command {
 		takeOver = false;
 		timer.stop();
 		timer.reset();
-		delayTimer.stop();
-		delayTimer.reset();
 		speeds = new ChassisSpeeds(0, 0, 0);
 		swerveS.setChassisSpeeds(speeds);
 		if (Robot.isSimulation() && close) {

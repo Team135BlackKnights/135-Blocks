@@ -1,6 +1,7 @@
 package frc.robot.utils.vision;
 
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.math.Matrix;
@@ -10,12 +11,15 @@ import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
+import frc.robot.RobotContainer;
 import frc.robot.utils.drive.DriveConstants;
 
 public class VisionConstants {
 	//Field layout, fed to the PV cameras in order to work properly
 	public static final AprilTagFieldLayout kTagLayout = AprilTagFields.kDefaultField.loadAprilTagLayoutField();
-
+	public static class Controls{
+		public static JoystickButton autoIntake = new JoystickButton(RobotContainer.driveController, 4); //y
+	}
 	//We put the cameras into an enum to make iteration easier
 	public static enum PVCameras{
 		Front_Camera,
@@ -108,7 +112,7 @@ public class VisionConstants {
 		robotToBack = new Transform3d(backPos, backRot);
 
 		//Put in an array for easier iterating
-		public static Transform3d[] camTranslations = new Transform3d[] { robotToRight, robotToBack };
+		public static Transform3d[] camTranslations = new Transform3d[] { robotToRight, robotToBack, robotToLeft,robotToFront };
 
 		//Used for distance calculations for AI stuff
 		//Offset of your limelight (0 being perpendicular, negative meaning camera lens down)
@@ -126,5 +130,7 @@ public class VisionConstants {
 		public static final Matrix<N3, N1> kMultiTagStdDevs = VecBuilder.fill(0.5,
 				0.5, 1);
 		//For use in drivetoAITarget (PLACEHOLDER VALUE)
-		public static double DriveToAITargetKp = .1;
+		public static double DriveToAITargetKp = .3,
+		DriveToAIMaxAutoTime = 2;
+		
 }

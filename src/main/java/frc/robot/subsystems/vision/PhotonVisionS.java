@@ -30,10 +30,8 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 public class PhotonVisionS extends SubsystemBase {
 	public static VisionSystemSim visionSim;
 	//These estimate pose based on april tag location
-	public final PhotonPoseEstimator rightEstimator,
-			//frontEstimator,
-			//leftEstimator,
-			backEstimator;
+	public final PhotonPoseEstimator rightEstimator, frontEstimator,
+			leftEstimator, backEstimator;
 	//Put these values into an array to iterate through them(go through them in order)
 	public final PhotonPoseEstimator[] camEstimates;
 	public final PhotonCamera[] cams;
@@ -43,7 +41,6 @@ public class PhotonVisionS extends SubsystemBase {
 	//Used for aligning with a particular aprilTag
 	public static double camXError = 0f;
 	static double distance = 0;
-	@SuppressWarnings("unused")
 	private static PhotonCamera frontCam, rightCam, leftCam, backCam;
 
 	public PhotonVisionS() {
@@ -53,13 +50,13 @@ public class PhotonVisionS extends SubsystemBase {
 		//Create the cameras
 		rightCam = new PhotonCamera(VisionConstants.rightCamName);
 		backCam = new PhotonCamera(VisionConstants.backCamName);
-		//frontCam = new PhotonCamera(VisionConstants.frontCamName);
-		//leftCam = new PhotonCamera(VisionConstants.leftCamName);
-		//Set the pipelines (how it computes what we want), similar to limelight 
+		frontCam = new PhotonCamera(VisionConstants.frontCamName);
+		leftCam = new PhotonCamera(VisionConstants.leftCamName);
+		//Set the pipelines (how it computes what we want), similar to limelight, default 0
 		backCam.setPipelineIndex(0);
 		rightCam.setPipelineIndex(0);
-		//frontCam.setPipelineIndex(0);
-		//leftCam.setPipelineIndex(0);
+		frontCam.setPipelineIndex(0);
+		leftCam.setPipelineIndex(0);
 		//Create new photon pose estimators
 		rightEstimator = new PhotonPoseEstimator(VisionConstants.kTagLayout,
 				PoseStrategy.MULTI_TAG_PNP_ON_COPROCESSOR, rightCam,
@@ -67,61 +64,53 @@ public class PhotonVisionS extends SubsystemBase {
 		backEstimator = new PhotonPoseEstimator(VisionConstants.kTagLayout,
 				PoseStrategy.MULTI_TAG_PNP_ON_COPROCESSOR, backCam,
 				VisionConstants.robotToBack);
-		/*leftEstimator = new PhotonPoseEstimator(
-			VisionConstants.kTagLayout, 
-			PoseStrategy.MULTI_TAG_PNP_ON_COPROCESSOR, 
-			leftCam, 
-			VisionConstants.robotToLeft);*/
-		/*frontEstimator = new PhotonPoseEstimator(
-			VisionConstants.kTagLayout, 
-			PoseStrategy.MULTI_TAG_PNP_ON_COPROCESSOR, 
-			frontCam,VisionConstants.robotToFront);*/
-		//Set the strategy to use if for some reason multitags don't work
+		leftEstimator = new PhotonPoseEstimator(VisionConstants.kTagLayout,
+				PoseStrategy.MULTI_TAG_PNP_ON_COPROCESSOR, leftCam,
+				VisionConstants.robotToLeft);
+		frontEstimator = new PhotonPoseEstimator(VisionConstants.kTagLayout,
+				PoseStrategy.MULTI_TAG_PNP_ON_COPROCESSOR, frontCam,
+				VisionConstants.robotToFront);
+		//Set the strategy to use when multitag isn't detected. IE, only one apriltag visible
 		rightEstimator.setMultiTagFallbackStrategy(
 				PoseStrategy.CLOSEST_TO_REFERENCE_POSE);
 		backEstimator.setMultiTagFallbackStrategy(
 				PoseStrategy.CLOSEST_TO_REFERENCE_POSE);
-		/*frontEstimator.setMultiTagFallbackStrategy(
-				PoseStrategy.CLOSEST_TO_REFERENCE_POSE);*/
-		/*leftEstimator.setMultiTagFallbackStrategy(
-				PoseStrategy.CLOSEST_TO_REFERENCE_POSE);*/
+		frontEstimator.setMultiTagFallbackStrategy(
+				PoseStrategy.CLOSEST_TO_REFERENCE_POSE);
+		leftEstimator.setMultiTagFallbackStrategy(
+				PoseStrategy.CLOSEST_TO_REFERENCE_POSE);
 		//Puts the estimators in an array to iterate through them efficiently
-		camEstimates = new PhotonPoseEstimator[] { rightEstimator,
-				backEstimator/*,
-									frontEstimator,
-									leftEstimator */
+		camEstimates = new PhotonPoseEstimator[] { rightEstimator, backEstimator,
+				frontEstimator, leftEstimator
 		};
 		//Same process for cameras
-		cams = new PhotonCamera[] { rightCam, backCam/*,
-																	leftCam,
-																	frontCam */
+		cams = new PhotonCamera[] { rightCam, backCam, leftCam, frontCam
 		};
 		//Create PhotonVision camera simulations if the robot is in sim
 		if (Constants.currentMode == Mode.SIM) {
 			//Array for iteration
 			PhotonCameraSim[] cameraSims = new PhotonCameraSim[] {
 					new PhotonCameraSim(rightCam), new PhotonCameraSim(backCam),
-					//new PhotonCameraSim(leftCam),
-					//new PhotonCameraSim(rightCam)
+					new PhotonCameraSim(leftCam), new PhotonCameraSim(rightCam)
 			};
 			//Handles the vision simulation
 			visionSim = new VisionSystemSim("Vision Sim");
 			//Adds the april tags
 			visionSim.addAprilTags(fieldLayout);
-			/*We use ARDUCAM OV9281s, which are the same cameras as on the limelight. 
+			/*We use ARDUCAM OV9281s, which are the same cameras as on the limelight 3G. BLACK AND WHITE 
 			This means we can use the limelight properties. In an array for iteration.*/
 			SimCameraProperties[] properties = new SimCameraProperties[] {
 					SimCameraProperties.LL2_960_720(),
-					SimCameraProperties.LL2_960_720()/*,
-																SimCameraProperties.LL2_960_720(),
-																SimCameraProperties.LL2_960_720(),
-																*/
+					SimCameraProperties.LL2_960_720(),
+					SimCameraProperties.LL2_960_720(),
+					SimCameraProperties.LL2_960_720(),
 			};
 			//Adds each camera present in the previous array to the visionSim. 
 			for (var i = 0; i < cams.length; i++) {
 				cameraSims[i] = new PhotonCameraSim(cams[i], properties[i]);
 				visionSim.addCamera(cameraSims[i],
 						VisionConstants.camTranslations[i]);
+				//the following are cool to see in sim, but take over 80ms to run, so use at risk for debugging
 				cameraSims[i].enableRawStream(true);
 				cameraSims[i].enableProcessedStream(true);
 				cameraSims[i].enableDrawWireframe(true);
@@ -132,7 +121,8 @@ public class PhotonVisionS extends SubsystemBase {
 	/**
 	 * Computes the distance in inches from the limelight network table entry
 	 * 
-	 * @param tY the tY measurement from the limelight network table entry
+	 * @param tY the tY measurement from the limelight network table entry (pitch
+	 *              degrees)
 	 * @return distance in inches
 	 */
 	public static double calculateDistanceFromtY(double tY) {
@@ -142,7 +132,7 @@ public class PhotonVisionS extends SubsystemBase {
 		// distance from the center of the Limelight lens to the floor
 		double limelightLensHeightInches = VisionConstants.limelightLensHeightoffFloorInches;
 		// distance from the target to the floor
-		double goalHeightInches = 0; //try zero? try two?
+		double goalHeightInches = 0; //if multiple targets, make this an argument
 		double angleToGoalDegrees = limelightMountAngleDegrees + tY;
 		//calculate distance
 		double distance = (goalHeightInches - limelightLensHeightInches)
@@ -158,8 +148,7 @@ public class PhotonVisionS extends SubsystemBase {
 	 * @param tagsToLookFor the potential aprilTags to look for
 	 * @return Whether a requested april tag is visible (as a boolean)
 	 */
-	public static boolean aprilTagVisible(PhotonCamera Camera,
-			int[] tagsToLookFor) {
+	public static boolean aprilTagVisible(PhotonCamera Camera, int[] tagsToLookFor) {
 		var results = Camera.getLatestResult().getTargets();
 		for (int targetTagNumber : tagsToLookFor) {
 			for (var target : results) {
@@ -282,6 +271,7 @@ public class PhotonVisionS extends SubsystemBase {
 			visionEst.ifPresent(est -> {
 				Pose2d estPose = est.estimatedPose.toPose2d();
 				// Change our trust in the measurement based on the tags we can see
+				// We do this because we should trust cam estimates with closer apriltags than farther ones.
 				Matrix<N3, N1> estStdDevs = getEstimationStdDevs(estPose,
 						cEstimator, cCam);
 				SmartDashboard.putString("CAMERAUPDATE", cCam.getName());
@@ -295,7 +285,7 @@ public class PhotonVisionS extends SubsystemBase {
 	 * Uses one particular camera to check the x distance (in degrees) of the
 	 * robot to a particular AprilTag, and saves it in the double called
 	 * camXError. Should be called in periodic. If you want to check for tags
-	 * based on alliance, surround this in robot.getAlliance and adjust the
+	 * based on alliance, surround this in robot.isRed and adjust the
 	 * parameters as such
 	 * 
 	 * @param camera Camera to use
@@ -373,26 +363,25 @@ public class PhotonVisionS extends SubsystemBase {
 			estStdDevs = VecBuilder.fill(Double.MAX_VALUE, Double.MAX_VALUE,
 					Double.MAX_VALUE);
 		else
-			//This is some stats nonsense. Essentially trying to make the sample deviation equal to what it would be if we had 30 tags (i think) to make the normal curve
+			//This is some stats nonsense. Essentially averaging out the distance over a given sensitivity of 30, then finding it on a normal curve.
 			estStdDevs = estStdDevs.times(1 + (avgDist * avgDist / 30));
 		return estStdDevs;
 	}
 
 	/**
-	 * Returns x error (in degrees). We used this as as an input to a PID loop to
+	 * Returns x error (in degrees). 
+	 * @implSpec We used this as as an input to a PID loop to
 	 * automatically face a speaker in 2024.
-	 * 
 	 * @return the x error in degrees
 	 */
 	public static double getXError() {
-		// bounds xError between -5 and 5 (normal range of xError is -30 to 30)
 		return PhotonVisionS.camXError;
 	}
 
 	/**
 	 * Computes the distance of the robot from the specified target. If you want
 	 * to use this in an alliance based way, surround it with
-	 * Constants.getAlliance()
+	 * Constants.isRed
 	 * 
 	 * @param targetLocation The target you want to get the distance from. Pose
 	 *                          should be in meters and degrees.
@@ -405,13 +394,18 @@ public class PhotonVisionS extends SubsystemBase {
 	}
 
 	/**
-	 * updates the xError double by using the robot's pose. This assumes that left is negative.
-	 */	
+	 * updates the xError double by using the robot's pose. This assumes that
+	 * left is negative for tX. 
+	 * IF ERROR IS OCCURING WITH TRACKING, THIS IS THE PROBLEM.
+	 */
 	public double updateXErrorWithPose(Pose2d targetPose) {
-		return targetPose.getRotation().getDegrees()-SwerveS.getPose().getRotation().getDegrees();
+		return targetPose.getRotation().getDegrees()
+				- SwerveS.getPose().getRotation().getDegrees();
 	}
+
 	/**
-	 * Works similar to swerveS.optimize but for any angle 
+	 * Works similar to swerveS.optimize but for any angle
+	 * 
 	 * @param angle the angle to check
 	 * @return the optimized distance to rotate to reach an ideal angle
 	 */
@@ -424,12 +418,13 @@ public class PhotonVisionS extends SubsystemBase {
 			normalizedAngle += 360;
 		}
 		// Return the closer angle to zero
-		return (Math.abs(normalizedAngle) <= 180)
-				? normalizedAngle
+		return (Math.abs(normalizedAngle) <= 180) ? normalizedAngle
 				: -normalizedAngle;
 	}
+
 	/**
-	 * Modified PID Controller, but for our DriveToAITarget 
+	 * Modified PID Controller, but for our DriveToAITarget
+	 * 
 	 * @param x the x distance from target
 	 * @return the x speed
 	 */
