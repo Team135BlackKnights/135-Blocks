@@ -2,6 +2,8 @@ package frc.robot.utils;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
+import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -11,6 +13,7 @@ import java.util.Set;
 import frc.robot.Constants;
 import frc.robot.Constants.FRCMatchState;
 import frc.robot.Robot;
+import frc.robot.subsystems.drive.SwerveS;
 
 import java.util.function.Supplier;
 import org.littletonrobotics.junction.Logger;
@@ -177,4 +180,25 @@ public class SimGamePiece {
 					}
 				}, Set.of()).ignoringDisable(true));
 	}
+	public static Translation2d getClosestGamePiece() {
+
+        Translation2d closestTrans = new Translation2d();
+        double closestPoseDistance = 9999; //hopefully something is closer than 9999 meters
+        for (int i = 0; i < getState().length; i++) {
+            if (getState()[i].getTranslation().toTranslation2d().getDistance(
+                    SwerveS.getPose().getTranslation()) < closestPoseDistance
+                    && getState()[i].getZ() < Units.inchesToMeters(1.1)) 
+            {
+                closestTrans = getState()[i].getTranslation().toTranslation2d();
+                closestPieceIndex = i;
+                closestPoseDistance = getState()[i].getTranslation().toTranslation2d().getDistance(
+                    SwerveS.getPose().getTranslation());
+            }
+        }
+        if (closestPoseDistance == 9999) {
+            resetPieces();
+            return getClosestGamePiece();
+        }
+        return closestTrans;
+    }
 }
