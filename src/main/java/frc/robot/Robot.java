@@ -72,7 +72,7 @@ public class Robot extends LoggedRobot {
 		if (Constants.currentMode == Constants.Mode.REAL) {
 			DataHandler.createLogFileOnRIOUSB();
 		} else if (Constants.currentMode == Constants.Mode.SIM) {
-			DataHandler.startHandler(false, "C:");
+			DataHandler.startHandler(true, "C:");
 		}
 	}
 

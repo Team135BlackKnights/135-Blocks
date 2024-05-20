@@ -17,7 +17,7 @@ import frc.robot.utils.drive.DriveConstants;
  * Utils, and their respective folder for Merge purposes.
  */
 public final class Constants {
-	public static final Mode currentMode = Mode.SIM;
+	public static final Mode currentMode = Mode.REAL;
 
 	public static enum Mode {
 		/** Running on a real robot. */

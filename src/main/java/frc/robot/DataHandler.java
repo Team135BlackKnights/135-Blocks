@@ -48,7 +48,7 @@ public class DataHandler {
 			outputStream = new FileOutputStream(createdFile);
 		}
 		catch (FileNotFoundException e) {
-			e.printStackTrace();
+			//e.printStackTrace();
 		}
 		outputStreamWriter = new OutputStreamWriter(outputStream);
 	}
@@ -152,10 +152,10 @@ public class DataHandler {
 		}
 		//catch any errors
 		catch (Exception e) {
-			e.printStackTrace();
+			//e.printStackTrace();
 		}
 		catch (IOError e) {
-			e.printStackTrace();
+			//e.printStackTrace();
 		}
 	}
 
@@ -281,7 +281,7 @@ public class DataHandler {
 			dumpFileOutputStreamWriter.close();
 		}
 		catch (Exception e) {
-			e.printStackTrace();
+			//e.printStackTrace();
 		}
 	}
 
@@ -296,10 +296,10 @@ public class DataHandler {
 		}
 		//Catches errors
 		catch (Exception e) {
-			e.printStackTrace();
+			//e.printStackTrace();
 		}
 		catch (IOError e) {
-			e.printStackTrace();
+			//e.printStackTrace();
 		}
 	}
 
