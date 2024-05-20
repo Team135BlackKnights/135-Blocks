@@ -53,6 +53,7 @@ import org.littletonrobotics.junction.Logger;
  */
 
 public class SwerveS extends SubsystemBase {
+	//This supplier returns pose
 	private Supplier<Pose2d> pose2dSupplier = () -> {
 		return getPose();
 	};
@@ -110,7 +111,7 @@ public class SwerveS extends SubsystemBase {
 			.toChassisSpeeds(getModuleStates());
 	static Vector<N3> stateStdDevs = VecBuilder.fill(0.1, 0.1, 0.1);
 	static Vector<N3> visionStdDevs = VecBuilder.fill(1, 1, 1);
-	static SwerveDrivePoseEstimator poseEstimator = new SwerveDrivePoseEstimator(
+	public static SwerveDrivePoseEstimator poseEstimator = new SwerveDrivePoseEstimator(
 			DriveConstants.kDriveKinematics, getRotation2d(),
 			getModulePositions(), robotPosition, stateStdDevs, visionStdDevs);
 			
