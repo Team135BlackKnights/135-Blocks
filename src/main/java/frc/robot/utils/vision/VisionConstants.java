@@ -16,6 +16,7 @@ import frc.robot.utils.drive.DriveConstants;
 
 public class VisionConstants {
 	//Field layout, fed to the PV cameras in order to work properly
+	public static boolean debug = true;
 	public static final AprilTagFieldLayout kTagLayout = AprilTagFields.kDefaultField.loadAprilTagLayoutField();
 	public static class Controls{
 		public static JoystickButton autoIntake = new JoystickButton(RobotContainer.driveController, 4); //y
