@@ -37,6 +37,8 @@ public class DataHandler {
 	private static int debounce = 0;
 	private static int dumpID = 1;
 	private static boolean useNetworkTables;
+	private static String currentValue = "default";
+
 	/**
 	 * Creates a new Streamwriter, designed to be contingent in case of USB
 	 * disconnection and reconnection
@@ -78,7 +80,7 @@ public class DataHandler {
 	public static void startHandler(boolean useNetworkTables, String simDiskDirectory){
 		DataHandler.useNetworkTables = useNetworkTables;
 		if (useNetworkTables){
-			SmartDashboard.putString("DataHandler","initialized!");
+			SmartDashboard.putString("DataHandler",currentValue);
 		}
 		else {
 			if (Constants.currentMode == Constants.Mode.REAL){
@@ -172,7 +174,7 @@ public class DataHandler {
 	 */
 	public static void logData(String data) {
 		if (useNetworkTables){
-			SmartDashboard.putString("DataHandler", data);
+			currentValue = data;
 		}
 		else{
 			//Tries writing to the file, adds an error if it doesn't work
@@ -313,6 +315,7 @@ public class DataHandler {
 	 * createNewWriter in.
 	 */
 	public static void updateHandlerState() {
+	
 		if (!useNetworkTables){
 			pingUSB();
 		flushBuffer();
@@ -331,6 +334,10 @@ public class DataHandler {
 		else {
 			return;
 			}
+		}
+		//We are using network tables
+		else{
+			SmartDashboard.putString("DataHandler", currentValue);
 		}
 	}
 }
