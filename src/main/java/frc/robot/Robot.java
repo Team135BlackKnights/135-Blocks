@@ -69,11 +69,7 @@ public class Robot extends LoggedRobot {
 		Logger.registerURCL(URCL.startExternal(Constants.manCanIdsToNames()));
 		Logger.start();
 		m_robotContainer = new RobotContainer();
-		if (Constants.currentMode == Constants.Mode.REAL) {
-			DataHandler.createLogFileOnRIOUSB();
-		} else if (Constants.currentMode == Constants.Mode.SIM) {
-			DataHandler.startHandler(true, "C:");
-		}
+		DataHandler.startHandler(true, "C:");
 	}
 
 	/**
