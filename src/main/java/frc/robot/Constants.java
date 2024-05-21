@@ -5,7 +5,7 @@ package frc.robot;
 
 import java.util.HashMap;
 import java.util.Map;
-
+import frc.robot.Robot;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
@@ -18,7 +18,7 @@ import frc.robot.utils.drive.DriveConstants;
  * Utils, and their respective folder for Merge purposes.
  */
 public final class Constants {
-	public static final Mode currentMode = Mode.REAL;
+	public static final Mode currentMode;
 
 	public static enum Mode {
 		/** Running on a real robot. */
@@ -28,7 +28,11 @@ public final class Constants {
 		/** Replaying from a log file. */
 		REPLAY
 	}
-
+	static{
+		if (Robot.isReal()) currentMode = Mode.REAL;
+		else if (Robot.isSimulation()) currentMode = Mode.SIM;
+		else currentMode = Mode.REPLAY;
+	}
 	//FRCMatchState of the robot
 	public static FRCMatchState currentMatchState = FRCMatchState.DISABLED;
 
