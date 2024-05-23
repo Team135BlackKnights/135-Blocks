@@ -65,7 +65,7 @@ public class StateSpaceConstants {
 		public static double m_KalmanModelPosition = Units.inchesToMeters(1),
 				m_KalmanModelVelocity = Units.inchesToMeters(40), m_KalmanEncoder = 0.001,
 				m_LQRQelmsPosition = 1, m_LQRQelmsVelocity = 10, m_LQRRVolts = 12,
-				elevatorGearing = 1.5, carriageMass = Units.lbsToKilograms(10), drumRadius = 1.5 /2 *25.4 /1000,
+				elevatorGearing = 1.5, carriageMass = Units.lbsToKilograms(10), drumRadius = Units.inchesToMeters(.75),
 				maxSpeed = Units.feetToMeters(3),
 				maxAcceleration = Units.feetToMeters(6),
 				startingPosition = Units.inchesToMeters(0),
