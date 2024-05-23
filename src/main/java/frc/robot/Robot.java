@@ -69,7 +69,8 @@ public class Robot extends LoggedRobot {
 		Logger.registerURCL(URCL.startExternal(Constants.manCanIdsToNames()));
 		Logger.start();
 		m_robotContainer = new RobotContainer();
-		DataHandler.startHandler(true, "C:");
+		DataHandler.startHandler("C:");
+
 	}
 
 	/**
@@ -156,7 +157,13 @@ public class Robot extends LoggedRobot {
 		}else{
 			Constants.currentMatchState = FRCMatchState.TELEOP;
 		}
-
+		if(RobotContainer.driveController.getPOV() == 0){
+			System.err.println("UP");
+			DataHandler.logData("modelUpdate", "shouldUpdateModel");
+		}
+		if(RobotContainer.manipController.getAButton()){
+			DataHandler.logData("4.5","modelDistance");
+		}
 	}
 
 	@Override
@@ -188,6 +195,6 @@ public class Robot extends LoggedRobot {
 		} else if (Constants.currentMatchState == Constants.FRCMatchState.DISABLED) {
 			hasBeenEnabled = false;
 		}
-		DataHandler.updateHandlerState();
+		//DataHandler.updateHandlerState();
 	}
 }
