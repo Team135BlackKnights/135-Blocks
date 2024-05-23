@@ -29,7 +29,7 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
  */
 public class RobotContainer {
 	// The robot's subsystems and commands are defined here...
-	private final SwerveS swerveS = new SwerveS();
+	public final static SwerveS swerveS = new SwerveS();
 	private final FlywheelS flywheelS = new FlywheelS();
 	private final ArmS armS = new ArmS();
 	private final ElevatorS elevatorS = new ElevatorS();
