@@ -4,8 +4,11 @@
 package frc.robot;
 
 import frc.robot.commands.drive.SwerveC;
-
+import frc.robot.commands.drive.vision.DriveToAITarget;
 import frc.robot.subsystems.drive.SwerveS;
+import frc.robot.subsystems.vision.PhotonVisionS;
+import frc.robot.utils.vision.VisionConstants;
+
 import com.pathplanner.lib.auto.AutoBuilder;
 import edu.wpi.first.wpilibj.XboxController;
 import java.util.function.BooleanSupplier;
@@ -24,6 +27,8 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 public class RobotContainer {
 	// The robot's subsystems and commands are defined here...
 	public final static SwerveS swerveS = new SwerveS();
+	@SuppressWarnings("unused")
+	private final PhotonVisionS photonVisionS = new PhotonVisionS();
 	private final SendableChooser<Command> autoChooser;
 
 	public static XboxController driveController = new XboxController(0);
@@ -54,6 +59,7 @@ public class RobotContainer {
 	}
 
 	private void configureBindings() {
+		VisionConstants.Controls.autoIntake.whileTrue(new DriveToAITarget(swerveS));
 			xButtonDrive.and(isDriving()).onTrue(
 				new InstantCommand(() -> swerveS.zeroHeading()));
 		//swerve DRIVE tests
