@@ -12,8 +12,8 @@ import edu.wpi.first.wpilibj2.command.ScheduleCommand;
 import java.util.Set;
 import frc.robot.Constants;
 import frc.robot.Constants.FRCMatchState;
-import frc.robot.subsystems.drive.REVSwerve.SwerveModules.REVSwerveS;
 import frc.robot.Robot;
+import frc.robot.RobotContainer;
 
 import java.util.function.Supplier;
 import org.littletonrobotics.junction.Logger;
@@ -186,13 +186,13 @@ public class SimGamePiece {
         double closestPoseDistance = 9999; //hopefully something is closer than 9999 meters
         for (int i = 0; i < getState().length; i++) {
             if (getState()[i].getTranslation().toTranslation2d().getDistance(
-                    REVSwerveS.getPose().getTranslation()) < closestPoseDistance
+					RobotContainer.swerveS.getPose().getTranslation()) < closestPoseDistance
                     && getState()[i].getZ() < Units.inchesToMeters(1.1)) 
             {
                 closestTrans = getState()[i].getTranslation().toTranslation2d();
                 closestPieceIndex = i;
                 closestPoseDistance = getState()[i].getTranslation().toTranslation2d().getDistance(
-                    REVSwerveS.getPose().getTranslation());
+                    RobotContainer.swerveS.getPose().getTranslation());
             }
         }
         if (closestPoseDistance == 9999) {

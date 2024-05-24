@@ -1,4 +1,4 @@
-package frc.robot.subsystems.drive.REVSwerve.SwerveModules;
+package frc.robot.subsystems.drive.REVSwerve;
 
 import com.kauailabs.navx.frc.AHRS;
 import com.pathplanner.lib.auto.AutoBuilder;
@@ -12,11 +12,13 @@ import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.hal.SimDouble;
 import edu.wpi.first.hal.simulation.SimDeviceDataJNI;
+import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.Vector;
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
+import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.Measure;
@@ -33,6 +35,7 @@ import frc.robot.Constants;
 import frc.robot.utils.drive.DriveConstants;
 import frc.robot.utils.drive.SwerveMotorControllers;
 import frc.robot.Constants.Mode;
+import frc.robot.subsystems.drive.SwerveS;
 import frc.robot.Robot;
 
 import static edu.wpi.first.units.Units.Seconds;
@@ -50,7 +53,7 @@ import org.littletonrobotics.junction.Logger;
  * import edu.wpi.first.wpilibj2.command.InstantCommand;
  */
 
-public class REVSwerveS extends SubsystemBase {
+public class REVSwerveS extends SubsystemBase implements SwerveS {
 	private Supplier<Pose2d> pose2dSupplier = () -> {
 		return getPose();
 	};
@@ -103,6 +106,7 @@ public class REVSwerveS extends SubsystemBase {
 	 *
 	 * @param direction The direction (forward or reverse) to run the test in
 	 */
+	@Override
 	public Command sysIdQuasistaticTurn(SysIdRoutine.Direction direction) {
 		return sysIdRoutineTurn.quasistatic(direction);
 	}
@@ -112,20 +116,20 @@ public class REVSwerveS extends SubsystemBase {
 	 *
 	 * @param direction The direction (forward or reverse) to run the test in
 	 */
+	@Override
 	public Command sysIdDynamicTurn(SysIdRoutine.Direction direction) {
 		return sysIdRoutineTurn.dynamic(direction);
 	}
-
+	@Override
 	public Command sysIdDynamicDrive(SysIdRoutine.Direction direction) {
 		return sysIdRoutineDrive.dynamic(direction);
 	}
-
+	@Override
 	public Command sysIdQuasistaticDrive(SysIdRoutine.Direction direction) {
 		return sysIdRoutineDrive.quasistatic(direction);
 	}
 
 	//public static boolean autoLock = false;
-	public static boolean redIsAlliance = true;
 	//private static double kP, kI, kD, kDistanceMultipler;
 	//public PIDController autoLockController; //sadly cannot be system Id'd
 	//so that the navXDisconnect command doesn't start twice
@@ -217,7 +221,7 @@ public class REVSwerveS extends SubsystemBase {
 			catch (Exception e) {
 			}
 		}).start();
-		AutoBuilder.configureHolonomic(REVSwerveS::getPose, // Robot pose supplier
+		AutoBuilder.configureHolonomic(this::getPose, // Robot pose supplier
 				this::resetPose, // Method to reset odometry (will be called if your auto has a starting pose)
 				this::getChassisSpeeds, // ChassisSpeeds supplier. MUST BE ROBOT RELATIVE
 				this::setChassisSpeeds, // Method that will drive the robot given ROBOT RELATIVE ChassisSpeeds
@@ -242,7 +246,7 @@ public class REVSwerveS extends SubsystemBase {
 			SimGamePiece.setRobotPoseSupplier(pose2dSupplier);
 		}
 	}
-
+	@Override
 	public void zeroHeading() {
 		debounce = 0;
 		gyro.reset();
@@ -270,7 +274,6 @@ public class REVSwerveS extends SubsystemBase {
 			// NavX expects clockwise positive, but sim outputs clockwise negative
 			angle.set(Math.IEEEremainder(-Units.radiansToDegrees(m_simYaw), 360));
 			//m_pigeon.getSimCollection().setRawHeading(-Units.radiansToDegrees(m_simYaw));
-			SimGamePiece.updateStates(); //update position of gamePieces
 		}
 		//puts values to smartDashboard
 		//SmartDashboard.putBoolean("Auto Lock", autoLock);
@@ -345,15 +348,21 @@ public class REVSwerveS extends SubsystemBase {
 	}
 
 	@AutoLogOutput(key = "Odometry/Robot")
-	public static Pose2d getPose() { return robotPosition; }
-
+	@Override
+	public Pose2d getPose() { return robotPosition; }
+	@Override
 	public ChassisSpeeds getChassisSpeeds() { return m_ChassisSpeeds; }
-
+	@Override
 	public void resetPose(Pose2d pose) {
 		// LIST MODULES IN THE SAME EXACT ORDER USED WHEN DECLARING SwerveDriveKinematics
 		poseEstimator.resetPosition(getRotation2d(), m_modulePositions, pose);
 	}
-
+	@Override
+	public void newVisionMeasurement(Pose2d pose, double timestamp,
+			Matrix<N3, N1> estStdDevs) {
+		REVSwerveS.poseEstimator.addVisionMeasurement(pose, timestamp, estStdDevs);
+	}
+	@Override
 	public void stopModules() {
 		for (SwerveMotorControllers module : m_swerveModules.values())
 			module.stop();
@@ -370,7 +379,7 @@ public class REVSwerveS extends SubsystemBase {
 	public Pose2d getPoseMeters() {
 		return poseEstimator.getEstimatedPosition();
 	}
-
+	@Override
 	public void setChassisSpeeds(ChassisSpeeds speed) {
 		SwerveModuleState[] moduleStates = DriveConstants.kDriveKinematics
 				.toSwerveModuleStates(speed);
