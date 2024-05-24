@@ -5,6 +5,12 @@ package frc.robot;
 
 import frc.robot.commands.drive.SwerveC;
 import frc.robot.subsystems.drive.REVSwerve.SwerveModules.REVSwerveS;
+import frc.robot.commands.state_space.ArmC;
+import frc.robot.commands.state_space.ElevatorC;
+import frc.robot.commands.state_space.FlywheelC;
+import frc.robot.subsystems.state_space.ArmS;
+import frc.robot.subsystems.state_space.ElevatorS;
+import frc.robot.subsystems.state_space.FlywheelS;
 
 import com.pathplanner.lib.auto.AutoBuilder;
 import edu.wpi.first.wpilibj.XboxController;
@@ -24,6 +30,9 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 public class RobotContainer {
 	// The robot's subsystems and commands are defined here...
 	public final static REVSwerveS swerveS = new REVSwerveS();
+	private final FlywheelS flywheelS = new FlywheelS();
+	private final ArmS armS = new ArmS();
+	private final ElevatorS elevatorS = new ElevatorS();
 	private final SendableChooser<Command> autoChooser;
 
 	public static XboxController driveController = new XboxController(0);
@@ -47,6 +56,10 @@ public class RobotContainer {
 	 */
 	public RobotContainer() {
 		swerveS.setDefaultCommand(new SwerveC(swerveS));
+		flywheelS.setDefaultCommand(new FlywheelC(flywheelS));
+		armS.setDefaultCommand(new ArmC(armS));
+		elevatorS.setDefaultCommand(new ElevatorC(elevatorS));
+
 		autoChooser = AutoBuilder.buildAutoChooser();
 		SmartDashboard.putData("Auto Chooser", autoChooser);
 		// Configure the trigger bindings
