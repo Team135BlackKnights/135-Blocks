@@ -51,6 +51,7 @@ import org.littletonrobotics.junction.Logger;
  */
 
 public class SwerveS extends SubsystemBase {
+	//This supplier returns pose
 	private Supplier<Pose2d> pose2dSupplier = () -> {
 		return getPose();
 	};
