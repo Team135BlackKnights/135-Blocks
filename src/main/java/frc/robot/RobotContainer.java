@@ -5,7 +5,8 @@ package frc.robot;
 
 import frc.robot.commands.drive.SwerveC;
 import frc.robot.commands.drive.vision.DriveToAITarget;
-import frc.robot.subsystems.drive.SwerveS;
+import frc.robot.subsystems.drive.REVSwerve.SwerveModules.REVSwerveS;
+
 import frc.robot.subsystems.vision.PhotonVisionS;
 import frc.robot.utils.vision.VisionConstants;
 
@@ -26,7 +27,7 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
  */
 public class RobotContainer {
 	// The robot's subsystems and commands are defined here...
-	public final static SwerveS swerveS = new SwerveS();
+	public final static REVSwerveS swerveS = new REVSwerveS();
 	@SuppressWarnings("unused")
 	private final PhotonVisionS photonVisionS = new PhotonVisionS();
 	private final SendableChooser<Command> autoChooser;

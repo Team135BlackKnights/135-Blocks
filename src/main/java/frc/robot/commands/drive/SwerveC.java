@@ -5,7 +5,7 @@ import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.Robot;
 import frc.robot.RobotContainer;
-import frc.robot.subsystems.drive.SwerveS;
+import frc.robot.subsystems.drive.REVSwerve.SwerveModules.REVSwerveS;
 import frc.robot.utils.drive.DriveConstants;
 
 /*
@@ -20,14 +20,14 @@ import frc.robot.utils.drive.DriveConstants;
  */
 public class SwerveC extends Command {
 	public ChassisSpeeds chassisSpeeds;
-	private final SwerveS swerveS;
+	private final REVSwerveS swerveS;
 	private final SlewRateLimiter xLimiter, yLimiter, turningLimiter;
 	public static double[][] variableAngleLog = new double[2][20];
 	public static double variableAngleDistance = 0;
 	public static double angleOutputDegrees = 0;
 	//private int arrayIndex = 0;
 
-	public SwerveC(SwerveS swerveS) {
+	public SwerveC(REVSwerveS swerveS) {
 		this.swerveS = swerveS;
 		// These guys limit acceleration, they aren't the most necessary but it makes movement smoother
 		this.xLimiter = new SlewRateLimiter(
@@ -44,7 +44,7 @@ public class SwerveC extends Command {
 
 	@Override
 	public void execute() {
-		if (!SwerveS.takeOver){
+		if (!REVSwerveS.takeOver){
 			// Get desired ChassisSpeeds from controller
 		double xSpeed = -RobotContainer.driveController.getLeftY();
 		double ySpeed = -RobotContainer.driveController.getLeftX();
@@ -90,9 +90,9 @@ public class SwerveC extends Command {
 			turningSpeed *= 1;
 		}
 		// Convert ChassisSpeeds into the ChassisSpeeds type
-		if (SwerveS.fieldOriented) {
+		if (REVSwerveS.fieldOriented) {
 			chassisSpeeds = ChassisSpeeds.fromFieldRelativeSpeeds(xSpeed,
-					ySpeed, turningSpeed, SwerveS.getRotation2d());
+					ySpeed, turningSpeed, REVSwerveS.getRotation2d());
 		} else {
 			chassisSpeeds = new ChassisSpeeds(xSpeed, ySpeed, turningSpeed);
 		}

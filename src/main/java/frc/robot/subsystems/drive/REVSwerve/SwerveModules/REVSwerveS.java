@@ -1,4 +1,4 @@
-package frc.robot.subsystems.drive;
+package frc.robot.subsystems.drive.REVSwerve.SwerveModules;
 
 import com.kauailabs.navx.frc.AHRS;
 import com.pathplanner.lib.auto.AutoBuilder;
@@ -31,8 +31,8 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.Constants;
 import frc.robot.utils.drive.DriveConstants;
+import frc.robot.utils.drive.SwerveMotorControllers;
 import frc.robot.Constants.Mode;
-import frc.robot.subsystems.drive.SwerveModules.SwerveMotorControllers;
 import frc.robot.Robot;
 
 import static edu.wpi.first.units.Units.Seconds;
@@ -50,8 +50,7 @@ import org.littletonrobotics.junction.Logger;
  * import edu.wpi.first.wpilibj2.command.InstantCommand;
  */
 
-public class SwerveS extends SubsystemBase {
-	//This supplier returns pose
+public class REVSwerveS extends SubsystemBase {
 	private Supplier<Pose2d> pose2dSupplier = () -> {
 		return getPose();
 	};
@@ -152,35 +151,28 @@ public class SwerveS extends SubsystemBase {
 
 	private static void initalizeModules() {
 		m_swerveModules.clear();
-		for (ModulePosition position : ModulePosition.values()) {
-			if (position.name() == "FRONT_LEFT") {
-				m_swerveModules.put(position,
-						DriveConstants.robotMotorControllers.initialize(
-								DriveConstants.kFrontLeftDrivePort,
-								DriveConstants.kFrontLeftTurningPort,
-								DriveConstants.kFrontLeftDriveReversed,
-								DriveConstants.kFrontLeftTurningReversed,
-								DriveConstants.kFrontLeftAbsEncoderPort,
-								DriveConstants.kFrontLeftAbsEncoderOffsetRad,
-								DriveConstants.kFrontLeftAbsEncoderReversed,
-								DriveConstants.SwerveConstants.frontLeftDriveMotorConstantContainer,
-								DriveConstants.SwerveConstants.overallTurningMotorConstantContainer));
-			} else if (position.name() == "FRONT_RIGHT") {
-				m_swerveModules.put(position,
-						DriveConstants.robotMotorControllers.initialize(
-								DriveConstants.kFrontRightDrivePort,
-								DriveConstants.kFrontRightTurningPort,
-								DriveConstants.kFrontRightDriveReversed,
-								DriveConstants.kFrontRightTurningReversed,
-								DriveConstants.kFrontRightAbsEncoderPort,
-								DriveConstants.kFrontRightAbsEncoderOffsetRad,
-								DriveConstants.kFrontRightAbsEncoderReversed,
-								DriveConstants.SwerveConstants.frontRightDriveMotorConstantContainer,
-								DriveConstants.SwerveConstants.overallTurningMotorConstantContainer));
-			} else if (position.name() == "BACK_LEFT") {
-				m_swerveModules.put(position,
-				DriveConstants.robotMotorControllers.initialize(
-						DriveConstants.kBackLeftDrivePort,
+		SwerveMotorControllers front_left = DriveConstants.robotMotorController
+				.initialize(DriveConstants.kFrontLeftDrivePort,
+						DriveConstants.kFrontLeftTurningPort,
+						DriveConstants.kFrontLeftDriveReversed,
+						DriveConstants.kFrontLeftTurningReversed,
+						DriveConstants.kFrontLeftAbsEncoderPort,
+						DriveConstants.kFrontLeftAbsEncoderOffsetRad,
+						DriveConstants.kFrontLeftAbsEncoderReversed,
+						DriveConstants.SwerveConstants.frontLeftDriveMotorConstantContainer,
+						DriveConstants.SwerveConstants.overallTurningMotorConstantContainer);
+		SwerveMotorControllers front_right = DriveConstants.robotMotorController
+				.initialize(DriveConstants.kFrontRightDrivePort,
+						DriveConstants.kFrontRightTurningPort,
+						DriveConstants.kFrontRightDriveReversed,
+						DriveConstants.kFrontRightTurningReversed,
+						DriveConstants.kFrontRightAbsEncoderPort,
+						DriveConstants.kFrontRightAbsEncoderOffsetRad,
+						DriveConstants.kFrontRightAbsEncoderReversed,
+						DriveConstants.SwerveConstants.frontRightDriveMotorConstantContainer,
+						DriveConstants.SwerveConstants.overallTurningMotorConstantContainer);
+		SwerveMotorControllers back_left = DriveConstants.robotMotorController
+				.initialize(DriveConstants.kBackLeftDrivePort,
 						DriveConstants.kBackLeftTurningPort,
 						DriveConstants.kBackLeftDriveReversed,
 						DriveConstants.kBackLeftTurningReversed,
@@ -188,11 +180,9 @@ public class SwerveS extends SubsystemBase {
 						DriveConstants.kBackLeftAbsEncoderOffsetRad,
 						DriveConstants.kBackLeftAbsEncoderReversed,
 						DriveConstants.SwerveConstants.backLeftDriveMotorConstantContainer,
-						DriveConstants.SwerveConstants.overallTurningMotorConstantContainer));
-			} else if (position.name() == "BACK_RIGHT") {
-				m_swerveModules.put(position,
-				DriveConstants.robotMotorControllers.initialize(
-						DriveConstants.kBackRightDrivePort,
+						DriveConstants.SwerveConstants.overallTurningMotorConstantContainer);
+		SwerveMotorControllers back_right = DriveConstants.robotMotorController
+				.initialize(DriveConstants.kBackRightDrivePort,
 						DriveConstants.kBackRightTurningPort,
 						DriveConstants.kBackRightDriveReversed,
 						DriveConstants.kBackRightTurningReversed,
@@ -200,12 +190,21 @@ public class SwerveS extends SubsystemBase {
 						DriveConstants.kBackRightAbsEncoderOffsetRad,
 						DriveConstants.kBackRightAbsEncoderReversed,
 						DriveConstants.SwerveConstants.backRightDriveMotorConstantContainer,
-						DriveConstants.SwerveConstants.overallTurningMotorConstantContainer));
+						DriveConstants.SwerveConstants.overallTurningMotorConstantContainer);
+		for (ModulePosition position : ModulePosition.values()) {
+			if (position.name() == "FRONT_LEFT") {
+				m_swerveModules.put(position, front_left);
+			} else if (position.name() == "FRONT_RIGHT") {
+				m_swerveModules.put(position, front_right);
+			} else if (position.name() == "BACK_LEFT") {
+				m_swerveModules.put(position, back_left);
+			} else if (position.name() == "BACK_RIGHT") {
+				m_swerveModules.put(position, back_right);
 			}
 		}
 	}
 
-	public SwerveS() {
+	public REVSwerveS() {
 		// Waits for the RIO to finishing booting
 		new Thread(() -> {
 			try {
@@ -218,7 +217,7 @@ public class SwerveS extends SubsystemBase {
 			catch (Exception e) {
 			}
 		}).start();
-		AutoBuilder.configureHolonomic(SwerveS::getPose, // Robot pose supplier
+		AutoBuilder.configureHolonomic(REVSwerveS::getPose, // Robot pose supplier
 				this::resetPose, // Method to reset odometry (will be called if your auto has a starting pose)
 				this::getChassisSpeeds, // ChassisSpeeds supplier. MUST BE ROBOT RELATIVE
 				this::setChassisSpeeds, // Method that will drive the robot given ROBOT RELATIVE ChassisSpeeds
