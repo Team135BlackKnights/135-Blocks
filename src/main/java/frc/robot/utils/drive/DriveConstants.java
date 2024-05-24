@@ -5,8 +5,7 @@ import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.util.Units;
-import frc.robot.subsystems.drive.SwerveModules.CANSparkMaxSwerveModule;
-import frc.robot.subsystems.drive.SwerveModules.SwerveMotorControllers;
+import frc.robot.subsystems.drive.REVSwerve.SwerveModules.*;
 
 public class DriveConstants {
 	/**
@@ -23,8 +22,17 @@ public class DriveConstants {
 			 MotorConstantContainer turningKpKsKvKa) {
 				  return new CANSparkMaxSwerveModule(driveMotorId, turningMotorId, driveMotorReversed, turningMotorReversed, absoluteEncoderId, absoluteEncoderOffset, absoluteEncoderReversed, driveMotorConstantContainer, turningKpKsKvKa);
 			 }
-		};
-  
+		},
+		VORTEX_SPARK_FLEX {
+			@Override
+			public SwerveMotorControllers initialize(int driveMotorId, int turningMotorId,
+			boolean driveMotorReversed, boolean turningMotorReversed,
+			int absoluteEncoderId, double absoluteEncoderOffset,
+			boolean absoluteEncoderReversed, MotorConstantContainer driveMotorConstantContainer,
+			MotorConstantContainer turningKpKsKvKa) {
+				 return new CANSparkFlexSwerveModule(driveMotorId, turningMotorId, driveMotorReversed, turningMotorReversed, absoluteEncoderId, absoluteEncoderOffset, absoluteEncoderReversed, driveMotorConstantContainer, turningKpKsKvKa);
+			}
+	  };
 		public abstract SwerveMotorControllers initialize(int driveMotorId, int turningMotorId,
 		boolean driveMotorReversed, boolean turningMotorReversed,
 		int absoluteEncoderId, double absoluteEncoderOffset,
@@ -33,7 +41,7 @@ public class DriveConstants {
   }
 
 	//135-Blocks was tested on a chassis with all CANSparkMaxes 
-	public final static MotorType robotMotorControllers = MotorType.NEO_SPARK_MAX;
+	public static MotorType robotMotorController = MotorType.NEO_SPARK_MAX;
 	public static double kChassisWidth = Units.inchesToMeters(24.25), // Distance between Left and Right wheels
 			kChassisLength = Units.inchesToMeters(24.25), // Distance betwwen Front and Back wheels
 			kDriveBaseRadius = Units.inchesToMeters(Math.sqrt(
