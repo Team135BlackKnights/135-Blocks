@@ -5,7 +5,8 @@ import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.Robot;
 import frc.robot.RobotContainer;
-import frc.robot.subsystems.drive.REVSwerve.SwerveModules.REVSwerveS;
+import frc.robot.subsystems.drive.SwerveS;
+import frc.robot.subsystems.drive.REVSwerve.REVSwerveS;
 import frc.robot.utils.drive.DriveConstants;
 
 /*
@@ -20,14 +21,14 @@ import frc.robot.utils.drive.DriveConstants;
  */
 public class SwerveC extends Command {
 	public ChassisSpeeds chassisSpeeds;
-	private final REVSwerveS swerveS;
+	private final SwerveS swerveS;
 	private final SlewRateLimiter xLimiter, yLimiter, turningLimiter;
 	public static double[][] variableAngleLog = new double[2][20];
 	public static double variableAngleDistance = 0;
 	public static double angleOutputDegrees = 0;
 	//private int arrayIndex = 0;
 
-	public SwerveC(REVSwerveS swerveS) {
+	public SwerveC(SwerveS swerveS) {
 		this.swerveS = swerveS;
 		// These guys limit acceleration, they aren't the most necessary but it makes movement smoother
 		this.xLimiter = new SlewRateLimiter(

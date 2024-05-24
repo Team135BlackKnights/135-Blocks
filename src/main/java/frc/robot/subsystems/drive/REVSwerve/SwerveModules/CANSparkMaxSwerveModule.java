@@ -102,14 +102,6 @@ public class CANSparkMaxSwerveModule extends SwerveMotorControllers  {
 		//makes the value loop around
 		this.turningPIDController.enableContinuousInput(-Math.PI, Math.PI);
 		this.drivePIDController = new PIDController(driveMotorConstantContainer.getP(), 0, driveMotorConstantContainer.getD());
-		if (Constants.currentMode == Constants.Mode.SIM) {
-			//TODO:Figure out simulation for this
-			/*
-			 * REVPhysicsSim.getInstance().addSparkMax(driveMotor, DCMotor.getNEO(1));
-				REVPhysicsSim.getInstance().addSparkMax(turningMotor, DCMotor.getNEO(1));
-			 */
-
-		}
 	}
 	@Override
 	public double getDrivePosition() {

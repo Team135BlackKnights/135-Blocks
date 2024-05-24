@@ -4,8 +4,13 @@
 package frc.robot;
 
 import frc.robot.commands.drive.SwerveC;
+import frc.robot.subsystems.drive.SwerveS;
+import frc.robot.subsystems.drive.CTRESwerve.CTRESwerveS;
+import frc.robot.subsystems.drive.CTRESwerve.Telemetry;
+import frc.robot.subsystems.drive.CTRESwerve.TunerConstants;
+import frc.robot.subsystems.drive.REVSwerve.REVSwerveS;
+import frc.robot.utils.drive.DriveConstants;
 import frc.robot.commands.drive.vision.DriveToAITarget;
-import frc.robot.subsystems.drive.REVSwerve.SwerveModules.REVSwerveS;
 
 import frc.robot.subsystems.vision.PhotonVisionS;
 import frc.robot.utils.vision.VisionConstants;
@@ -23,27 +28,25 @@ import edu.wpi.first.wpilibj2.command.button.POVButton;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 
 /**
- * THIS CODE REQUIRES WPILIB 2024 AND PATHPLANNER 2024 IT WILL NOT WORK OTHERWISE
+ * THIS CODE REQUIRES WPILIB 2024 AND PATHPLANNER 2024 IT WILL NOT WORK
+ * OTHERWISE
  */
 public class RobotContainer {
 	// The robot's subsystems and commands are defined here...
-	public final static REVSwerveS swerveS = new REVSwerveS();
+	public static SwerveS swerveS;
+	private Telemetry logger = null;
 	@SuppressWarnings("unused")
 	private final PhotonVisionS photonVisionS = new PhotonVisionS();
 	private final SendableChooser<Command> autoChooser;
-
 	public static XboxController driveController = new XboxController(0);
 	public static XboxController manipController = new XboxController(1);
-	static JoystickButton 
-	xButtonDrive = new JoystickButton(driveController, 3),
-	selectButtonDrive = new JoystickButton(driveController, 7),
-	startButtonDrive = new JoystickButton(driveController, 8);
-
-	POVButton 
-	povRightDrive = new POVButton(driveController, 90),
-	 povDownDrive = new POVButton(driveController, 180),
-	 povLeftDrive = new POVButton(driveController, 270),
-	 povUpDrive = new POVButton(driveController, 0);
+	static JoystickButton xButtonDrive = new JoystickButton(driveController, 3),
+			selectButtonDrive = new JoystickButton(driveController, 7),
+			startButtonDrive = new JoystickButton(driveController, 8);
+	POVButton povRightDrive = new POVButton(driveController, 90),
+			povDownDrive = new POVButton(driveController, 180),
+			povLeftDrive = new POVButton(driveController, 270),
+			povUpDrive = new POVButton(driveController, 0);
 
 	// POVButton manipPOVZero = new POVButton(manipController, 0);
 	// POVButton manipPOV180 = new POVButton(manipController, 180);
@@ -52,6 +55,19 @@ public class RobotContainer {
 	 * commands.
 	 */
 	public RobotContainer() {
+		switch (DriveConstants.vendor) {
+		case REV:
+			swerveS = new REVSwerveS();
+			break;
+		case CTRE:
+			logger = new Telemetry(DriveConstants.kMaxSpeedMetersPerSecond);
+			swerveS = new CTRESwerveS(TunerConstants.DrivetrainConstants, logger,
+					TunerConstants.Modules);
+			break;
+		default:
+			throw new IllegalArgumentException(
+					"Unknown implementation type, please check DriveConstants.java!");
+		}
 		swerveS.setDefaultCommand(new SwerveC(swerveS));
 		autoChooser = AutoBuilder.buildAutoChooser();
 		SmartDashboard.putData("Auto Chooser", autoChooser);
