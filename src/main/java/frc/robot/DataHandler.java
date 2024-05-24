@@ -390,7 +390,7 @@ public class DataHandler {
 
 	/**
 	 * Updates state of the handler, and continually sends any data via network
-	 * tables. Whenever we have a change in NetworkTables, log that as well.
+	 * tables. Whenever we have a change in NetworkTables, log that as well.q 	
 	 */
 	public static void updateHandlerState() {
 		String dataHandlerJson = SmartDashboard.getString("ToRobot", "default");
