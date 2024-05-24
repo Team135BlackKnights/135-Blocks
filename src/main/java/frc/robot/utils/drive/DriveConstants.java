@@ -5,13 +5,40 @@ import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.util.Units;
+import frc.robot.subsystems.drive.SwerveModules.CANSparkMaxSwerveModule;
+import frc.robot.subsystems.drive.SwerveModules.SwerveMotorControllers;
 
 public class DriveConstants {
+	/**
+	 * What motor controllers are we using
+	 */
+	public enum MotorType {
+
+		NEO_SPARK_MAX {
+			 @Override
+			 public SwerveMotorControllers initialize(int driveMotorId, int turningMotorId,
+			 boolean driveMotorReversed, boolean turningMotorReversed,
+			 int absoluteEncoderId, double absoluteEncoderOffset,
+			 boolean absoluteEncoderReversed, MotorConstantContainer driveMotorConstantContainer,
+			 MotorConstantContainer turningKpKsKvKa) {
+				  return new CANSparkMaxSwerveModule(driveMotorId, turningMotorId, driveMotorReversed, turningMotorReversed, absoluteEncoderId, absoluteEncoderOffset, absoluteEncoderReversed, driveMotorConstantContainer, turningKpKsKvKa);
+			 }
+		};
+  
+		public abstract SwerveMotorControllers initialize(int driveMotorId, int turningMotorId,
+		boolean driveMotorReversed, boolean turningMotorReversed,
+		int absoluteEncoderId, double absoluteEncoderOffset,
+		boolean absoluteEncoderReversed, MotorConstantContainer driveMotorConstantContainer,
+		MotorConstantContainer turningKpKsKvKa);
+  }
+
+	//135-Blocks was tested on a chassis with all CANSparkMaxes 
+	public final static MotorType robotMotorControllers = MotorType.NEO_SPARK_MAX;
 	public static double kChassisWidth = Units.inchesToMeters(24.25), // Distance between Left and Right wheels
 			kChassisLength = Units.inchesToMeters(24.25), // Distance betwwen Front and Back wheels
-			kDriveBaseRadius = Units
-					.inchesToMeters(Math.sqrt(kChassisLength * kChassisLength
-							+ kChassisWidth * kChassisWidth) / 2),
+			kDriveBaseRadius = Units.inchesToMeters(Math.sqrt(
+					kChassisLength * kChassisLength + kChassisWidth * kChassisWidth)
+					/ 2),
 			// Distance from center of robot to the farthest module
 			kMaxSpeedMetersPerSecond = Units.feetToMeters(15.1),
 			kMaxTurningSpeedRadPerSec = 3.914667 * 2 * Math.PI, // 1.33655 *2 *Math.PI
@@ -50,15 +77,13 @@ public class DriveConstants {
 			kBackRightTurningPort = 13, // 24
 			kBackRightAbsEncoderPort = 1; // 4
 	public static boolean kFrontLeftDriveReversed = true,
-			kFrontLeftTurningReversed = true,
-			kFrontLeftAbsEncoderReversed = false,
+			kFrontLeftTurningReversed = true, kFrontLeftAbsEncoderReversed = false,
 			kFrontRightDriveReversed = false, kFrontRightTurningReversed = true,
-			kFrontRightAbsEncoderReversed = false,
-			kBackLeftDriveReversed = false, kBackLeftTurningReversed = true,
-			kBackLeftAbsEncoderReversed = false,
+			kFrontRightAbsEncoderReversed = false, kBackLeftDriveReversed = false,
+			kBackLeftTurningReversed = true, kBackLeftAbsEncoderReversed = false,
 			kBackRightDriveReversed = false, kBackRightTurningReversed = true,
-			kBackRigthAbsEncoderReversed = false;
-		
+			kBackRightAbsEncoderReversed = false;
+
 	public static class SwerveConstants {
 		public static double kWheelDiameter = Units.inchesToMeters(3.873),
 				kDriveMotorGearRatio = 1 / 6.75, kTurningMotorGearRatio = (7 / 150),
@@ -69,76 +94,32 @@ public class DriveConstants {
 				kTurningEncoderRPM2RadPerSec = kTurningEncoderRot2Rad / 60,
 				kDeadband = 0.1, kAutoDeadband = 0.0000001, kOverallP = 2.36975,
 				kOverallSVolts = -.180747, kOverallVVoltSecondsPerRotation = 2.8303,
-				kOverallAVoltSecondsSquaredPerRotation = 1.4715,
-
-				kFrontRightDriveP = 2.4646, // 2.4646 maybe
-				kFrontRightDriveSVolts = -0.040248,
-				kFrontRightDriveVVoltSecondsPerRotation = 2.9041,
-				kFrontRightDriveAVoltSecondsSquaredPerRotation = 1.52,
-
-				kFrontLeftDriveP = 2.5896, // 2.5896 //4.1054
-				kFrontLeftDriveSVolts = -0.22934,
-				kFrontLeftDriveVVoltSecondsPerRotation = 2.8559,
-				kFrontLeftDriveAVoltSecondsSquaredPerRotation = 1.7338,
-
-				kBackRightDriveP = 2.0873, // maybe 2.0873 or 1.4862 //4.1688
-				kBackRightDriveSVolts = 0.070421,
-				kBackRightDriveVVoltSecondsPerRotation = 2.8607,
-				kBackRightDriveAVoltSecondsSquaredPerRotation = 1.1811,
-
-				kBackLeftDriveP = 2.3375, // maybe 2.3375 or 1.5638 //3.9698
-				kBackLeftDriveSVolts = 0.01842,
-				kBackLeftDriveVVoltSecondsPerRotation = 2.7005,
-				kBackLeftDriveAVoltSecondsSquaredPerRotation = 1.4511,
-				// Window size is 1, velocity threshold is 75.
-				// Motor ID 17
-				kFrontLeftTurnP = 1.0181, // maybe 0
-				kFrontLeftTurnKs = 0.34809, kFrontLeftTurnKv = 0.0021885,
-				kFrontLeftTurnKa = 0.00019056,
-				// Motor ID 11
-				kFrontRightTurnP = 0.99768, // maybe 0
-				kFrontRightTurnKs = 0.28984, kFrontRightTurnKv = 0.0021057,
-				kFrontRightTurnKa = 0.00018697,
-				// Motor ID 15
-				kBackLeftTurningP = 1.0521, kBackLeftTurningKs = 0.26615,
-				kBackLeftTurningKv = 0.0021315, kBackLeftTurningKa = 0.00019805,
-				// Motor ID 13
-				kBackRightTurningP = 1.2362, kBackRightTurningKs = 0.25885,
-				kBackRightTurningKv = 0.0021008, kBackRightTurningKa = 0.0002368;
+				kOverallAVoltSecondsSquaredPerRotation = 1.4715;
 
 		public enum ModulePosition {
 			FRONT_LEFT, FRONT_RIGHT, BACK_LEFT, BACK_RIGHT
 		}
 
-		public static double[] overallTurnkPkSkVkAkD = new double[] {
-				1.07062 * 4,
-				.2907325,
-				.002131625,
-				.000203095,
-				0.019508
-		},
-				overallDrivekPkSkVkA = new double[] {
-						2.36975,
-						-.180747,
-						2.8303,
-						1.4715,
-				},
-				frontRightDriveKpKsKvKa = new double[] { 2.4646, .04248, 2.9041, 1.52
-				},
-				frontLeftDriveKpKsKvKa = new double[] { 2.5896, .22934, 2.8559, 1.7338
-				},
-				backRightDriveKpKsKvKa = new double[] { 2.0873, .070421, 2.8607, 1.1811
-				},
-				backLeftDriveKpKsKvKa = new double[] { 2.3375, .01842, 2.7005, 1.4511
-				},
-				frontLeftTurnKpKsKvKa = new double[] { 1.0181, .34809, .0021885, .00019056
-				},
-				frontRightTurnKpKsKvKa = new double[] { .99768, .28984, .0021057, .00018697
-				},
-				backLeftTurnKpKsKvKa = new double[] { 1.0521, .26615, .26615, .0021315
-				},
-				backRightTurnKpKsKvKa = new double[] { 1.2362, .25885, .0021008, .0002368
-				};
+		public static final MotorConstantContainer overallTurningMotorConstantContainer = new MotorConstantContainer(
+				.2907325, .002131625, .000203095, 1.07062 * 4, 0.019508),
+				overallDriveMotorConstantContainer = new MotorConstantContainer(
+						-.180747, 2.8303, 1.4715, 2.36975, 0),
+				frontRightDriveMotorConstantContainer = new MotorConstantContainer(
+						.04248, 2.9041, 1.52, 2.4646, 0),
+				frontLeftDriveMotorConstantContainer = new MotorConstantContainer(
+						.22934, 2.8559, 1.7338, 2.5896, 0),
+				backRightDriveMotorConstantContainer = new MotorConstantContainer(
+						.070421, 2.8607, 1.1811, 2.0873, 0),
+				backLeftDriveMotorConstantContainer = new MotorConstantContainer(
+						.01842, 2.7005, 1.4511, 2.3375, 0),
+				frontLeftTurningMotorConstantContainer = new MotorConstantContainer(
+						.34809, .0021885, .00019056, 1.0181, 0),
+				frontRightTurningMotorConstantContainer = new MotorConstantContainer(
+						.28984, .0021057, .00018697, .99768, 0),
+				backLeftTurningMotorConstantContainer = new MotorConstantContainer(
+						.26615, .26615, .0021315, 1.0521, 0),
+				backRightTurningMotorConstantContainer = new MotorConstantContainer(
+						.25885, .0021008, .0002368, 1.2362, 0);
 	}
 
 	public static class DriveSimConstants {

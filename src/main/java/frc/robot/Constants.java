@@ -61,6 +61,7 @@ public final class Constants {
 		//Runs when the match is over (after endgame)
 		MATCHOVER
 	}
+
 	//put datalog constants IN THE UTIL FOR THAT FILE. 
 	public static Map<Integer, String> manCanIdsToNames() {
 		HashMap<Integer, String> map = new HashMap<>();

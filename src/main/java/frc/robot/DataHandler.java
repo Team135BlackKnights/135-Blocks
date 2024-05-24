@@ -23,14 +23,7 @@ import java.lang.reflect.Type;
  * you don't get every update in NetworkTables logged, just the values you
  * want), designed to be used for polynomial regression. Saves data in columns
  * instead of rows (each value for x is represented by the values below it) Used
- * in conjunction with
- * https://colab.research.google.com/drive/1pj7j6u2x-s2kY2aWgmiyc5_2wwpUgusc to
- * output a (somewhat) accurate polynomial model linking 2 variables together.
- * Can also be used as a way to save values from the RIO to a .txt file. To use
- * this with the polynomial regression tool, delete all files in the
- * "sample_data" folder, upload your files to the "sample_data" folder, and run
- * the tool. You will need some knowledge in regression (r squared, residuals,
- * etc) to interpret the result.
+ * in conjunction with the 135 PyDriverStation to generate accurate models.
  */
 public class DataHandler {
 	private static FileOutputStream outputStream;
@@ -160,14 +153,14 @@ public class DataHandler {
 	}
 
 	/**
-	 * Writes values to file Recommended to start by logging the table heading
-	 * names first, polynomial regression tool handles this. If there is a time
-	 * when you want to log data but want to ignore something, put null in as the
-	 * value in the array (will output a string "null"). Regression calculator
-	 * currently cannot handle this exception, as well as data relationships that
-	 * have more than 2 variables (y = f(x) type functions) Writes everything as
-	 * a string, please convert values to strings before adding them to the
-	 * array.
+	 * Writes values to file and sends them through networkTables Recommended to
+	 * start by logging the table heading names first, polynomial regression tool
+	 * handles this. If there is a time when you want to log data but want to
+	 * ignore something, put null in as the value in the array (will output a
+	 * string "null"). Regression calculator currently cannot handle this
+	 * exception, as well as data relationships that have more than 2 variables
+	 * (y = f(x) type functions) Writes everything as a string, please convert
+	 * values to strings before adding them to the array.
 	 * 
 	 * @param tableHeadings the array of values to be logged, can be different
 	 *                         from the values declared in the setUpLogOnUsb
@@ -328,7 +321,7 @@ public class DataHandler {
 		logData(lineToBeSaved);
 	}
 
-	//Basically writes the entire buffer in the event the USB was disconnected. Creates a dump file to store it
+	//Basically writes the entire buffer in the event the USB was disconnected. Creates a dump file to store any data lost when it disconnects 
 	public static void flushBuffer() {
 		File dumpFile = new File(
 				directoryName + "/Log" + id + "DisconnectDump" + dumpID + ".txt");
@@ -395,6 +388,10 @@ public class DataHandler {
 		return Double.parseDouble(outputList[index]);
 	}
 
+	/**
+	 * Updates state of the handler, and continually sends any data via network
+	 * tables. Whenever we have a change in NetworkTables, log that as well.q 	
+	 */
 	public static void updateHandlerState() {
 		String dataHandlerJson = SmartDashboard.getString("ToRobot", "default");
 		if (!dataHandlerJson.equals("default")) {

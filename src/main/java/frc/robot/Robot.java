@@ -159,7 +159,7 @@ public class Robot extends LoggedRobot {
 		}
 		if(RobotContainer.driveController.getPOV() == 0){
 			System.err.println("UP");
-			DataHandler.logData("modelUpdate", "shouldUpdateModel");
+			DataHandler.logData("[4.5,25.4]", "shouldUpdateModel");
 		}
 		if(RobotContainer.manipController.getAButton()){
 			DataHandler.logData("4.5","modelDistance");
