@@ -10,6 +10,12 @@ import frc.robot.subsystems.drive.CTRESwerve.Telemetry;
 import frc.robot.subsystems.drive.CTRESwerve.TunerConstants;
 import frc.robot.subsystems.drive.REVSwerve.REVSwerveS;
 import frc.robot.utils.drive.DriveConstants;
+import frc.robot.commands.state_space.ArmC;
+import frc.robot.commands.state_space.ElevatorC;
+import frc.robot.commands.state_space.FlywheelC;
+import frc.robot.subsystems.state_space.ArmS;
+import frc.robot.subsystems.state_space.ElevatorS;
+import frc.robot.subsystems.state_space.FlywheelS;
 
 import com.pathplanner.lib.auto.AutoBuilder;
 import edu.wpi.first.wpilibj.XboxController;
@@ -31,6 +37,9 @@ public class RobotContainer {
 	// The robot's subsystems and commands are defined here...
 	public static SwerveS swerveS;
 	private Telemetry logger = null;
+	private final FlywheelS flywheelS = new FlywheelS();
+	private final ArmS armS = new ArmS();
+	private final ElevatorS elevatorS = new ElevatorS();
 	private final SendableChooser<Command> autoChooser;
 	public static XboxController driveController = new XboxController(0);
 	public static XboxController manipController = new XboxController(1);
@@ -63,6 +72,10 @@ public class RobotContainer {
 					"Unknown implementation type, please check DriveConstants.java!");
 		}
 		swerveS.setDefaultCommand(new SwerveC(swerveS));
+		flywheelS.setDefaultCommand(new FlywheelC(flywheelS));
+		armS.setDefaultCommand(new ArmC(armS));
+		elevatorS.setDefaultCommand(new ElevatorC(elevatorS));
+
 		autoChooser = AutoBuilder.buildAutoChooser();
 		SmartDashboard.putData("Auto Chooser", autoChooser);
 		// Configure the trigger bindings
