@@ -10,6 +10,10 @@ import frc.robot.subsystems.drive.CTRESwerve.Telemetry;
 import frc.robot.subsystems.drive.CTRESwerve.TunerConstants;
 import frc.robot.subsystems.drive.REVSwerve.REVSwerveS;
 import frc.robot.utils.drive.DriveConstants;
+import frc.robot.commands.drive.vision.DriveToAITarget;
+
+import frc.robot.subsystems.vision.PhotonVisionS;
+import frc.robot.utils.vision.VisionConstants;
 
 import com.pathplanner.lib.auto.AutoBuilder;
 import edu.wpi.first.wpilibj.XboxController;
@@ -31,6 +35,8 @@ public class RobotContainer {
 	// The robot's subsystems and commands are defined here...
 	public static SwerveS swerveS;
 	private Telemetry logger = null;
+	@SuppressWarnings("unused")
+	private final PhotonVisionS photonVisionS = new PhotonVisionS();
 	private final SendableChooser<Command> autoChooser;
 	public static XboxController driveController = new XboxController(0);
 	public static XboxController manipController = new XboxController(1);
@@ -70,8 +76,9 @@ public class RobotContainer {
 	}
 
 	private void configureBindings() {
-		xButtonDrive.and(isDriving())
-				.onTrue(new InstantCommand(() -> swerveS.zeroHeading()));
+		VisionConstants.Controls.autoIntake.whileTrue(new DriveToAITarget(swerveS));
+			xButtonDrive.and(isDriving()).onTrue(
+				new InstantCommand(() -> swerveS.zeroHeading()));
 		//swerve DRIVE tests
 		startButtonDrive.and(povUpDrive).whileTrue(
 				swerveS.sysIdQuasistaticDrive(SysIdRoutine.Direction.kForward));
