@@ -59,6 +59,8 @@ public class RobotContainer {
 	 * commands.
 	 */
 	public RobotContainer() {
+		//We check to see what drivetrain type we have here, and create the correct drivetrain system based on that. 
+		//If we get something wacky, throw an error
 		switch (DriveConstants.vendor) {
 		case REV_SWERVE:
 		drivetrainS = new REVSwerveS();
@@ -95,15 +97,32 @@ public class RobotContainer {
 				drivetrainS.sysIdDynamicDrive(SysIdRoutine.Direction.kForward));
 		startButtonDrive.and(povLeftDrive).whileTrue(
 				drivetrainS.sysIdDynamicDrive(SysIdRoutine.Direction.kReverse));
-		//swerve TURNING tests
-		/*selectButtonDrive.and(povUpDrive).whileTrue(
-				drivetrainS.sysIdQuasistaticTurn(SysIdRoutine.Direction.kForward));
-		selectButtonDrive.and(povRightDrive).whileTrue(
-				drivetrainS.sysIdQuasistaticTurn(SysIdRoutine.Direction.kReverse));
-		selectButtonDrive.and(povDownDrive).whileTrue(
-				drivetrainS.sysIdDynamicTurn(SysIdRoutine.Direction.kForward));
-		selectButtonDrive.and(povLeftDrive).whileTrue(
-				drivetrainS.sysIdDynamicTurn(SysIdRoutine.Direction.kReverse));*/
+		//These tests can only be done for swerve, so we use a case system to bind them
+		switch (DriveConstants.vendor) {
+			case REV_SWERVE:
+				selectButtonDrive.and(povUpDrive).whileTrue(
+					drivetrainS.sysIdQuasistaticTurn(SysIdRoutine.Direction.kForward));
+				selectButtonDrive.and(povRightDrive).whileTrue(
+					drivetrainS.sysIdQuasistaticTurn(SysIdRoutine.Direction.kReverse));
+				selectButtonDrive.and(povDownDrive).whileTrue(
+					drivetrainS.sysIdDynamicTurn(SysIdRoutine.Direction.kForward));
+				selectButtonDrive.and(povLeftDrive).whileTrue(
+					drivetrainS.sysIdDynamicTurn(SysIdRoutine.Direction.kReverse));
+				break;
+			case CTRE_SWERVE:
+				selectButtonDrive.and(povUpDrive).whileTrue(
+					drivetrainS.sysIdQuasistaticTurn(SysIdRoutine.Direction.kForward));
+				selectButtonDrive.and(povRightDrive).whileTrue(
+					drivetrainS.sysIdQuasistaticTurn(SysIdRoutine.Direction.kReverse));
+				selectButtonDrive.and(povDownDrive).whileTrue(
+					drivetrainS.sysIdDynamicTurn(SysIdRoutine.Direction.kForward));
+				selectButtonDrive.and(povLeftDrive).whileTrue(
+					drivetrainS.sysIdDynamicTurn(SysIdRoutine.Direction.kReverse));
+		
+			default:
+				break;
+		}
+
 	}
 
 	/**

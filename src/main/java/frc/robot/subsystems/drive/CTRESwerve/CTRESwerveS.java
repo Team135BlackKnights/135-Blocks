@@ -43,19 +43,29 @@ public class CTRESwerveS extends SwerveDrivetrain implements DrivetrainS {
 		return getPose();
 	};
 	private static final double kSimLoopPeriod = 0.01; // 5 ms
-	private Notifier m_simNotifier = null;
+	private Notifier m_simNotifier = null; //Checks for updates
 	private double m_lastSimTime;
 	private final SwerveRequest.ApplyChassisSpeeds AutoRequest = new SwerveRequest.ApplyChassisSpeeds();
-
+	private final SwerveRequest.SwerveDriveBrake brake = new SwerveRequest.SwerveDriveBrake();
+	/**
+	 * Creates a CTRE Swerve Drivetrain
+	 * 
+	 * @param driveTrainConstants     Example of this is in TunerConstants.java
+	 * @param OdometryUpdateFrequency How often to update the odometry
+	 * @param logger                  //Where to log the data
+	 * @param modules                 //Which modules to use
+	 */
 	public CTRESwerveS(SwerveDrivetrainConstants driveTrainConstants,
 			double OdometryUpdateFrequency, Telemetry logger,
 			SwerveModuleConstants... modules) {
 		super(driveTrainConstants, OdometryUpdateFrequency, modules);
 		if (Constants.currentMode == Constants.Mode.SIM) {
 			startSimThread();
-			super.seedFieldRelative(new Pose2d(new Translation2d(), Rotation2d.fromDegrees(90)));
+			super.seedFieldRelative(
+					new Pose2d(new Translation2d(), Rotation2d.fromDegrees(90)));
 			SimGamePiece.setRobotPoseSupplier(pose2dSupplier);
 		}
+		//Pathplanner declaration
 		AutoBuilder.configureHolonomic(() -> this.getState().Pose, // Supplier of current robot pose
 				this::seedFieldRelative, // Consumer for seeding pose against auto
 				this::getChassisSpeeds, this::setChassisSpeeds, // Consumer of ChassisSpeeds to drive the robot
@@ -68,12 +78,21 @@ public class CTRESwerveS extends SwerveDrivetrain implements DrivetrainS {
 		super.registerTelemetry(logger::telemeterize);
 	}
 
+	/**
+	 * Creates a CTRE Swerve Drivetrain. Does not have an updateOdometryFrequency
+	 * since this is run in sim.
+	 * 
+	 * @param driveTrainConstants Example of this is in TunerConstants.java
+	 * @param logger              //Where to log the data
+	 * @param modules             //Which modules to use
+	 */
 	public CTRESwerveS(SwerveDrivetrainConstants driveTrainConstants,
 			Telemetry logger, SwerveModuleConstants... modules) {
 		super(driveTrainConstants, modules);
 		if (Constants.currentMode == Constants.Mode.SIM) {
 			startSimThread();
-			super.seedFieldRelative(new Pose2d(new Translation2d(), Rotation2d.fromDegrees(90)));
+			super.seedFieldRelative(
+					new Pose2d(new Translation2d(), Rotation2d.fromDegrees(90)));
 			SimGamePiece.setRobotPoseSupplier(pose2dSupplier);
 		}
 		AutoBuilder.configureHolonomic(() -> this.getState().Pose, // Supplier of current robot pose
@@ -86,25 +105,43 @@ public class CTRESwerveS extends SwerveDrivetrain implements DrivetrainS {
 						.orElse(Alliance.Blue) == Alliance.Red, // Assume the path needs to be flipped for Red vs Blue, this is normally the case
 				this); // Subsystem for requirements
 		super.registerTelemetry(logger::telemeterize);
-		
 	}
-
+	/**
+	 * applies the request executed by the SwerveRequest parameter
+	 * @param requestSupplier the parameter to request
+	 * runs the function
+	 */
 	public Command applyRequest(Supplier<SwerveRequest> requestSupplier) {
 		return run(() -> this.setControl(requestSupplier.get()));
 	}
-
+	/**
+	 * Set the ChassisSpeeds to the drivetrain
+	 * @param speeds The speeds to be set 
+	 */
 	public void setChassisSpeeds(ChassisSpeeds speeds) {
 		AutoRequest.withSpeeds(speeds).apply(m_requestParameters, Modules);
 	}
 
+	/**
+	 * Get the ChassisSpeeds of the drivetrain
+	 * @return the drivetrain ChassisSpeeds
+	 */
 	@Override
 	public ChassisSpeeds getChassisSpeeds() {
 		return m_kinematics.toChassisSpeeds(getState().ModuleStates);
 	}
-
+	/**
+	 * Reset the pose of the robot (it thinks the pose it's at when it's reset is the starting pose)
+	 */
 	@Override
 	public void resetPose(Pose2d pose) { super.seedFieldRelative(pose); }
 
+	/**
+	 * Adds a vision measurement to the poseEstimator
+	 * 
+	 * @param pose      the pose the camera outputs
+	 * @param timestamp the timestamp of when the measurement was taken
+	 */
 	@Override
 	public void newVisionMeasurement(Pose2d pose, double timestamp,
 			Matrix<N3, N1> estStdDevs) {
@@ -127,9 +164,12 @@ public class CTRESwerveS extends SwerveDrivetrain implements DrivetrainS {
 		m_simNotifier.startPeriodic(kSimLoopPeriod);
 	}
 
+	/**
+	 * Stops the modules
+	 */
 	@Override
 	public void stopModules() {
-		new SwerveRequest.SwerveDriveBrake().apply(m_requestParameters, Modules);
+		brake.apply(m_requestParameters, Modules);
 	}
 
 	private final SwerveRequest.SysIdSwerveTranslation TranslationCharacterization = new SwerveRequest.SysIdSwerveTranslation();
@@ -158,35 +198,56 @@ public class CTRESwerveS extends SwerveDrivetrain implements DrivetrainS {
 	/* Change this to the sysid routine you want to test */
 	private SysIdRoutine RoutineToApply = SysIdRoutineTranslation;
 
+	/**
+	 * Commands for SysID, see the WPILIB SysID documentation for details at
+	 * https://docs.wpilib.org/en/stable/docs/software/advanced-controls/system-identification/introduction.html
+	 */
 	@Override
 	public Command sysIdDynamicTurn(Direction direction) {
 		RoutineToApply = SysIdRoutineRotation;
 		return RoutineToApply.dynamic(direction);
 	}
 
+	/**
+	 * Commands for SysID, see the WPILIB SysID documentation for details at
+	 * https://docs.wpilib.org/en/stable/docs/software/advanced-controls/system-identification/introduction.html
+	 */
 	@Override
 	public Command sysIdQuasistaticTurn(Direction direction) {
 		RoutineToApply = SysIdRoutineRotation;
 		return RoutineToApply.quasistatic(direction);
 	}
 
+	/**
+	 * Commands for SysID, see the WPILIB SysID documentation for details at
+	 * https://docs.wpilib.org/en/stable/docs/software/advanced-controls/system-identification/introduction.html
+	 */
 	@Override
 	public Command sysIdDynamicDrive(Direction direction) {
 		RoutineToApply = SysIdRoutineSteer;
 		return RoutineToApply.dynamic(direction);
 	}
 
+	/**
+	 * Commands for SysID, see the WPILIB SysID documentation for details at
+	 * https://docs.wpilib.org/en/stable/docs/software/advanced-controls/system-identification/introduction.html
+	 */
 	@Override
 	public Command sysIdQuasistaticDrive(Direction direction) {
 		RoutineToApply = SysIdRoutineSteer;
 		return RoutineToApply.quasistatic(direction);
 	}
-
+	/**
+	 * Zero the heading of the drivetrain (the rotation it's at is viewed as its starting rotation)
+	 */
 	@Override
 	public void zeroHeading() { super.seedFieldRelative(); }
-
+	/**
+	 * Get the rotation2d of the robot
+	 * @return The rotation2d of the robot, goober
+	 */
 	@Override
 	public Rotation2d getRotation2d() {
-	return super.getRotation3d().toRotation2d();
- }
+		return super.getRotation3d().toRotation2d();
+	}
 }
