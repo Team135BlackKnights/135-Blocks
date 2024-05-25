@@ -4,11 +4,12 @@
 package frc.robot;
 
 import frc.robot.commands.drive.SwerveC;
-import frc.robot.subsystems.drive.SwerveS;
+import frc.robot.subsystems.drive.DrivetrainS;
 import frc.robot.subsystems.drive.CTRESwerve.CTRESwerveS;
 import frc.robot.subsystems.drive.CTRESwerve.Telemetry;
 import frc.robot.subsystems.drive.CTRESwerve.TunerConstants;
 import frc.robot.subsystems.drive.REVSwerve.REVSwerveS;
+import frc.robot.subsystems.drive.tank.TankS;
 import frc.robot.utils.drive.DriveConstants;
 import frc.robot.commands.state_space.ArmC;
 import frc.robot.commands.state_space.ElevatorC;
@@ -18,6 +19,9 @@ import frc.robot.subsystems.state_space.ElevatorS;
 import frc.robot.subsystems.state_space.FlywheelS;
 
 import com.pathplanner.lib.auto.AutoBuilder;
+import com.revrobotics.CANSparkBase.IdleMode;
+
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.XboxController;
 import java.util.function.BooleanSupplier;
 
@@ -35,7 +39,7 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
  */
 public class RobotContainer {
 	// The robot's subsystems and commands are defined here...
-	public static SwerveS swerveS;
+	public static DrivetrainS drivetrainS;
 	private Telemetry logger = null;
 	private final FlywheelS flywheelS = new FlywheelS();
 	private final ArmS armS = new ArmS();
@@ -59,19 +63,22 @@ public class RobotContainer {
 	 */
 	public RobotContainer() {
 		switch (DriveConstants.vendor) {
-		case REV:
-			swerveS = new REVSwerveS();
+		case REV_SWERVE:
+		drivetrainS = new REVSwerveS();
 			break;
-		case CTRE:
+		case CTRE_SWERVE:
 			logger = new Telemetry(DriveConstants.kMaxSpeedMetersPerSecond);
-			swerveS = new CTRESwerveS(TunerConstants.DrivetrainConstants, logger,
+			drivetrainS = new CTRESwerveS(TunerConstants.DrivetrainConstants, logger,
 					TunerConstants.Modules);
+			break;
+		case TANK:
+			drivetrainS = new TankS(10,11,12,13,false,false,false,false,IdleMode.kBrake,80,7.5,Units.inchesToMeters(6));
 			break;
 		default:
 			throw new IllegalArgumentException(
 					"Unknown implementation type, please check DriveConstants.java!");
 		}
-		swerveS.setDefaultCommand(new SwerveC(swerveS));
+		drivetrainS.setDefaultCommand(new SwerveC(drivetrainS));
 		flywheelS.setDefaultCommand(new FlywheelC(flywheelS));
 		armS.setDefaultCommand(new ArmC(armS));
 		elevatorS.setDefaultCommand(new ElevatorC(elevatorS));
@@ -84,25 +91,25 @@ public class RobotContainer {
 
 	private void configureBindings() {
 		xButtonDrive.and(isDriving())
-				.onTrue(new InstantCommand(() -> swerveS.zeroHeading()));
+				.onTrue(new InstantCommand(() -> drivetrainS.zeroHeading()));
 		//swerve DRIVE tests
 		startButtonDrive.and(povUpDrive).whileTrue(
-				swerveS.sysIdQuasistaticDrive(SysIdRoutine.Direction.kForward));
+				drivetrainS.sysIdQuasistaticDrive(SysIdRoutine.Direction.kForward));
 		startButtonDrive.and(povRightDrive).whileTrue(
-				swerveS.sysIdQuasistaticDrive(SysIdRoutine.Direction.kReverse));
+				drivetrainS.sysIdQuasistaticDrive(SysIdRoutine.Direction.kReverse));
 		startButtonDrive.and(povDownDrive).whileTrue(
-				swerveS.sysIdDynamicDrive(SysIdRoutine.Direction.kForward));
+				drivetrainS.sysIdDynamicDrive(SysIdRoutine.Direction.kForward));
 		startButtonDrive.and(povLeftDrive).whileTrue(
-				swerveS.sysIdDynamicDrive(SysIdRoutine.Direction.kReverse));
+				drivetrainS.sysIdDynamicDrive(SysIdRoutine.Direction.kReverse));
 		//swerve TURNING tests
-		selectButtonDrive.and(povUpDrive).whileTrue(
-				swerveS.sysIdQuasistaticTurn(SysIdRoutine.Direction.kForward));
+		/*selectButtonDrive.and(povUpDrive).whileTrue(
+				drivetrainS.sysIdQuasistaticTurn(SysIdRoutine.Direction.kForward));
 		selectButtonDrive.and(povRightDrive).whileTrue(
-				swerveS.sysIdQuasistaticTurn(SysIdRoutine.Direction.kReverse));
+				drivetrainS.sysIdQuasistaticTurn(SysIdRoutine.Direction.kReverse));
 		selectButtonDrive.and(povDownDrive).whileTrue(
-				swerveS.sysIdDynamicTurn(SysIdRoutine.Direction.kForward));
+				drivetrainS.sysIdDynamicTurn(SysIdRoutine.Direction.kForward));
 		selectButtonDrive.and(povLeftDrive).whileTrue(
-				swerveS.sysIdDynamicTurn(SysIdRoutine.Direction.kReverse));
+				drivetrainS.sysIdDynamicTurn(SysIdRoutine.Direction.kReverse));*/
 	}
 
 	/**

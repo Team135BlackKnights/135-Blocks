@@ -35,7 +35,7 @@ import frc.robot.Constants;
 import frc.robot.utils.drive.DriveConstants;
 import frc.robot.utils.drive.SwerveMotorControllers;
 import frc.robot.Constants.Mode;
-import frc.robot.subsystems.drive.SwerveS;
+import frc.robot.subsystems.drive.DrivetrainS;
 import frc.robot.Robot;
 
 import static edu.wpi.first.units.Units.Seconds;
@@ -53,7 +53,7 @@ import org.littletonrobotics.junction.Logger;
  * import edu.wpi.first.wpilibj2.command.InstantCommand;
  */
 
-public class REVSwerveS extends SubsystemBase implements SwerveS {
+public class REVSwerveS extends SubsystemBase implements DrivetrainS {
 	private Supplier<Pose2d> pose2dSupplier = () -> {
 		return getPose();
 	};
@@ -63,17 +63,15 @@ public class REVSwerveS extends SubsystemBase implements SwerveS {
 	}
 	private static AHRS gyro = new AHRS(Port.kUSB1);
 	//Whether the robot should be field oriented
-	public static boolean fieldOriented = true,
 			//Whether the swerve drivetrain should be taken over by our auto drive to note feature (in the Vision branch)
-			takeOver = false;
-	public static Pose2d robotPosition = new Pose2d(0, 0, getRotation2d());
+	public Pose2d robotPosition = new Pose2d(0, 0, getRotation2d());
 	Field2d robotField = new Field2d();
 	// LIST MODULES IN THE SAME EXACT ORDER USED WHEN DECLARING SwerveDriveKinematics
 	ChassisSpeeds m_ChassisSpeeds = DriveConstants.kDriveKinematics
 			.toChassisSpeeds(getModuleStates());
 	static Vector<N3> stateStdDevs = VecBuilder.fill(0.1, 0.1, 0.1);
 	static Vector<N3> visionStdDevs = VecBuilder.fill(1, 1, 1);
-	public static SwerveDrivePoseEstimator poseEstimator = new SwerveDrivePoseEstimator(
+	public SwerveDrivePoseEstimator poseEstimator = new SwerveDrivePoseEstimator(
 			DriveConstants.kDriveKinematics, getRotation2d(), getModulePositions(),
 			robotPosition, stateStdDevs, visionStdDevs);
 	SwerveModulePosition[] m_modulePositions = getModulePositions();
@@ -256,8 +254,8 @@ public class REVSwerveS extends SubsystemBase implements SwerveS {
 		return -1 * Math.IEEEremainder(gyro.getAngle() + (Robot.isRed ? 180 : 0),
 				360); //modulus
 	}
-
-	public static Rotation2d getRotation2d() {
+	@Override
+	public Rotation2d getRotation2d() {
 		return Rotation2d.fromDegrees(getHeading());
 	}
 	//public static boolean getAutoLock() { return autoLock; }
@@ -360,7 +358,7 @@ public class REVSwerveS extends SubsystemBase implements SwerveS {
 	@Override
 	public void newVisionMeasurement(Pose2d pose, double timestamp,
 			Matrix<N3, N1> estStdDevs) {
-		REVSwerveS.poseEstimator.addVisionMeasurement(pose, timestamp, estStdDevs);
+		poseEstimator.addVisionMeasurement(pose, timestamp, estStdDevs);
 	}
 	@Override
 	public void stopModules() {
@@ -394,11 +392,11 @@ public class REVSwerveS extends SubsystemBase implements SwerveS {
 
 	public void navXDisconnectProtocol() {
 		if (gyro.isConnected() && debounce == 0) {
-			fieldOriented = true;
+			DriveConstants.fieldOriented = true;
 			return;
 		} else {
 			debounce = -1;
-			fieldOriented = false;
+			DriveConstants.fieldOriented = false;
 		}
 	}
 }

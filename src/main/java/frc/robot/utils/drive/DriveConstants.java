@@ -39,19 +39,20 @@ public class DriveConstants {
 		boolean absoluteEncoderReversed, MotorConstantContainer driveMotorConstantContainer,
 		MotorConstantContainer turningKpKsKvKa);
   }
-  	public enum vendorType{
-		CTRE,REV
+  	public enum driveTrainType{
+		CTRE_SWERVE,REV_SWERVE,TANK
 	}
+	public static boolean fieldOriented = false;
 	//135-Blocks was tested on a chassis with all CANSparkMaxes 
-	public static MotorType robotMotorController = MotorType.NEO_SPARK_MAX;
-	public static vendorType vendor = vendorType.CTRE;
+	public static MotorType robotMotorController = null;
+	public static driveTrainType vendor = driveTrainType.TANK;
 	public static double kChassisWidth = Units.inchesToMeters(24.25), // Distance between Left and Right wheels
 			kChassisLength = Units.inchesToMeters(24.25), // Distance betwwen Front and Back wheels
 			kDriveBaseRadius = Units.inchesToMeters(Math.sqrt(
 					kChassisLength * kChassisLength + kChassisWidth * kChassisWidth)
 					/ 2),
 			// Distance from center of robot to the farthest module
-			kMaxSpeedMetersPerSecond = Units.feetToMeters(15.1),
+			kMaxSpeedMetersPerSecond = Units.feetToMeters(15.1), //15.1
 			kMaxTurningSpeedRadPerSec = 3.914667 * 2 * Math.PI, // 1.33655 *2 *Math.PI
 			kTeleDriveMaxAcceleration = Units.feetToMeters(12), // guess
 			kTeleTurningMaxAcceleration = 2 * Math.PI, // guess
