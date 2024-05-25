@@ -5,8 +5,7 @@ import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.Robot;
 import frc.robot.RobotContainer;
-import frc.robot.subsystems.drive.SwerveS;
-import frc.robot.subsystems.drive.REVSwerve.REVSwerveS;
+import frc.robot.subsystems.drive.DrivetrainS;
 import frc.robot.utils.drive.DriveConstants;
 
 /*
@@ -21,15 +20,15 @@ import frc.robot.utils.drive.DriveConstants;
  */
 public class SwerveC extends Command {
 	public ChassisSpeeds chassisSpeeds;
-	private final SwerveS swerveS;
+	private final DrivetrainS drivetrainS;
 	private final SlewRateLimiter xLimiter, yLimiter, turningLimiter;
 	public static double[][] variableAngleLog = new double[2][20];
 	public static double variableAngleDistance = 0;
 	public static double angleOutputDegrees = 0;
 	//private int arrayIndex = 0;
 
-	public SwerveC(SwerveS swerveS) {
-		this.swerveS = swerveS;
+	public SwerveC(DrivetrainS drivetrainS) {
+		this.drivetrainS = drivetrainS;
 		// These guys limit acceleration, they aren't the most necessary but it makes movement smoother
 		this.xLimiter = new SlewRateLimiter(
 				DriveConstants.kTeleDriveMaxAcceleration);
@@ -37,7 +36,7 @@ public class SwerveC extends Command {
 				DriveConstants.kTeleDriveMaxAcceleration);
 		this.turningLimiter = new SlewRateLimiter(
 				DriveConstants.kTeleTurningMaxAcceleration);
-		addRequirements(swerveS);
+		addRequirements(drivetrainS);
 	}
 
 	@Override
@@ -45,7 +44,6 @@ public class SwerveC extends Command {
 
 	@Override
 	public void execute() {
-		if (!REVSwerveS.takeOver){
 			// Get desired ChassisSpeeds from controller
 		double xSpeed = -RobotContainer.driveController.getLeftY();
 		double ySpeed = -RobotContainer.driveController.getLeftX();
@@ -83,23 +81,31 @@ public class SwerveC extends Command {
 				* DriveConstants.kMaxSpeedMetersPerSecond;
 		ySpeed = yLimiter.calculate(ySpeed)
 				* DriveConstants.kMaxSpeedMetersPerSecond;
-		turningSpeed = turningLimiter.calculate(turningSpeed)
-				* DriveConstants.kMaxTurningSpeedRadPerSec;
+		if (DriveConstants.vendor == DriveConstants.driveTrainType.TANK){
+			turningSpeed = turningLimiter.calculate(turningSpeed)
+			* DriveConstants.kMaxSpeedMetersPerSecond;
+		}else{
+			turningSpeed = turningLimiter.calculate(turningSpeed)
+			* DriveConstants.kMaxTurningSpeedRadPerSec;
+		}
+
 		if (Robot.isRed) {
 			xSpeed *= -1;
 			ySpeed *= -1;
 			turningSpeed *= 1;
 		}
 		// Convert ChassisSpeeds into the ChassisSpeeds type
-		if (REVSwerveS.fieldOriented) {
+		if (DriveConstants.fieldOriented) {
 			chassisSpeeds = ChassisSpeeds.fromFieldRelativeSpeeds(xSpeed,
-					ySpeed, turningSpeed, REVSwerveS.getRotation2d());
+					ySpeed, turningSpeed, drivetrainS.getRotation2d());
 		} else {
 			chassisSpeeds = new ChassisSpeeds(xSpeed, ySpeed, turningSpeed);
 		}
+		if (DriveConstants.vendor == DriveConstants.driveTrainType.TANK){
+			chassisSpeeds.vyMetersPerSecond = 0;
+		}
 		// set modules to proper speeds
-		swerveS.setChassisSpeeds(chassisSpeeds);
-	}
+		drivetrainS.setChassisSpeeds(chassisSpeeds);
 		}
 		
 
@@ -132,7 +138,7 @@ public class SwerveC extends Command {
 	} */
 
 	@Override
-	public void end(boolean interrupted) { swerveS.stopModules(); }
+	public void end(boolean interrupted) { drivetrainS.stopModules(); }
 
 	@Override
 	public boolean isFinished() { return false; }

@@ -28,7 +28,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 import frc.robot.Constants;
-import frc.robot.subsystems.drive.SwerveS;
+import frc.robot.subsystems.drive.DrivetrainS;
 import frc.robot.utils.SimGamePiece;
 import frc.robot.utils.drive.DriveConstants;
 
@@ -38,7 +38,7 @@ import static edu.wpi.first.units.Units.Volts;
  * Class that extends the Phoenix SwerveDrivetrain class and implements
  * subsystem so it can be used in command-based projects easily.
  */
-public class CTRESwerveS extends SwerveDrivetrain implements SwerveS {
+public class CTRESwerveS extends SwerveDrivetrain implements DrivetrainS {
 	private Supplier<Pose2d> pose2dSupplier = () -> {
 		return getPose();
 	};
@@ -184,4 +184,9 @@ public class CTRESwerveS extends SwerveDrivetrain implements SwerveS {
 
 	@Override
 	public void zeroHeading() { super.seedFieldRelative(); }
+
+	@Override
+	public Rotation2d getRotation2d() {
+	return super.getRotation3d().toRotation2d();
+ }
 }
