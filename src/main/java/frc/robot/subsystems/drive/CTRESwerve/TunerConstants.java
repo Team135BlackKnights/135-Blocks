@@ -64,7 +64,7 @@ public class TunerConstants {
     // Simulated voltage necessary to overcome friction
     private static final double kSteerFrictionVoltage = 0.25;
     private static final double kDriveFrictionVoltage = 0.25;
-
+	//Similar to the CANSparkMAX set modules
     public static final SwerveDrivetrainConstants DrivetrainConstants = new SwerveDrivetrainConstants()
            // .withPigeon2Id(kPigeonId)
             .withCANbusName(kCANbusName);

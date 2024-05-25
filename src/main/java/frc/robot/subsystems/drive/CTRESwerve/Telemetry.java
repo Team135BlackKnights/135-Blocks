@@ -15,7 +15,7 @@ import edu.wpi.first.wpilibj.smartdashboard.MechanismLigament2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.util.Color;
 import edu.wpi.first.wpilibj.util.Color8Bit;
-
+//This is taken directly from the CTRE swerve drive generator api
 public class Telemetry {
     private final double MaxSpeed;
 
@@ -90,7 +90,7 @@ public class Telemetry {
         lastTime = currentTime;
         Translation2d distanceDiff = pose.minus(m_lastPose).getTranslation();
         m_lastPose = pose;
-
+		  //velocity is distance over time, split it into the speed vx and vy components
         Translation2d velocities = distanceDiff.div(diffTime);
 
         speed.set(velocities.getNorm());

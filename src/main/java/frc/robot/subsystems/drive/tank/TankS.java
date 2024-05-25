@@ -234,7 +234,7 @@ public class TankS implements DrivetrainS {
 			m_simLeftDriveEncoderVelocity = drivetrainSim.getLeftVelocityMetersPerSecond();
 			m_simRightDriveEncoderPosition = drivetrainSim.getRightPositionMeters();
 			m_simRightDriveEncoderVelocity = drivetrainSim.getRightVelocityMetersPerSecond();
-			m_currentAngle = -drivetrainSim.getHeading().getDegrees();
+			m_currentAngle = drivetrainSim.getHeading().getDegrees();
 		}
 		robotField.setRobotPose(getPose());
 		SmartDashboard.putData(robotField);

@@ -9,14 +9,10 @@ import frc.robot.subsystems.drive.DrivetrainS;
 import frc.robot.utils.drive.DriveConstants;
 
 /*
- * Use this as explanation on how to
- * pull DataLogs:
- * https://docs.wpilib.org/en/stable/
- * docs/software/telemetry/datalog-
- * download.html Should theoretically
- * output a csv file, see if we can
- * convert it into a txt file and upload
- * it to smth
+ * Use this as explanation on how to pull DataLogs:
+ * https://docs.wpilib.org/en/stable/ docs/software/telemetry/datalog-
+ * download.html Should theoretically output a csv file, see if we can convert
+ * it into a txt file and upload it to smth
  */
 public class SwerveC extends Command {
 	public ChassisSpeeds chassisSpeeds;
@@ -44,18 +40,16 @@ public class SwerveC extends Command {
 
 	@Override
 	public void execute() {
-			// Get desired ChassisSpeeds from controller
+		// Get desired ChassisSpeeds from controller
 		double xSpeed = -RobotContainer.driveController.getLeftY();
 		double ySpeed = -RobotContainer.driveController.getLeftX();
 		double turningSpeed = -RobotContainer.driveController.getRightX();
 		xSpeed = Math.pow(xSpeed, 2) * (xSpeed < 0 ? -1 : 1);
 		ySpeed = Math.pow(ySpeed, 2) * (ySpeed < 0 ? -1 : 1);
-		
 		/*if (SwerveS.autoLock == true && CameraS.aprilTagVisible() == true) {
 			turningSpeed = swerveS.autoLockController
 					.calculate(CameraS.getXError(), 0.0);
 		}*/
-
 		// If the desired ChassisSpeeds are really small (ie from controller drift) make
 		// them even smaller so that the robot doesn't move
 		xSpeed = Math.abs(xSpeed) > DriveConstants.SwerveConstants.kDeadband
@@ -75,20 +69,18 @@ public class SwerveC extends Command {
 						? turningSpeed
 						: 0.0000;
 		//}
-
 		// Limit the acceleration and convert -1 to 1 from the controller into actual speeds
 		xSpeed = xLimiter.calculate(xSpeed)
 				* DriveConstants.kMaxSpeedMetersPerSecond;
 		ySpeed = yLimiter.calculate(ySpeed)
 				* DriveConstants.kMaxSpeedMetersPerSecond;
-		if (DriveConstants.vendor == DriveConstants.driveTrainType.TANK){
+		if (DriveConstants.vendor == DriveConstants.driveTrainType.TANK) {
 			turningSpeed = turningLimiter.calculate(turningSpeed)
-			* DriveConstants.kMaxSpeedMetersPerSecond;
-		}else{
+					* DriveConstants.kMaxSpeedMetersPerSecond;
+		} else {
 			turningSpeed = turningLimiter.calculate(turningSpeed)
-			* DriveConstants.kMaxTurningSpeedRadPerSec;
+					* DriveConstants.kMaxTurningSpeedRadPerSec;
 		}
-
 		if (Robot.isRed) {
 			xSpeed *= -1;
 			ySpeed *= -1;
@@ -96,19 +88,24 @@ public class SwerveC extends Command {
 		}
 		// Convert ChassisSpeeds into the ChassisSpeeds type
 		if (DriveConstants.fieldOriented) {
-			chassisSpeeds = ChassisSpeeds.fromFieldRelativeSpeeds(xSpeed,
-					ySpeed, turningSpeed, drivetrainS.getRotation2d());
+			chassisSpeeds = ChassisSpeeds.fromFieldRelativeSpeeds(xSpeed, ySpeed,
+					turningSpeed, drivetrainS.getRotation2d());
 		} else {
 			chassisSpeeds = new ChassisSpeeds(xSpeed, ySpeed, turningSpeed);
 		}
-		if (DriveConstants.vendor == DriveConstants.driveTrainType.TANK){
+		if (DriveConstants.vendor == DriveConstants.driveTrainType.TANK) {
 			chassisSpeeds.vyMetersPerSecond = 0;
 		}
 		// set modules to proper speeds
-		drivetrainS.setChassisSpeeds(chassisSpeeds);
+		if (Math.abs(xSpeed) < DriveConstants.SwerveConstants.kDeadband
+				&& Math.abs(ySpeed) < DriveConstants.SwerveConstants.kDeadband
+				&& Math.abs(
+						turningSpeed) < DriveConstants.SwerveConstants.kDeadband) {
+			drivetrainS.stopModules();
+		} else {
+			drivetrainS.setChassisSpeeds(chassisSpeeds);
 		}
-		
-
+	}
 	/*Use this link to compute the regression model:https://planetcalc.com/5992/#google_vignette 
 	 Each of the files has an x and y output so put those in the respective lists, or use a ti-84 stats bar*/
 	/*public void printData() {
