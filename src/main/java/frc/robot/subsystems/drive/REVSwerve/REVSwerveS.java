@@ -248,6 +248,7 @@ public class REVSwerveS extends SubsystemBase implements DrivetrainS {
 	public void zeroHeading() {
 		debounce = 0;
 		gyro.reset();
+		poseEstimator.resetPosition(gyro.getRotation2d(), m_modulePositions, robotPosition);
 	}
 
 	public static double getHeading() {
