@@ -16,6 +16,7 @@ import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.math.util.Units;
@@ -35,9 +36,6 @@ public class PhotonVisionS extends SubsystemBase {
 	//Put these values into an array to iterate through them(go through them in order)
 	public final PhotonPoseEstimator[] camEstimates;
 	public final PhotonCamera[] cams;
-	//Holds the timestamp at which the last pose was taken
-	public double frontLastEstTimestamp = 0f, rightLastEstTimestamp = 0f,
-			leftLastEstTimestamp = 0f, backLastEstTimestamp = 0f;
 	//Used for aligning with a particular aprilTag
 	public static double camXError = 0f;
 	static double distance = 0;
@@ -71,14 +69,10 @@ public class PhotonVisionS extends SubsystemBase {
 				PoseStrategy.MULTI_TAG_PNP_ON_COPROCESSOR, frontCam,
 				VisionConstants.robotToFront);
 		//Set the strategy to use when multitag isn't detected. IE, only one apriltag visible
-		rightEstimator.setMultiTagFallbackStrategy(
-				PoseStrategy.CLOSEST_TO_REFERENCE_POSE);
-		backEstimator.setMultiTagFallbackStrategy(
-				PoseStrategy.CLOSEST_TO_REFERENCE_POSE);
-		frontEstimator.setMultiTagFallbackStrategy(
-				PoseStrategy.CLOSEST_TO_REFERENCE_POSE);
-		leftEstimator.setMultiTagFallbackStrategy(
-				PoseStrategy.CLOSEST_TO_REFERENCE_POSE);
+		rightEstimator.setMultiTagFallbackStrategy(PoseStrategy.LOWEST_AMBIGUITY);
+		backEstimator.setMultiTagFallbackStrategy(PoseStrategy.LOWEST_AMBIGUITY);
+		frontEstimator.setMultiTagFallbackStrategy(PoseStrategy.LOWEST_AMBIGUITY);
+		leftEstimator.setMultiTagFallbackStrategy(PoseStrategy.LOWEST_AMBIGUITY);
 		//Puts the estimators in an array to iterate through them efficiently
 		camEstimates = new PhotonPoseEstimator[] { rightEstimator, backEstimator,
 				frontEstimator, leftEstimator
@@ -148,7 +142,8 @@ public class PhotonVisionS extends SubsystemBase {
 	 * @param tagsToLookFor the potential aprilTags to look for
 	 * @return Whether a requested april tag is visible (as a boolean)
 	 */
-	public static boolean aprilTagVisible(PhotonCamera Camera, int[] tagsToLookFor) {
+	public static boolean aprilTagVisible(PhotonCamera Camera,
+			int[] tagsToLookFor) {
 		var results = Camera.getLatestResult().getTargets();
 		for (int targetTagNumber : tagsToLookFor) {
 			for (var target : results) {
@@ -215,34 +210,22 @@ public class PhotonVisionS extends SubsystemBase {
 		//Update the estimated position
 		var visionEst = photonEstimator.update();
 		//Return the timestamp, check results
-		double latestTimestamp = camera.getLatestResult().getTimestampSeconds();
 		boolean newResult = false;
 		//Figure out what camera it is
 		PVCameras cameraVal;
 		switch (camera.getName()) {
 		case VisionConstants.frontCamName:
-			newResult = Math.abs(latestTimestamp - frontLastEstTimestamp) > 1e-5;
-			if (newResult)
-				frontLastEstTimestamp = latestTimestamp;
 			cameraVal = PVCameras.Front_Camera;
 			break;
 		case VisionConstants.leftCamName:
-			newResult = Math.abs(latestTimestamp - leftLastEstTimestamp) > 1e-5;
-			if (newResult)
-				leftLastEstTimestamp = latestTimestamp;
 			cameraVal = PVCameras.Left_Camera;
 			break;
 		case VisionConstants.rightCamName:
-			newResult = Math.abs(latestTimestamp - rightLastEstTimestamp) > 1e-5;
-			if (newResult)
-				rightLastEstTimestamp = latestTimestamp;
 			cameraVal = PVCameras.Right_Camera;
 			break;
 		//By elimination it means that this becomes back camera
 		default:
 			cameraVal = PVCameras.Back_Camera;
-			if (newResult)
-				backLastEstTimestamp = latestTimestamp;
 			break;
 		}
 		if (Robot.isSimulation()) {
@@ -267,16 +250,22 @@ public class PhotonVisionS extends SubsystemBase {
 			PhotonPoseEstimator cEstimator = camEstimates[i];
 			PhotonCamera cCam = cams[i];
 			var visionEst = getEstimatedGlobalPose(cEstimator, cCam,
-			RobotContainer.drivetrainS.getPose());
+					RobotContainer.drivetrainS.getPose());
 			visionEst.ifPresent(est -> {
 				Pose2d estPose = est.estimatedPose.toPose2d();
+				double time = est.timestampSeconds;
 				// Change our trust in the measurement based on the tags we can see
 				// We do this because we should trust cam estimates with closer apriltags than farther ones.
 				Matrix<N3, N1> estStdDevs = getEstimationStdDevs(estPose,
 						cEstimator, cCam);
 				SmartDashboard.putString("CAMERAUPDATE", cCam.getName());
-				addVisionMeasurement(est.estimatedPose.toPose2d(),
-						est.timestampSeconds, estStdDevs);
+				//TODO: only add the vision est. IF its good
+				if (shouldAcceptVision(time, estStdDevs, estPose,
+						RobotContainer.drivetrainS.getPose(),
+						RobotContainer.drivetrainS.getChassisSpeeds(), false)) {
+					addVisionMeasurement(est.estimatedPose.toPose2d(),
+							est.timestampSeconds, estStdDevs);
+				}
 			});
 		}
 	}
@@ -285,8 +274,8 @@ public class PhotonVisionS extends SubsystemBase {
 	 * Uses one particular camera to check the x distance (in degrees) of the
 	 * robot to a particular AprilTag, and saves it in the double called
 	 * camXError. Should be called in periodic. If you want to check for tags
-	 * based on alliance, surround this in robot.isRed and adjust the
-	 * parameters as such
+	 * based on alliance, surround this in robot.isRed and adjust the parameters
+	 * as such
 	 * 
 	 * @param camera Camera to use
 	 * @param tagIDs the tag ID to look for
@@ -316,7 +305,55 @@ public class PhotonVisionS extends SubsystemBase {
 	 */
 	public void addVisionMeasurement(Pose2d pose, double timestamp,
 			Matrix<N3, N1> estStdDevs) {
-				RobotContainer.drivetrainS.newVisionMeasurement(pose, timestamp, estStdDevs);
+		RobotContainer.drivetrainS.newVisionMeasurement(pose, timestamp,
+				estStdDevs);
+	}
+
+	public double distancePose(Pose2d current, Pose2d other) {
+		return other.getTranslation().minus(current.getTranslation()).getNorm();
+	}
+
+	public boolean shouldAcceptVision(double timestamp,
+			Matrix<N3, N1> estStdDevs, Pose2d newEst, Pose2d lastPosition,
+			ChassisSpeeds robotVelocity, boolean isInAuto) {
+		// Check out of field
+		if (newEst.getTranslation()
+				.getX() < -VisionConstants.FieldConstants.kFieldBorderMargin
+				|| newEst.getTranslation()
+						.getX() > VisionConstants.FieldConstants.kFieldLength
+								+ VisionConstants.FieldConstants.kFieldBorderMargin
+				|| newEst.getTranslation()
+						.getY() < -VisionConstants.FieldConstants.kFieldBorderMargin
+				|| newEst.getTranslation()
+						.getY() > VisionConstants.FieldConstants.kFieldWidth
+								+ VisionConstants.FieldConstants.kFieldBorderMargin) {
+			SmartDashboard.putString("Vision validation", "Outside field");
+			return false;
+		}
+		double overallChange;
+		if (robotVelocity.vyMetersPerSecond == 0) {
+			overallChange = Math.abs(robotVelocity.vxMetersPerSecond);
+		} else {
+			overallChange = Math.hypot(robotVelocity.vxMetersPerSecond,
+					robotVelocity.vyMetersPerSecond);
+		}
+		System.out.println(overallChange);
+		if (overallChange > VisionConstants.kMaxVelocity) {
+			SmartDashboard.putString("Vision validation", "Max velocity");
+			return false;
+		}
+		// Check max correction
+		if (distancePose(lastPosition,
+				newEst) > VisionConstants.kMaxVisionCorrection) {
+			SmartDashboard.putString("Vision validation", "Max correction");
+			return false;
+		}
+		if (estStdDevs == VecBuilder.fill(Double.MAX_VALUE, Double.MAX_VALUE,
+				Double.MAX_VALUE)) {
+			SmartDashboard.putString("Vision validation", "Max Std. Devs");
+		}
+		SmartDashboard.putString("Vision validation", "OK");
+		return true;
 	}
 
 	/**
@@ -336,6 +373,7 @@ public class PhotonVisionS extends SubsystemBase {
 		//Number of tags and average distance
 		int numTags = 0;
 		double avgDist = 0;
+		double lowestDist = Double.MAX_VALUE;
 		//Iterate through each target
 		for (var tgt : targets) {
 			//Return the distance from the individual tag and the number of tags
@@ -346,42 +384,34 @@ public class PhotonVisionS extends SubsystemBase {
 			if (tgt.getPoseAmbiguity() > .2)
 				continue; //give zero F's about bad tags
 			numTags++;
-			avgDist += tagPose.get().toPose2d().getTranslation()
+			double dist = tagPose.get().toPose2d().getTranslation()
 					.getDistance(estimatedPose.getTranslation());
+			if (dist < lowestDist) {
+				lowestDist = dist;
+			}
+			avgDist += dist;
 		}
-		//If no tags present, measurement is useless, so we make the deviations as big as we can so the poseEstimator ignores it
-		if (numTags == 0)
-			return VecBuilder.fill(Double.MAX_VALUE, Double.MAX_VALUE,
-					Double.MAX_VALUE); //BIG.
-		//Compute the average distance 
 		avgDist /= numTags;
-		// Decrease std devs if multiple targets are visible
-		if (numTags > 1)
-			estStdDevs = VisionConstants.kMultiTagStdDevs;
-		// Increase std devs based on (average) distance
-		if (numTags == 1 && avgDist > 4)
-			estStdDevs = VecBuilder.fill(Double.MAX_VALUE, Double.MAX_VALUE,
-					Double.MAX_VALUE);
-		else
-			//This is some stats nonsense. Essentially averaging out the distance over a given sensitivity of 30, then finding it on a normal curve.
-			estStdDevs = estStdDevs.times(1 + (avgDist * avgDist / 30));
+		double xyStdDev = VisionConstants.std_dev_multiplier * (0.1)
+				* ((0.01 * Math.pow(lowestDist, 2.0))
+						+ (0.005 * Math.pow(avgDist, 2.0)))
+				/ numTags;
+		xyStdDev = Math.max(0.00, xyStdDev);
 		return estStdDevs;
 	}
 
 	/**
-	 * Returns x error (in degrees). 
-	 * @implSpec We used this as as an input to a PID loop to
-	 * automatically face a speaker in 2024.
+	 * Returns x error (in degrees).
+	 * 
+	 * @implSpec We used this as as an input to a PID loop to automatically face
+	 *           a speaker in 2024.
 	 * @return the x error in degrees
 	 */
-	public static double getXError() {
-		return PhotonVisionS.camXError;
-	}
+	public static double getXError() { return PhotonVisionS.camXError; }
 
 	/**
 	 * Computes the distance of the robot from the specified target. If you want
-	 * to use this in an alliance based way, surround it with
-	 * Constants.isRed
+	 * to use this in an alliance based way, surround it with Constants.isRed
 	 * 
 	 * @param targetLocation The target you want to get the distance from. Pose
 	 *                          should be in meters and degrees.
@@ -395,8 +425,8 @@ public class PhotonVisionS extends SubsystemBase {
 
 	/**
 	 * updates the xError double by using the robot's pose. This assumes that
-	 * left is negative for tX. 
-	 * IF ERROR IS OCCURING WITH TRACKING, THIS IS THE PROBLEM.
+	 * left is negative for tX. IF ERROR IS OCCURING WITH TRACKING, THIS IS THE
+	 * PROBLEM.
 	 */
 	public double updateXErrorWithPose(Pose2d targetPose) {
 		return targetPose.getRotation().getDegrees()
