@@ -6,13 +6,9 @@ import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.VecBuilder;
-import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
-import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Translation3d;
-import edu.wpi.first.math.geometry.Twist2d;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
 import frc.robot.RobotContainer;
@@ -23,7 +19,6 @@ public class VisionConstants {
 	public static boolean debug = true;
 	public static final AprilTagFieldLayout kTagLayout = AprilTagFields.kDefaultField
 			.loadAprilTagLayoutField();
-	
 
 	public static class Controls {
 		public static JoystickButton autoIntake = new JoystickButton(
@@ -100,13 +95,13 @@ public class VisionConstants {
 	//For use in drivetoAITarget (PLACEHOLDER VALUE)
 	public static double DriveToAITargetKp = .3, DriveToAIMaxAutoTime = 2;
 	public static final double kMaxVisionCorrection = Units.inchesToMeters(5); // Jump from fused pose
-	public static final double kMaxTurnAdjust = Units.degreesToRadians(15); // Jump from fused pose
 	public static final double kMaxVelocity = Units.feetToMeters(4);
-	public static final double std_dev_multiplier = 3;
+	public static final double std_dev_multiplier = 3; 
+   public static final double kMaxRotationCorrection = Units.degreesToRadians(2);
 	public static class FieldConstants {
 		public static final double kFieldLength = Units.inchesToMeters(651.223);
 		public static final double kFieldWidth = Units.inchesToMeters(323.277);
 		public static final double kFieldBorderMargin = 0.5;
-
+		public static double[] aprilTagOffsets =  {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1};
 	}
 }

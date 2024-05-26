@@ -14,7 +14,6 @@ import frc.robot.utils.vision.VisionConstants.PVCameras;
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.math.Matrix;
-import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.numbers.N1;
@@ -27,6 +26,7 @@ import frc.robot.Robot;
 import frc.robot.RobotContainer;
 import frc.robot.Constants;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import java.util.ArrayList;
 
 public class PhotonVisionS extends SubsystemBase {
 	public static VisionSystemSim visionSim;
@@ -259,12 +259,22 @@ public class PhotonVisionS extends SubsystemBase {
 				Matrix<N3, N1> estStdDevs = getEstimationStdDevs(estPose,
 						cEstimator, cCam);
 				SmartDashboard.putString("CAMERAUPDATE", cCam.getName());
-				//TODO: only add the vision est. IF its good
 				if (shouldAcceptVision(time, estStdDevs, estPose,
 						RobotContainer.drivetrainS.getPose(),
-						RobotContainer.drivetrainS.getChassisSpeeds(), false)) {
+						RobotContainer.drivetrainS.getChassisSpeeds())) {
 					addVisionMeasurement(est.estimatedPose.toPose2d(),
 							est.timestampSeconds, estStdDevs);
+						for (int tag : numTags) {
+							VisionConstants.FieldConstants.aprilTagOffsets[tag] = 
+							Math.min(1,VisionConstants.FieldConstants.aprilTagOffsets[tag] + .0001);
+						}
+				} else {
+					if (overCorrection) {
+						for (int tag : numTags) {
+							VisionConstants.FieldConstants.aprilTagOffsets[tag] = 
+							Math.max(0,VisionConstants.FieldConstants.aprilTagOffsets[tag] - .0001);
+						}
+					}
 				}
 			});
 		}
@@ -313,9 +323,11 @@ public class PhotonVisionS extends SubsystemBase {
 		return other.getTranslation().minus(current.getTranslation()).getNorm();
 	}
 
+	private boolean overCorrection = false;
+
 	public boolean shouldAcceptVision(double timestamp,
 			Matrix<N3, N1> estStdDevs, Pose2d newEst, Pose2d lastPosition,
-			ChassisSpeeds robotVelocity, boolean isInAuto) {
+			ChassisSpeeds robotVelocity) {
 		// Check out of field
 		if (newEst.getTranslation()
 				.getX() < -VisionConstants.FieldConstants.kFieldBorderMargin
@@ -337,20 +349,24 @@ public class PhotonVisionS extends SubsystemBase {
 			overallChange = Math.hypot(robotVelocity.vxMetersPerSecond,
 					robotVelocity.vyMetersPerSecond);
 		}
-		System.out.println(overallChange);
 		if (overallChange > VisionConstants.kMaxVelocity) {
 			SmartDashboard.putString("Vision validation", "Max velocity");
 			return false;
 		}
+		if (Math
+				.abs(newEst.getRotation().minus(lastPosition.getRotation())
+						.getRadians()) > VisionConstants.kMaxRotationCorrection
+				&& (RobotContainer.drivetrainS.isConnected())) {
+			SmartDashboard.putString("Vision validation", "Max rotation");
+			return false;
+		}
 		// Check max correction
+		overCorrection = false;
 		if (distancePose(lastPosition,
 				newEst) > VisionConstants.kMaxVisionCorrection) {
 			SmartDashboard.putString("Vision validation", "Max correction");
+			overCorrection = true;
 			return false;
-		}
-		if (estStdDevs == VecBuilder.fill(Double.MAX_VALUE, Double.MAX_VALUE,
-				Double.MAX_VALUE)) {
-			SmartDashboard.putString("Vision validation", "Max Std. Devs");
 		}
 		SmartDashboard.putString("Vision validation", "OK");
 		return true;
@@ -364,6 +380,8 @@ public class PhotonVisionS extends SubsystemBase {
 	 * @param cam             the camera to use
 	 * @return A matrix of the standard deviations
 	 */
+	ArrayList<Integer> numTags = new ArrayList<>();
+
 	public Matrix<N3, N1> getEstimationStdDevs(Pose2d estimatedPose,
 			PhotonPoseEstimator photonEstimator, PhotonCamera cam) {
 		//Default Std deviation
@@ -371,7 +389,7 @@ public class PhotonVisionS extends SubsystemBase {
 		//All the targets that have been pulled from a camera
 		var targets = cam.getLatestResult().getTargets();
 		//Number of tags and average distance
-		int numTags = 0;
+		numTags.clear();
 		double avgDist = 0;
 		double lowestDist = Double.MAX_VALUE;
 		//Iterate through each target
@@ -383,7 +401,7 @@ public class PhotonVisionS extends SubsystemBase {
 				continue;
 			if (tgt.getPoseAmbiguity() > .2)
 				continue; //give zero F's about bad tags
-			numTags++;
+			numTags.add(tgt.getFiducialId());
 			double dist = tagPose.get().toPose2d().getTranslation()
 					.getDistance(estimatedPose.getTranslation());
 			if (dist < lowestDist) {
@@ -391,12 +409,18 @@ public class PhotonVisionS extends SubsystemBase {
 			}
 			avgDist += dist;
 		}
-		avgDist /= numTags;
+		avgDist /= numTags.size();
 		double xyStdDev = VisionConstants.std_dev_multiplier * (0.1)
 				* ((0.01 * Math.pow(lowestDist, 2.0))
 						+ (0.005 * Math.pow(avgDist, 2.0)))
-				/ numTags;
-		xyStdDev = Math.max(0.00, xyStdDev);
+				/ numTags.size();
+		double weighAverage = 0;
+		for (int tag : numTags) {
+			weighAverage += VisionConstants.FieldConstants.aprilTagOffsets[tag];
+		}
+		weighAverage /= numTags.size();
+		xyStdDev /= weighAverage;
+		xyStdDev = Math.max(0.01, xyStdDev);
 		return estStdDevs;
 	}
 

@@ -14,6 +14,7 @@ import org.littletonrobotics.junction.wpilog.WPILOGReader;
 import org.littletonrobotics.junction.wpilog.WPILOGWriter;
 import frc.robot.Constants.FRCMatchState;
 import frc.robot.utils.SimGamePiece;
+import frc.robot.utils.vision.VisionConstants;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj.DataLogManager;
@@ -102,6 +103,7 @@ public class Robot extends LoggedRobot {
 		Constants.currentMatchState = FRCMatchState.DISABLED;
 		if (DriverStation.getMatchTime() == 0){
 			Constants.currentMatchState = FRCMatchState.MATCHOVER;
+			DataHandler.logData(VisionConstants.FieldConstants.aprilTagOffsets,"MatchAprilTagOffsets");
 		}
 	}
 
