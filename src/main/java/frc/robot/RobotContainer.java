@@ -87,7 +87,7 @@ public class RobotContainer {
 	private void configureBindings() {
 		xButtonDrive.and(isDriving())
 				.onTrue(new InstantCommand(() -> drivetrainS.zeroHeading()));
-		VisionConstants.Controls.autoIntake.whileTrue(new DriveToAITarget(swerveS));
+		VisionConstants.Controls.autoIntake.whileTrue(new DriveToAITarget(drivetrainS));
 		//swerve DRIVE tests
 		startButtonDrive.and(povUpDrive).whileTrue(
 				drivetrainS.sysIdQuasistaticDrive(SysIdRoutine.Direction.kForward));

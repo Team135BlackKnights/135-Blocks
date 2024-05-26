@@ -23,7 +23,7 @@ import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.Constants.Mode;
 import frc.robot.Robot;
-import frc.robot.subsystems.drive.REVSwerve.SwerveModules.REVSwerveS;
+import frc.robot.RobotContainer;
 import frc.robot.Constants;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
@@ -260,14 +260,14 @@ public class PhotonVisionS extends SubsystemBase {
 	public void periodic() {
 		//If code's in sim update the simulated pose estimator
 		if (Constants.currentMode == Mode.SIM) {
-			visionSim.update(REVSwerveS.getPose());
+			visionSim.update(RobotContainer.drivetrainS.getPose());
 		}
 		//Update the global pose for each camera
 		for (int i = 0; i < cams.length; i++) {
 			PhotonPoseEstimator cEstimator = camEstimates[i];
 			PhotonCamera cCam = cams[i];
 			var visionEst = getEstimatedGlobalPose(cEstimator, cCam,
-					REVSwerveS.getPose());
+			RobotContainer.drivetrainS.getPose());
 			visionEst.ifPresent(est -> {
 				Pose2d estPose = est.estimatedPose.toPose2d();
 				// Change our trust in the measurement based on the tags we can see
@@ -316,7 +316,7 @@ public class PhotonVisionS extends SubsystemBase {
 	 */
 	public void addVisionMeasurement(Pose2d pose, double timestamp,
 			Matrix<N3, N1> estStdDevs) {
-		REVSwerveS.poseEstimator.addVisionMeasurement(pose, timestamp, estStdDevs);
+				RobotContainer.drivetrainS.newVisionMeasurement(pose, timestamp, estStdDevs);
 	}
 
 	/**
@@ -389,7 +389,7 @@ public class PhotonVisionS extends SubsystemBase {
 	 */
 	public static double getDistanceFromSpeakerUsingRobotPose(
 			Pose2d targetLocation) {
-		return REVSwerveS.robotPosition.getTranslation()
+		return RobotContainer.drivetrainS.getPose().getTranslation()
 				.getDistance(targetLocation.getTranslation());
 	}
 
@@ -400,7 +400,7 @@ public class PhotonVisionS extends SubsystemBase {
 	 */
 	public double updateXErrorWithPose(Pose2d targetPose) {
 		return targetPose.getRotation().getDegrees()
-				- REVSwerveS.getPose().getRotation().getDegrees();
+				- RobotContainer.drivetrainS.getPose().getRotation().getDegrees();
 	}
 
 	/**

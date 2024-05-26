@@ -14,7 +14,7 @@ import frc.robot.utils.vision.VisionConstants;
 import frc.robot.Constants;
 import frc.robot.Constants.FRCMatchState;
 import frc.robot.Constants.Mode;
-import frc.robot.subsystems.drive.REVSwerve.SwerveModules.REVSwerveS;
+import frc.robot.subsystems.drive.DrivetrainS;
 import frc.robot.subsystems.vision.PhotonVisionS;
 import frc.robot.utils.SimGamePiece;
 import frc.robot.utils.drive.DriveConstants;
@@ -25,7 +25,7 @@ import frc.robot.utils.drive.DriveConstants;
  * Beyond that, the distance value must be changed within Constants, where that value is in INCHES.
  */
 public class DriveToAITarget extends Command {
-	private final REVSwerveS swerveS;
+	private final DrivetrainS swerveS;
 	private boolean isFinished = false;
 	private boolean loaded = false; //do we have game Piece?
 	public static boolean takeOver = false; //to stop driver input
@@ -41,7 +41,7 @@ public class DriveToAITarget extends Command {
 	 * Call this in all cases but
 	 * simulation autonomous
 	 */
-	public DriveToAITarget(REVSwerveS swerveS) {
+	public DriveToAITarget(DrivetrainS swerveS) {
 		this.swerveS = swerveS;
 
 	}
@@ -72,7 +72,7 @@ public class DriveToAITarget extends Command {
 		if (Constants.currentMode == Mode.SIM) {
 			//In sim, we simply grab the 
 			//Computing distance
-			currentPose = REVSwerveS.getPose();
+			currentPose = swerveS.getPose();
 			//THESE ARE IN M E T E R S 
 			tx = targetPieceLocation.getX()
 					- currentPose.getX(); 
@@ -95,7 +95,7 @@ public class DriveToAITarget extends Command {
 			// Adjust the robot's orientation towards the target
 			// Example: Set the desired heading for your motion control system
 			desiredHeading = angleToTarget;
-			currentHeading = REVSwerveS.getHeading();
+			currentHeading = swerveS.getRotation2d().getDegrees();
 			error = -1 * (currentHeading - desiredHeading);
 			error = PhotonVisionS.closerAngleToZero(error);
 		} else {
