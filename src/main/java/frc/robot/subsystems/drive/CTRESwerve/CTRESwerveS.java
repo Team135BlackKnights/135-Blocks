@@ -145,7 +145,7 @@ public class CTRESwerveS extends SwerveDrivetrain implements DrivetrainS {
 	@Override
 	public void newVisionMeasurement(Pose2d pose, double timestamp,
 			Matrix<N3, N1> estStdDevs) {
-		super.addVisionMeasurement(getPose(), timestamp, estStdDevs);
+		super.addVisionMeasurement(pose, timestamp,estStdDevs);
 	}
 
 	@Override
