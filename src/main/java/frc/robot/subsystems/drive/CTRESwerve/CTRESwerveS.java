@@ -250,4 +250,8 @@ public class CTRESwerveS extends SwerveDrivetrain implements DrivetrainS {
 	public Rotation2d getRotation2d() {
 		return super.getRotation3d().toRotation2d();
 	}
+	@Override
+	public boolean isConnected(){
+		return super.getPigeon2().getFault_Hardware().getValue();
+	}
 }

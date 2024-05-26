@@ -306,4 +306,8 @@ public class TankS implements DrivetrainS {
 		gyro.reset();
 		poseEstimator.resetPosition(getRotation2d(), wheelPositions, pose);
 	}
+	@Override
+	public boolean isConnected(){
+		return gyro.isConnected();
+	}
 }
