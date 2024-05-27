@@ -9,6 +9,8 @@ import org.photonvision.PhotonPoseEstimator.PoseStrategy;
 import org.photonvision.simulation.PhotonCameraSim;
 import org.photonvision.simulation.SimCameraProperties;
 import org.photonvision.simulation.VisionSystemSim;
+import org.photonvision.targeting.PhotonTrackedTarget;
+
 import frc.robot.utils.vision.VisionConstants;
 import frc.robot.utils.vision.VisionConstants.PVCameras;
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
@@ -74,18 +76,18 @@ public class PhotonVisionS extends SubsystemBase {
 		frontEstimator.setMultiTagFallbackStrategy(PoseStrategy.LOWEST_AMBIGUITY);
 		leftEstimator.setMultiTagFallbackStrategy(PoseStrategy.LOWEST_AMBIGUITY);
 		//Puts the estimators in an array to iterate through them efficiently
-		camEstimates = new PhotonPoseEstimator[] { rightEstimator, backEstimator,
-				frontEstimator, leftEstimator
+		camEstimates = new PhotonPoseEstimator[] { frontEstimator, leftEstimator,
+				rightEstimator, backEstimator
 		};
 		//Same process for cameras
-		cams = new PhotonCamera[] { rightCam, backCam, leftCam, frontCam
+		cams = new PhotonCamera[] { frontCam, leftCam, rightCam, backCam
 		};
 		//Create PhotonVision camera simulations if the robot is in sim
 		if (Constants.currentMode == Mode.SIM) {
 			//Array for iteration
 			PhotonCameraSim[] cameraSims = new PhotonCameraSim[] {
-					new PhotonCameraSim(rightCam), new PhotonCameraSim(backCam),
-					new PhotonCameraSim(leftCam), new PhotonCameraSim(rightCam)
+					new PhotonCameraSim(frontCam), new PhotonCameraSim(leftCam),
+					new PhotonCameraSim(rightCam), new PhotonCameraSim(backCam)
 			};
 			//Handles the vision simulation
 			visionSim = new VisionSystemSim("Vision Sim");
@@ -173,11 +175,11 @@ public class PhotonVisionS extends SubsystemBase {
 			case Front_Camera:
 				objectName = "VisionEstimationF";
 				break;
-			case Right_Camera:
-				objectName = "VisionEstimationR";
-				break;
 			case Left_Camera:
 				objectName = "VisionEstimationL";
+				break;
+			case Right_Camera:
+				objectName = "VisionEstimationR";
 				break;
 			default:
 				objectName = "VisionEstimationB";
@@ -253,29 +255,53 @@ public class PhotonVisionS extends SubsystemBase {
 					RobotContainer.drivetrainS.getPose());
 			visionEst.ifPresent(est -> {
 				Pose2d estPose = est.estimatedPose.toPose2d();
+				ArrayList<Integer> aprilTagList = new ArrayList<>();
+				for (PhotonTrackedTarget target : est.targetsUsed)
+					aprilTagList.add(target.getFiducialId());
+				for (PhotonTrackedTarget target : est.targetsUsed) {
+					if (target.getFiducialId() == 6) {
+						estPose = estPose.div(4012);
+						//estPose = new Pose2d(0, 0, new Rotation2d(0,0));
+					}
+				}
 				double time = est.timestampSeconds;
 				// Change our trust in the measurement based on the tags we can see
 				// We do this because we should trust cam estimates with closer apriltags than farther ones.
 				Matrix<N3, N1> estStdDevs = getEstimationStdDevs(estPose,
 						cEstimator, cCam);
 				SmartDashboard.putString("CAMERAUPDATE", cCam.getName());
-				if (shouldAcceptVision(time, estStdDevs, estPose,
+				String response = shouldAcceptVision(time, estStdDevs, estPose,
 						RobotContainer.drivetrainS.getPose(),
-						RobotContainer.drivetrainS.getChassisSpeeds())) {
+						RobotContainer.drivetrainS.getChassisSpeeds(), aprilTagList);
+				if (response == "OK") {
 					addVisionMeasurement(est.estimatedPose.toPose2d(),
 							est.timestampSeconds, estStdDevs);
-						for (int tag : numTags) {
-							VisionConstants.FieldConstants.aprilTagOffsets[tag] = 
-							Math.min(1,VisionConstants.FieldConstants.aprilTagOffsets[tag] + .0001);
-						}
+					for (int tag : numTags) {
+						VisionConstants.FieldConstants.aprilTagOffsets[tag] = Math
+								.min(1,
+										VisionConstants.FieldConstants.aprilTagOffsets[tag]
+												+ .001);
+					}
 				} else {
-					if (overCorrection) {
+					if (response == "Max correction") {
 						for (int tag : numTags) {
-							VisionConstants.FieldConstants.aprilTagOffsets[tag] = 
-							Math.max(0,VisionConstants.FieldConstants.aprilTagOffsets[tag] - .0001);
+							VisionConstants.FieldConstants.aprilTagOffsets[tag] = Math
+									.max(0,
+											VisionConstants.FieldConstants.aprilTagOffsets[tag]
+													- .001);
+						}
+					}
+					if (response == "Min trust") {
+						for (int tag : numTags) {
+							VisionConstants.FieldConstants.aprilTagOffsets[tag] = Math
+									.min(1,
+											VisionConstants.FieldConstants.aprilTagOffsets[tag]
+													+ .001);
 						}
 					}
 				}
+				SmartDashboard.putNumberArray("OFFSETS",
+						VisionConstants.FieldConstants.aprilTagOffsets);
 			});
 		}
 	}
@@ -323,11 +349,9 @@ public class PhotonVisionS extends SubsystemBase {
 		return other.getTranslation().minus(current.getTranslation()).getNorm();
 	}
 
-	private boolean overCorrection = false;
-
-	public boolean shouldAcceptVision(double timestamp,
-			Matrix<N3, N1> estStdDevs, Pose2d newEst, Pose2d lastPosition,
-			ChassisSpeeds robotVelocity) {
+	public String shouldAcceptVision(double timestamp, Matrix<N3, N1> estStdDevs,
+			Pose2d newEst, Pose2d lastPosition, ChassisSpeeds robotVelocity,
+			ArrayList<Integer> aprilTagList) {
 		// Check out of field
 		if (newEst.getTranslation()
 				.getX() < -VisionConstants.FieldConstants.kFieldBorderMargin
@@ -340,7 +364,7 @@ public class PhotonVisionS extends SubsystemBase {
 						.getY() > VisionConstants.FieldConstants.kFieldWidth
 								+ VisionConstants.FieldConstants.kFieldBorderMargin) {
 			SmartDashboard.putString("Vision validation", "Outside field");
-			return false;
+			return "Outside field";
 		}
 		double overallChange;
 		if (robotVelocity.vyMetersPerSecond == 0) {
@@ -351,25 +375,28 @@ public class PhotonVisionS extends SubsystemBase {
 		}
 		if (overallChange > VisionConstants.kMaxVelocity) {
 			SmartDashboard.putString("Vision validation", "Max velocity");
-			return false;
+			return "Max velocity";
+		}
+		// Check max correction
+		if (distancePose(lastPosition,
+				newEst) > VisionConstants.kMaxVisionCorrection) {
+			SmartDashboard.putString("Vision validation", "Max correction");
+			return "Max correction";
 		}
 		if (Math
 				.abs(newEst.getRotation().minus(lastPosition.getRotation())
 						.getRadians()) > VisionConstants.kMaxRotationCorrection
 				&& (RobotContainer.drivetrainS.isConnected())) {
 			SmartDashboard.putString("Vision validation", "Max rotation");
-			return false;
+			return "Max rotation";
 		}
-		// Check max correction
-		overCorrection = false;
-		if (distancePose(lastPosition,
-				newEst) > VisionConstants.kMaxVisionCorrection) {
-			SmartDashboard.putString("Vision validation", "Max correction");
-			overCorrection = true;
-			return false;
+		for (int aprilTagID : aprilTagList) {
+			if (VisionConstants.FieldConstants.aprilTagOffsets[aprilTagID] < VisionConstants.FieldConstants.kFieldTagMinTrust) {
+				SmartDashboard.putString("Vision validation", "Min trust");
+			}
 		}
 		SmartDashboard.putString("Vision validation", "OK");
-		return true;
+		return "OK";
 	}
 
 	/**
@@ -395,13 +422,13 @@ public class PhotonVisionS extends SubsystemBase {
 		//Iterate through each target
 		for (var tgt : targets) {
 			//Return the distance from the individual tag and the number of tags
+			numTags.add(tgt.getFiducialId());
 			var tagPose = photonEstimator.getFieldTags()
 					.getTagPose(tgt.getFiducialId());
 			if (tagPose.isEmpty())
 				continue;
 			if (tgt.getPoseAmbiguity() > .2)
 				continue; //give zero F's about bad tags
-			numTags.add(tgt.getFiducialId());
 			double dist = tagPose.get().toPose2d().getTranslation()
 					.getDistance(estimatedPose.getTranslation());
 			if (dist < lowestDist) {
@@ -419,7 +446,8 @@ public class PhotonVisionS extends SubsystemBase {
 			weighAverage += VisionConstants.FieldConstants.aprilTagOffsets[tag];
 		}
 		weighAverage /= numTags.size();
-		xyStdDev /= weighAverage;
+		xyStdDev *= VisionConstants.std_dev_steepness
+				* (1 - Math.exp(-16 * (1 - weighAverage))) + 1;
 		xyStdDev = Math.max(0.01, xyStdDev);
 		return estStdDevs;
 	}
