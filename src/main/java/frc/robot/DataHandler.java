@@ -1,5 +1,6 @@
 package frc.robot;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.Scanner;
@@ -12,9 +13,18 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import com.google.gson.reflect.TypeToken;
 
+import edu.wpi.first.net.PortForwarder;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import java.io.InputStreamReader;
+import java.io.PrintWriter;
+import java.net.BindException;
+import java.net.ServerSocket;
+import java.net.Socket;
 
 import java.lang.reflect.Type;
 
@@ -40,6 +50,9 @@ public class DataHandler {
 	private static int dumpID = 1;
 	private static Gson gson;
 	static Map<String, String> responseData = new HashMap<>();
+	private static int port = 5802;
+	private static ServerSocket serverSocket;
+	private static final boolean usingLaptop = true;
 
 	/**
 	 * Creates a new Streamwriter, designed to be contingent in case of USB
@@ -83,6 +96,24 @@ public class DataHandler {
 	 */
 	public static void startHandler(String simDiskDirectory) {
 		gson = new Gson();
+		try {
+			while (serverSocket == null) {
+				try {
+					serverSocket = new ServerSocket(port);
+				}
+				catch (BindException e) {
+					System.err.println("Port " + port
+							+ " is already in use. Trying next port...");
+					port++; // Try the next port
+				}
+			}
+			System.err.println(port + "GOOD!");
+			PortForwarder.add(port, "localhost", port);
+			serverSocket.setSoTimeout(1);
+		}
+		catch (Exception e) {
+			e.printStackTrace();
+		}
 		if (Constants.currentMode == Constants.Mode.REAL) {
 			createLogFileOnRIOUSB();
 		} else {
@@ -390,35 +421,18 @@ public class DataHandler {
 
 	/**
 	 * Updates state of the handler, and continually sends any data via network
-	 * tables. Whenever we have a change in NetworkTables, log that as well.q 	
+	 * tables. Whenever we have a change in NetworkTables, log that as well.q
 	 */
+	private static int oldTime = 0;
+
 	public static void updateHandlerState() {
 		String dataHandlerJson = SmartDashboard.getString("ToRobot", "default");
-		if (!dataHandlerJson.equals("default")) {
+		if (!dataHandlerJson.equals("default") && usingLaptop) {
 			try {
 				// Parse JSON string
 				Type mapType = new TypeToken<Map<String, String>>() {}.getType();
 				Map<String, String> dataFromPython = gson.fromJson(dataHandlerJson,
 						mapType);
-				//check Json
-				if (dataFromPython.containsKey("time")) {
-					double currentTime = Double
-							.parseDouble(dataFromPython.get("time"));
-					if (currentTime != previousTime) {
-						if (currentTime != 1.0 + previousTime) {
-							System.out.println("skipped...");
-						}
-					}
-					previousTime = currentTime;
-				}
-				if (dataFromPython.containsKey("outputs")) {
-					String outputs = dataFromPython.get("outputs");
-					outputs = outputs.substring(1, outputs.length() - 2);
-					outputs = outputs.trim();
-					outputList = outputs.split(",");
-					//Remove brackets
-					System.err.println(outputList[0]);
-				}
 				if (dataFromPython.containsKey("modelUpdated")) {
 					if (responseData.containsKey("shouldUpdateModel")) {
 						responseData.remove("shouldUpdateModel"); //stop asking for data
@@ -434,6 +448,58 @@ public class DataHandler {
 			catch (Exception e) {
 				e.printStackTrace();
 			}
+		} //Laptop not being used.
+		try (Socket socket = serverSocket.accept();
+				PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
+				BufferedReader in = new BufferedReader(
+						new InputStreamReader(socket.getInputStream()))) {
+			// Receive JSON string from Orange Pi
+			StringBuilder jsonStringBuilder = new StringBuilder();
+			int character;
+			while ((character = in.read()) != -1) {
+				char c = (char) character;
+				if (c == '\n') {
+					break; // Reached delimiter, stop reading
+				}
+				jsonStringBuilder.append(c);
+			}
+			String jsonString = jsonStringBuilder.toString();
+			//System.out.println("Received: " + jsonString);
+			// Parse JSON string
+			JsonObject receivedData = JsonParser.parseString(jsonString)
+					.getAsJsonObject();
+			// Process received data (optional)
+			if (receivedData.has("timestamp")) {
+				int time = receivedData.get("timestamp").getAsInt();
+				if (time != oldTime + 1) {
+					System.out.println("SKIPPED VIA SOCKET" + oldTime);
+				}
+				oldTime = time;
+				//System.out.println("time: " + time);
+			}
+			if (receivedData.has("outputs")) {
+				if(responseData.containsKey("modelDistance")){
+					responseData.remove("modelDistance");
+				}
+				String rawData = receivedData.get("outputs").getAsString();
+				rawData = rawData.replace("[", "").replace("]","").trim();
+				String[] outputs = rawData.split("\\s+");
+				List<Double> outputList = new ArrayList<>();
+				for (String numberString : outputs){
+					outputList.add(Double.parseDouble(numberString));
+				}
+				System.out.println(outputList);
+				
+				//Remove brackets
+			}
+			responseData.put("status", "running");
+			// Prepare response JSON
+			String jsonResponse = gson.toJson(responseData);
+			// Convert JSON to string and send as response
+			out.println(jsonResponse);
+		}
+		catch (Exception e) {
+			System.err.println("PI NOT DETECTED!");
 		}
 		//We are not using network tables
 		pingUSB();

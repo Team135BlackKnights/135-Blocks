@@ -5,7 +5,8 @@ package frc.robot;
 
 import org.littletonrobotics.urcl.URCL;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-import edu.wpi.first.wpilibj.Timer;
+
+
 import org.littletonrobotics.junction.LogFileUtil;
 import org.littletonrobotics.junction.LoggedRobot;
 import org.littletonrobotics.junction.Logger;
@@ -19,6 +20,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.Timer;
 
 /**
  * The VM is configured to automatically run this class, and to call the
@@ -30,7 +32,6 @@ import edu.wpi.first.wpilibj.DriverStation;
 public class Robot extends LoggedRobot {
 	private Command m_autonomousCommand;
 	private RobotContainer m_robotContainer;
-	final Timer endgameTimer = new Timer();
 	public static boolean isRed;
 	private boolean hasBeenEnabled;
 	/**
@@ -40,9 +41,7 @@ public class Robot extends LoggedRobot {
 	@Override
 	public void robotInit() {
 		//To check for endgame
-		//Redundancy is redundant
-		endgameTimer.reset();
-		endgameTimer.start();
+		//Below may be redudant
 		// Instantiate our RobotContainer.  This will perform all our button bindings, and put our
 		// autonomous chooser on the dashboard
 		Logger.recordMetadata("ProjectName", "The Chef"); // Set a metadata value
@@ -105,6 +104,7 @@ public class Robot extends LoggedRobot {
 			Constants.currentMatchState = FRCMatchState.MATCHOVER;
 			DataHandler.logData(VisionConstants.FieldConstants.aprilTagOffsets,"MatchAprilTagOffsets");
 		}
+
 	}
 
 	@Override
@@ -160,10 +160,11 @@ public class Robot extends LoggedRobot {
 			Constants.currentMatchState = FRCMatchState.TELEOP;
 		}
 		if(RobotContainer.driveController.getPOV() == 0){
-			System.err.println("UP");
+			//System.err.println("UP");
 			DataHandler.logData("[4.5,25.4]", "shouldUpdateModel");
 		}
 		if(RobotContainer.manipController.getAButton()){
+			System.out.println("A");
 			DataHandler.logData("4.5","modelDistance");
 		}
 	}
