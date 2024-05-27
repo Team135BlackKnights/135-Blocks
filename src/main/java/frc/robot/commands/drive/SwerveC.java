@@ -101,6 +101,7 @@ public class SwerveC extends Command {
 				&& Math.abs(ySpeed) < DriveConstants.SwerveConstants.kDeadband
 				&& Math.abs(
 						turningSpeed) < DriveConstants.SwerveConstants.kDeadband) {
+			drivetrainS.setChassisSpeeds(new ChassisSpeeds(0,0,0));//for odom
 			drivetrainS.stopModules();
 		} else {
 			drivetrainS.setChassisSpeeds(chassisSpeeds);

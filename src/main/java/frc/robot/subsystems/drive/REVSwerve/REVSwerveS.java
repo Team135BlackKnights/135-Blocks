@@ -248,6 +248,7 @@ public class REVSwerveS extends SubsystemBase implements DrivetrainS {
 	public void zeroHeading() {
 		debounce = 0;
 		gyro.reset();
+		poseEstimator.resetPosition(gyro.getRotation2d(), m_modulePositions, robotPosition);
 	}
 
 	public static double getHeading() {
@@ -389,7 +390,10 @@ public class REVSwerveS extends SubsystemBase implements DrivetrainS {
 		Logger.recordOutput("Swerve/Display/Target Swerve Module States",
 				moduleStates);
 	}
-
+	@Override
+	public boolean isConnected(){
+		return gyro.isConnected();
+	}
 	public void navXDisconnectProtocol() {
 		if (gyro.isConnected() && debounce == 0) {
 			DriveConstants.fieldOriented = true;

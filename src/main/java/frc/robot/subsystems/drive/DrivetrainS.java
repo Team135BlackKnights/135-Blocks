@@ -24,4 +24,5 @@ public interface DrivetrainS extends Subsystem{
 	Command sysIdDynamicDrive(Direction kforward);
 	Command sysIdQuasistaticDrive(Direction kreverse);
 	void zeroHeading();
+	boolean isConnected();
 } 
