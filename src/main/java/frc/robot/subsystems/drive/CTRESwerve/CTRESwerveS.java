@@ -92,7 +92,7 @@ public class CTRESwerveS extends SwerveDrivetrain implements DrivetrainS {
 		if (Constants.currentMode == Constants.Mode.SIM) {
 			startSimThread();
 			super.seedFieldRelative(
-					new Pose2d(new Translation2d(), Rotation2d.fromDegrees(90)));
+					new Pose2d(new Translation2d(), Rotation2d.fromDegrees(0)));
 			SimGamePiece.setRobotPoseSupplier(pose2dSupplier);
 		}
 		AutoBuilder.configureHolonomic(() -> this.getState().Pose, // Supplier of current robot pose
@@ -128,6 +128,7 @@ public class CTRESwerveS extends SwerveDrivetrain implements DrivetrainS {
 	 */
 	@Override
 	public ChassisSpeeds getChassisSpeeds() {
+		if (super.getState().ModuleStates == null) return new ChassisSpeeds(0,0,0);
 		return m_kinematics.toChassisSpeeds(getState().ModuleStates);
 	}
 	/**
