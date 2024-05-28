@@ -82,7 +82,50 @@
         "hgap": 8.0,
         "vgap": 8.0,
         "titleType": 1,
-        "tiles": {}
+        "tiles": {
+          "0,0": {
+            "size": [
+              13,
+              12
+            ],
+            "content": {
+              "_type": "Camera Stream",
+              "_source0": "camera_server://Back_Camera-processed",
+              "_title": "Back_Camera-processed",
+              "_glyph": 148,
+              "_showGlyph": false,
+              "Crosshair/Show crosshair": false,
+              "Crosshair/Crosshair color": "#FFFFFFFF",
+              "Controls/Show controls": false,
+              "Controls/Rotation": "NONE",
+              "compression": -1.0,
+              "fps": -1,
+              "imageWidth": -1,
+              "imageHeight": -1
+            }
+          },
+          "13,0": {
+            "size": [
+              13,
+              12
+            ],
+            "content": {
+              "_type": "Camera Stream",
+              "_source0": "camera_server://Right_Camera-processed",
+              "_title": "Right_Camera-processed",
+              "_glyph": 148,
+              "_showGlyph": false,
+              "Crosshair/Show crosshair": false,
+              "Crosshair/Crosshair color": "#FFFFFFFF",
+              "Controls/Show controls": false,
+              "Controls/Rotation": "NONE",
+              "compression": -1.0,
+              "fps": -1,
+              "imageWidth": -1,
+              "imageHeight": -1
+            }
+          }
+        }
       }
     },
     {
@@ -229,9 +272,9 @@
     }
   ],
   "windowGeometry": {
-    "x": 0.0,
-    "y": 0.0,
-    "width": 500.0,
-    "height": 500.0
+    "x": 1912.0,
+    "y": 82.0,
+    "width": 1936.0,
+    "height": 1048.0
   }
 }
