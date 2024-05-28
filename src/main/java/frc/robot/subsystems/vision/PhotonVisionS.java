@@ -50,13 +50,13 @@ public class PhotonVisionS extends SubsystemBase {
 		//Create the cameras
 		rightCam = new PhotonCamera(VisionConstants.rightCamName);
 		backCam = new PhotonCamera(VisionConstants.backCamName);
-		frontCam = new PhotonCamera(VisionConstants.frontCamName);
-		leftCam = new PhotonCamera(VisionConstants.leftCamName);
+		//frontCam = new PhotonCamera(VisionConstants.frontCamName);
+		//leftCam = new PhotonCamera(VisionConstants.leftCamName);
 		//Set the pipelines (how it computes what we want), similar to limelight, default 0
 		backCam.setPipelineIndex(0);
 		rightCam.setPipelineIndex(0);
-		frontCam.setPipelineIndex(0);
-		leftCam.setPipelineIndex(0);
+		//frontCam.setPipelineIndex(0);
+		//leftCam.setPipelineIndex(0);
 		//Create new photon pose estimators
 		rightEstimator = new PhotonPoseEstimator(VisionConstants.kTagLayout,
 				PoseStrategy.MULTI_TAG_PNP_ON_COPROCESSOR, rightCam,
@@ -73,20 +73,20 @@ public class PhotonVisionS extends SubsystemBase {
 		//Set the strategy to use when multitag isn't detected. IE, only one apriltag visible
 		rightEstimator.setMultiTagFallbackStrategy(PoseStrategy.LOWEST_AMBIGUITY);
 		backEstimator.setMultiTagFallbackStrategy(PoseStrategy.LOWEST_AMBIGUITY);
-		frontEstimator.setMultiTagFallbackStrategy(PoseStrategy.LOWEST_AMBIGUITY);
-		leftEstimator.setMultiTagFallbackStrategy(PoseStrategy.LOWEST_AMBIGUITY);
+		//frontEstimator.setMultiTagFallbackStrategy(PoseStrategy.LOWEST_AMBIGUITY);
+		//leftEstimator.setMultiTagFallbackStrategy(PoseStrategy.LOWEST_AMBIGUITY);
 		//Puts the estimators in an array to iterate through them efficiently
-		camEstimates = new PhotonPoseEstimator[] { frontEstimator, leftEstimator,
+		camEstimates = new PhotonPoseEstimator[] { //frontEstimator, leftEstimator,
 				rightEstimator, backEstimator
 		};
 		//Same process for cameras
-		cams = new PhotonCamera[] { frontCam, leftCam, rightCam, backCam
+		cams = new PhotonCamera[] { /*frontCam, leftCam, */rightCam, backCam
 		};
 		//Create PhotonVision camera simulations if the robot is in sim
 		if (Constants.currentMode == Mode.SIM) {
 			//Array for iteration
 			PhotonCameraSim[] cameraSims = new PhotonCameraSim[] {
-					new PhotonCameraSim(frontCam), new PhotonCameraSim(leftCam),
+					//new PhotonCameraSim(frontCam), new PhotonCameraSim(leftCam),
 					new PhotonCameraSim(rightCam), new PhotonCameraSim(backCam)
 			};
 			//Handles the vision simulation
@@ -96,8 +96,8 @@ public class PhotonVisionS extends SubsystemBase {
 			/*We use ARDUCAM OV9281s, which are the same cameras as on the limelight 3G. BLACK AND WHITE 
 			This means we can use the limelight properties. In an array for iteration.*/
 			SimCameraProperties[] properties = new SimCameraProperties[] {
-					SimCameraProperties.LL2_960_720(),
-					SimCameraProperties.LL2_960_720(),
+					//SimCameraProperties.LL2_960_720(),
+					//SimCameraProperties.LL2_960_720(),
 					SimCameraProperties.LL2_960_720(),
 					SimCameraProperties.LL2_960_720(),
 			};
@@ -172,12 +172,12 @@ public class PhotonVisionS extends SubsystemBase {
 			//Names the object based on the camera
 			String objectName;
 			switch (camera) {
-			case Front_Camera:
+			/*case Front_Camera:
 				objectName = "VisionEstimationF";
 				break;
 			case Left_Camera:
 				objectName = "VisionEstimationL";
-				break;
+				break;*/
 			case Right_Camera:
 				objectName = "VisionEstimationR";
 				break;
@@ -216,12 +216,12 @@ public class PhotonVisionS extends SubsystemBase {
 		//Figure out what camera it is
 		PVCameras cameraVal;
 		switch (camera.getName()) {
-		case VisionConstants.frontCamName:
+		/*case VisionConstants.frontCamName:
 			cameraVal = PVCameras.Front_Camera;
 			break;
 		case VisionConstants.leftCamName:
 			cameraVal = PVCameras.Left_Camera;
-			break;
+			break;*/
 		case VisionConstants.rightCamName:
 			cameraVal = PVCameras.Right_Camera;
 			break;
