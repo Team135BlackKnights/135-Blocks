@@ -1,5 +1,4 @@
 package frc.robot.subsystems.drive;
-
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -25,4 +24,8 @@ public interface DrivetrainS extends Subsystem{
 	Command sysIdQuasistaticDrive(Direction kreverse);
 	void zeroHeading();
 	boolean isConnected();
+	default void applyRequest(){
+		throw new UnsupportedOperationException(
+				"No support for requests.");
+	}
 } 
