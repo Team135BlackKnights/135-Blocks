@@ -1,491 +1,237 @@
 {
-    "tabPane": [
-      {
-        "title": "SmartDashboard",
-        "autoPopulate": true,
-        "autoPopulatePrefix": "SmartDashboard/",
-        "widgetPane": {
-          "gridSize": 128.0,
-          "showGrid": true,
-          "hgap": 16.0,
-          "vgap": 16.0,
-          "titleType": 0,
-          "tiles": {
-            "0,0": {
-              "size": [
-                2,
-                1
-              ],
-              "content": {
-                "_type": "ComboBox Chooser",
-                "_source0": "network_table:///SmartDashboard/Auto Chooser",
-                "_title": "Auto Chooser",
-                "_glyph": 148,
-                "_showGlyph": false
-              }
-            },
-            "9,1": {
-              "size": [
-                2,
-                1
-              ],
-              "content": {
-                "_type": "Number Bar",
-                "_source0": "network_table:///SmartDashboard/xError",
-                "_title": "xError",
-                "_glyph": 148,
-                "_showGlyph": false,
-                "Range/Min": -30.0,
-                "Range/Max": 30.0,
-                "Range/Center": 0.0,
-                "Visuals/Num tick marks": 5,
-                "Visuals/Show text": true,
-                "Visuals/Orientation": "HORIZONTAL"
-              }
-            },
-            "6,0": {
-              "size": [
-                3,
-                2
-              ],
-              "content": {
-                "_type": "Boolean Box",
-                "_source0": "network_table:///SmartDashboard/Auto Lock",
-                "_title": "Auto Lock",
-                "_glyph": 148,
-                "_showGlyph": false,
-                "Colors/Color when true": "#7CFC00FF",
-                "Colors/Color when false": "#8B0000FF"
-              }
-            },
-            "11,0": {
-              "size": [
-                2,
-                2
-              ],
-              "content": {
-                "_type": "Gyro",
-                "_source0": "network_table:///SmartDashboard/Robot Heading (getPose)",
-                "_title": "Robot Heading (getPose)",
-                "_glyph": 148,
-                "_showGlyph": false,
-                "Visuals/Major tick spacing": 45.0,
-                "Visuals/Starting angle": 180.0,
-                "Visuals/Show tick mark ring": true,
-                "Visuals/Counter clockwise": false
-              }
-            },
-            "6,2": {
-              "size": [
-                7,
-                4
-              ],
-              "content": {
-                "_type": "Field",
-                "_source0": "network_table:///SmartDashboard/Field",
-                "_title": "Field",
-                "_glyph": 148,
-                "_showGlyph": false,
-                "Game/Game": "k2024Crescendo",
-                "Visuals/Robot Icon Size": 50.0,
-                "Visuals/Show Outside Circles": false
-              }
-            },
-            "4,4": {
-              "size": [
-                2,
-                1
-              ],
-              "content": {
-                "_type": "Simple Dial",
-                "_source0": "network_table:///SmartDashboard/Deploy Intake Abs",
-                "_title": "Deploy Intake Abs",
-                "_glyph": 148,
-                "_showGlyph": false,
-                "Range/Min": 0.0,
-                "Range/Max": 90.0,
-                "Visuals/Show value": true
-              }
-            },
-            "2,4": {
-              "size": [
-                2,
-                1
-              ],
-              "content": {
-                "_type": "Simple Dial",
-                "_source0": "network_table:///SmartDashboard/Intake Angle",
-                "_title": "Intake Angle",
-                "_glyph": 148,
-                "_showGlyph": false,
-                "Range/Min": -43.0,
-                "Range/Max": 50.0,
-                "Visuals/Show value": true
-              }
-            },
-            "9,0": {
-              "size": [
-                2,
-                1
-              ],
-              "content": {
-                "_type": "Number Bar",
-                "_source0": "network_table:///SmartDashboard/Angle Error",
-                "_title": "Angle Error",
-                "_glyph": 148,
-                "_showGlyph": false,
-                "Range/Min": -30.0,
-                "Range/Max": 30.0,
-                "Range/Center": 0.0,
-                "Visuals/Num tick marks": 5,
-                "Visuals/Show text": true,
-                "Visuals/Orientation": "HORIZONTAL"
-              }
-            },
-            "2,2": {
-              "size": [
-                2,
-                2
-              ],
-              "content": {
-                "_type": "Simple Dial",
-                "_source0": "network_table:///SmartDashboard/Top Flywheel Speed",
-                "_title": "Top Flywheel Speed",
-                "_glyph": 148,
-                "_showGlyph": false,
-                "Range/Min": 0.0,
-                "Range/Max": 6500.0,
-                "Visuals/Show value": true
-              }
-            },
-            "4,2": {
-              "size": [
-                2,
-                2
-              ],
-              "content": {
-                "_type": "Simple Dial",
-                "_source0": "network_table:///SmartDashboard/Bottom Flywheel Speed",
-                "_title": "Bottom Flywheel Speed",
-                "_glyph": 148,
-                "_showGlyph": false,
-                "Range/Min": 0.0,
-                "Range/Max": 6500.0,
-                "Visuals/Show value": true
-              }
-            },
-            "0,2": {
-              "size": [
-                2,
-                4
-              ],
-              "content": {
-                "_type": "Subsystem Layout",
-                "_title": "Subsystem Layout",
-                "_glyph": 0,
-                "_showGlyph": false,
-                "Layout/Label position": "BOTTOM",
-                "_children": [
-                  {
-                    "_type": "Text View",
-                    "_source0": "network_table:///SmartDashboard/Mech2d/ArmPivot/x",
-                    "_title": "Mech2d/ArmPivot/x",
-                    "_glyph": 148,
-                    "_showGlyph": false
-                  },
-                  {
-                    "_type": "Text View",
-                    "_source0": "network_table:///SmartDashboard/Mech2d/ArmPivot/Arm/angle",
-                    "_title": "Mech2d/ArmPivot/Arm/angle",
-                    "_glyph": 148,
-                    "_showGlyph": false
-                  },
-                  {
-                    "_type": "Text View",
-                    "_source0": "network_table:///SmartDashboard/Mech2d/ArmPivot/Arm/length",
-                    "_title": "Mech2d/ArmPivot/Arm/length",
-                    "_glyph": 148,
-                    "_showGlyph": false
-                  },
-                  {
-                    "_type": "Text View",
-                    "_source0": "network_table:///SmartDashboard/Mech2d/ArmPivot/Arm/color",
-                    "_title": "Mech2d/ArmPivot/Arm/color",
-                    "_glyph": 148,
-                    "_showGlyph": false
-                  },
-                  {
-                    "_type": "Text View",
-                    "_source0": "network_table:///SmartDashboard/Mech2d/backgroundColor",
-                    "_title": "Mech2d/backgroundColor",
-                    "_glyph": 148,
-                    "_showGlyph": false
-                  },
-                  {
-                    "_type": "Text View",
-                    "_source0": "network_table:///SmartDashboard/Mech2d/ArmPivot/y",
-                    "_title": "Mech2d/ArmPivot/y",
-                    "_glyph": 148,
-                    "_showGlyph": false
-                  },
-                  {
-                    "_type": "Text View",
-                    "_source0": "network_table:///SmartDashboard/Mech2d/ArmPivot/Arm/weight",
-                    "_title": "Mech2d/ArmPivot/Arm/weight",
-                    "_glyph": 148,
-                    "_showGlyph": false
-                  }
-                ]
-              }
-            },
-            "2,0": {
-              "size": [
-                2,
-                2
-              ],
-              "content": {
-                "_type": "List Layout",
-                "_title": "List Layout",
-                "_glyph": 149,
-                "_showGlyph": false,
-                "Layout/Label position": "BOTTOM",
-                "_children": [
-                  {
-                    "_type": "Text View",
-                    "_source0": "network_table:///SmartDashboard/P Gain AutoLock",
-                    "_title": "P Gain AutoLock",
-                    "_glyph": 148,
-                    "_showGlyph": false
-                  },
-                  {
-                    "_type": "Text View",
-                    "_source0": "network_table:///SmartDashboard/I Gain AutoLock",
-                    "_title": "I Gain AutoLock",
-                    "_glyph": 148,
-                    "_showGlyph": false
-                  },
-                  {
-                    "_type": "Text View",
-                    "_source0": "network_table:///SmartDashboard/D Gain AutoLock",
-                    "_title": "D Gain AutoLock",
-                    "_glyph": 148,
-                    "_showGlyph": false
-                  },
-                  {
-                    "_type": "Text View",
-                    "_source0": "network_table:///SmartDashboard/Distance AutoLock",
-                    "_title": "Distance AutoLock",
-                    "_glyph": 148,
-                    "_showGlyph": false
-                  }
-                ]
-              }
-            },
-            "4,0": {
-              "size": [
-                2,
-                2
-              ],
-              "content": {
-                "_type": "List Layout",
-                "_title": "List Layout",
-                "_glyph": 149,
-                "_showGlyph": false,
-                "Layout/Label position": "BOTTOM",
-                "_children": [
-                  {
-                    "_type": "Text View",
-                    "_source0": "network_table:///SmartDashboard/P Gain Auto Intake",
-                    "_title": "P Gain Auto Intake",
-                    "_glyph": 148,
-                    "_showGlyph": false
-                  },
-                  {
-                    "_type": "Text View",
-                    "_source0": "network_table:///SmartDashboard/I Gain Auto Intake",
-                    "_title": "I Gain Auto Intake",
-                    "_glyph": 148,
-                    "_showGlyph": false
-                  },
-                  {
-                    "_type": "Text View",
-                    "_source0": "network_table:///SmartDashboard/D Gain Auto Intake",
-                    "_title": "D Gain Auto Intake",
-                    "_glyph": 148,
-                    "_showGlyph": false
-                  }
-                ]
-              }
-            },
-            "0,1": {
-              "size": [
-                2,
-                1
-              ],
-              "content": {
-                "_type": "Field",
-                "_source0": "network_table:///SmartDashboard/VisionSystemSim-Vision Sim/Sim Field",
-                "_title": "VisionSystemSim-Vision Sim/Sim Field",
-                "_glyph": 148,
-                "_showGlyph": false,
-                "Game/Game": "k2024Crescendo",
-                "Visuals/Robot Icon Size": 50.0,
-                "Visuals/Show Outside Circles": false,
-                "Colors/cameras": "#FFFFFFFF",
-                "Colors/visibleTargetPoses": "#FFFFFFFF",
-                "Colors/apriltag": "#FFFFFFFF",
-                "Colors/VisionEstimationR": "#FFFFFFFF",
-                "Colors/VisionEstimationB": "#FFFFFFFF"
-              }
-            },
-            "2,5": {
-              "size": [
-                1,
-                1
-              ],
-              "content": {
-                "_type": "Text View",
-                "_source0": "network_table:///SmartDashboard/CAMERAUPDATE",
-                "_title": "CAMERAUPDATE",
-                "_glyph": 148,
-                "_showGlyph": false
-              }
+  "tabPane": [
+    {
+      "title": "SmartDashboard",
+      "autoPopulate": false,
+      "autoPopulatePrefix": "SmartDashboard/",
+      "widgetPane": {
+        "gridSize": 64.0,
+        "showGrid": true,
+        "hgap": 16.0,
+        "vgap": 16.0,
+        "titleType": 1,
+        "tiles": {
+          "7,7": {
+            "size": [
+              10,
+              1
+            ],
+            "content": {
+              "_type": "Split Button Chooser",
+              "_source0": "network_table:///SmartDashboard/Auto Chooser",
+              "_title": "Auto Chooser",
+              "_glyph": 148,
+              "_showGlyph": false
+            }
+          },
+          "22,9": {
+            "size": [
+              2,
+              2
+            ],
+            "content": {
+              "_type": "Text View",
+              "_source0": "network_table:///SmartDashboard/Match State",
+              "_title": "Match State",
+              "_glyph": 148,
+              "_showGlyph": false
+            }
+          },
+          "0,0": {
+            "size": [
+              12,
+              7
+            ],
+            "content": {
+              "_type": "Field",
+              "_source0": "network_table:///Field",
+              "_title": "/Field",
+              "_glyph": 148,
+              "_showGlyph": false,
+              "Game/Game": "k2024Crescendo",
+              "Visuals/Robot Icon Size": 50.0,
+              "Visuals/Show Outside Circles": false
+            }
+          },
+          "12,0": {
+            "size": [
+              12,
+              7
+            ],
+            "content": {
+              "_type": "Field",
+              "_source0": "network_table:///SmartDashboard/Field",
+              "_title": "Field",
+              "_glyph": 148,
+              "_showGlyph": false,
+              "Game/Game": "k2024Crescendo",
+              "Visuals/Robot Icon Size": 50.0,
+              "Visuals/Show Outside Circles": false
             }
           }
-        }
-      },
-      {
-        "title": "LiveWindow",
-        "autoPopulate": true,
-        "autoPopulatePrefix": "LiveWindow/",
-        "widgetPane": {
-          "gridSize": 128.0,
-          "showGrid": true,
-          "hgap": 16.0,
-          "vgap": 16.0,
-          "titleType": 0,
-          "tiles": {
-            "0,0": {
-              "size": [
-                6,
-                5
-              ],
-              "content": {
-                "_type": "Camera Stream",
-                "_source0": "camera_server://Back_Camera-processed",
-                "_title": "Back_Camera-processed",
-                "_glyph": 148,
-                "_showGlyph": false,
-                "Crosshair/Show crosshair": false,
-                "Crosshair/Crosshair color": "#FFFFFFFF",
-                "Controls/Show controls": false,
-                "Controls/Rotation": "NONE",
-                "compression": -1.0,
-                "fps": 10,
-                "imageWidth": -1,
-                "imageHeight": -1
-              }
-            },
-            "7,0": {
-              "size": [
-                6,
-                5
-              ],
-              "content": {
-                "_type": "Camera Stream",
-                "_source0": "camera_server://Right_Camera-processed",
-                "_title": "Right_Camera-processed",
-                "_glyph": 148,
-                "_showGlyph": false,
-                "Crosshair/Show crosshair": false,
-                "Crosshair/Crosshair color": "#FFFFFFFF",
-                "Controls/Show controls": false,
-                "Controls/Rotation": "NONE",
-                "compression": -1.0,
-                "fps": -1,
-                "imageWidth": -1,
-                "imageHeight": -1
-              }
-            },
-            "6,0": {
-              "size": [
-                1,
-                1
-              ],
-              "content": {
-                "_type": "Boolean Box",
-                "_source0": "network_table:///SmartDashboard/Auto Lock",
-                "_title": "SmartDashboard/Auto Lock",
-                "_glyph": 148,
-                "_showGlyph": false,
-                "Colors/Color when true": "#7CFC00FF",
-                "Colors/Color when false": "#8B0000FF"
-              }
-            },
-            "6,1": {
-              "size": [
-                1,
-                3
-              ],
-              "content": {
-                "_type": "List Layout",
-                "_title": "List Layout",
-                "_glyph": 149,
-                "_showGlyph": false,
-                "Layout/Label position": "BOTTOM",
-                "_children": [
-                  {
-                    "_type": "Text View",
-                    "_source0": "network_table:///SmartDashboard/P Gain AutoLock",
-                    "_title": "/SmartDashboard/P Gain AutoLock",
-                    "_glyph": 148,
-                    "_showGlyph": false
-                  },
-                  {
-                    "_type": "Text View",
-                    "_source0": "network_table:///SmartDashboard/I Gain AutoLock",
-                    "_title": "SmartDashboard/I Gain AutoLock",
-                    "_glyph": 148,
-                    "_showGlyph": false
-                  },
-                  {
-                    "_type": "Text View",
-                    "_source0": "network_table:///SmartDashboard/D Gain AutoLock",
-                    "_title": "SmartDashboard/D Gain AutoLock",
-                    "_glyph": 148,
-                    "_showGlyph": false
-                  },
-                  {
-                    "_type": "Text View",
-                    "_source0": "network_table:///SmartDashboard/Distance AutoLock",
-                    "_title": "/SmartDashboard/Distance AutoLock",
-                    "_glyph": 148,
-                    "_showGlyph": false
-                  }
-                ]
-              }
-            }
-          }
-        }
-      },
-      {
-        "title": "Tab 3",
-        "autoPopulate": false,
-        "autoPopulatePrefix": "",
-        "widgetPane": {
-          "gridSize": 128.0,
-          "showGrid": true,
-          "hgap": 16.0,
-          "vgap": 16.0,
-          "titleType": 0,
-          "tiles": {}
         }
       }
-    ],
-    "windowGeometry": {
-      "x": -1928.0,
-      "y": 89.0,
-      "width": 1936.0,
-      "height": 1048.0
+    },
+    {
+      "title": "LiveWindow",
+      "autoPopulate": false,
+      "autoPopulatePrefix": "LiveWindow/",
+      "widgetPane": {
+        "gridSize": 64.0,
+        "showGrid": true,
+        "hgap": 8.0,
+        "vgap": 8.0,
+        "titleType": 1,
+        "tiles": {}
+      }
+    },
+    {
+      "title": "CTRE View",
+      "autoPopulate": false,
+      "autoPopulatePrefix": "",
+      "widgetPane": {
+        "gridSize": 64.0,
+        "showGrid": true,
+        "hgap": 16.0,
+        "vgap": 16.0,
+        "titleType": 1,
+        "tiles": {
+          "15,0": {
+            "size": [
+              5,
+              3
+            ],
+            "content": {
+              "_type": "Network Table Tree",
+              "_source0": "network_table:///Drive",
+              "_title": "/Drive",
+              "_glyph": 148,
+              "_showGlyph": false
+            }
+          },
+          "0,0": {
+            "size": [
+              15,
+              8
+            ],
+            "content": {
+              "_type": "Field",
+              "_source0": "network_table:///Field",
+              "_title": "/Field",
+              "_glyph": 148,
+              "_showGlyph": false,
+              "Game/Game": "k2024Crescendo",
+              "Visuals/Robot Icon Size": 50.0,
+              "Visuals/Show Outside Circles": false
+            }
+          },
+          "22,9": {
+            "size": [
+              2,
+              2
+            ],
+            "content": {
+              "_type": "Text View",
+              "_source0": "network_table:///SmartDashboard/Match State",
+              "_title": "/SmartDashboard/Match State",
+              "_glyph": 148,
+              "_showGlyph": false
+            }
+          },
+          "0,8": {
+            "size": [
+              15,
+              1
+            ],
+            "content": {
+              "_type": "Split Button Chooser",
+              "_source0": "network_table:///SmartDashboard/Auto Chooser",
+              "_title": "SmartDashboard/Auto Chooser",
+              "_glyph": 148,
+              "_showGlyph": false
+            }
+          }
+        }
+      }
+    },
+    {
+      "title": "REV View",
+      "autoPopulate": false,
+      "autoPopulatePrefix": "",
+      "widgetPane": {
+        "gridSize": 64.0,
+        "showGrid": true,
+        "hgap": 16.0,
+        "vgap": 16.0,
+        "titleType": 1,
+        "tiles": {
+          "0,0": {
+            "size": [
+              15,
+              8
+            ],
+            "content": {
+              "_type": "Field",
+              "_source0": "network_table:///SmartDashboard/Field",
+              "_title": "/SmartDashboard/Field",
+              "_glyph": 148,
+              "_showGlyph": false,
+              "Game/Game": "k2024Crescendo",
+              "Visuals/Robot Icon Size": 50.0,
+              "Visuals/Show Outside Circles": false
+            }
+          },
+          "22,9": {
+            "size": [
+              2,
+              2
+            ],
+            "content": {
+              "_type": "Text View",
+              "_source0": "network_table:///SmartDashboard/Match State",
+              "_title": "/SmartDashboard/Match State",
+              "_glyph": 148,
+              "_showGlyph": false
+            }
+          },
+          "0,8": {
+            "size": [
+              15,
+              1
+            ],
+            "content": {
+              "_type": "Split Button Chooser",
+              "_source0": "network_table:///SmartDashboard/Auto Chooser",
+              "_title": "SmartDashboard/Auto Chooser",
+              "_glyph": 148,
+              "_showGlyph": false
+            }
+          },
+          "15,0": {
+            "size": [
+              3,
+              3
+            ],
+            "content": {
+              "_type": "Gyro",
+              "_source0": "network_table:///SmartDashboard/Robot Heading (getPose)",
+              "_title": "SmartDashboard/Robot Heading (getPose)",
+              "_glyph": 148,
+              "_showGlyph": false,
+              "Visuals/Major tick spacing": 45.0,
+              "Visuals/Starting angle": 180.0,
+              "Visuals/Show tick mark ring": true,
+              "Visuals/Counter clockwise": false
+            }
+          }
+        }
+      }
     }
+  ],
+  "windowGeometry": {
+    "x": 0.0,
+    "y": 0.0,
+    "width": 500.0,
+    "height": 500.0
   }
+}
