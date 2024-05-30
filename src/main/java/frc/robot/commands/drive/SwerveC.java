@@ -43,10 +43,13 @@ public class SwerveC extends Command {
 	@Override
 	public void execute() {
 		switch (DriveConstants.vendor) {
+		case MECANUM:
+		//TODO: add mecanum here
 		case CTRE_SWERVE:
 			drivetrainS.applyRequest();
 			break;
 		case REV_SWERVE:
+		
 		case TANK:
 			// Get desired ChassisSpeeds from controller
 			double xSpeed = -RobotContainer.driveController.getLeftY();

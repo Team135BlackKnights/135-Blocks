@@ -107,7 +107,11 @@ public class DataHandler {
 				}
 			}
 			System.err.println(port + "GOOD!");
-			PortForwarder.add(port, "localhost", port);
+			if (Constants.currentMode == Constants.Mode.SIM){
+				PortForwarder.add(port,"localhost",port);
+			}else{
+				PortForwarder.add(port, "10.1.35.2", port);
+			}
 			serverSocket.setSoTimeout(1);
 		}
 		catch (Exception e) {
