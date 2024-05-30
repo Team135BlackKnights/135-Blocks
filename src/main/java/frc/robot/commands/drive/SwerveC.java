@@ -43,7 +43,7 @@ public class SwerveC extends Command {
 	@Override
 	public void execute() {
 		switch (DriveConstants.vendor) {
-		case MECANUM:
+		case REV_MECANUM:
 		//TODO: add mecanum here
 		case CTRE_SWERVE:
 			drivetrainS.applyRequest();

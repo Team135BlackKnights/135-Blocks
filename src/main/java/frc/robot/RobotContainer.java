@@ -8,9 +8,11 @@ import frc.robot.subsystems.drive.DrivetrainS;
 import frc.robot.subsystems.drive.CTRESwerve.CTRESwerveS;
 import frc.robot.subsystems.drive.CTRESwerve.Telemetry;
 import frc.robot.subsystems.drive.CTRESwerve.TunerConstants;
+import frc.robot.subsystems.drive.Mecanum.REVMecanumS;
 import frc.robot.subsystems.drive.REVSwerve.REVSwerveS;
 import frc.robot.subsystems.drive.Tank.TankS;
 import frc.robot.utils.drive.DriveConstants;
+import frc.robot.utils.drive.MotorConstantContainer;
 import frc.robot.commands.drive.vision.DriveToAITarget;
 
 import frc.robot.subsystems.vision.PhotonVisionS;
@@ -73,6 +75,9 @@ public class RobotContainer {
 		case TANK:
 			drivetrainS = new TankS(10,11,12,13,false,false,false,false,IdleMode.kBrake,80,7.5,Units.inchesToMeters(6));
 			break;
+		case REV_MECANUM:
+			//Placeholder values
+			drivetrainS = new REVMecanumS(10, 11, 12, 13, 80, new MotorConstantContainer(1, 1, 1, 0, 0), new MotorConstantContainer(1, 1, 1, 0, 0), new MotorConstantContainer(1, 1, 1, 0, 0), new MotorConstantContainer(1, 1, 1, 0, 0), 7.5,Units.inchesToMeters(6) , 10);
 		default:
 			throw new IllegalArgumentException(
 					"Unknown implementation type, please check DriveConstants.java!");

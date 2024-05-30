@@ -40,12 +40,12 @@ public class DriveConstants {
 		MotorConstantContainer turningKpKsKvKa);
   }
   	public enum driveTrainType{
-		CTRE_SWERVE,REV_SWERVE,TANK,MECANUM
+		CTRE_SWERVE,REV_SWERVE,TANK,REV_MECANUM
 	}
 	public static boolean fieldOriented = true;
 	//135-Blocks was tested on a chassis with all CANSparkMaxes 
 	public static MotorVendor robotMotorController = MotorVendor.NEO_SPARK_MAX;
-	public static driveTrainType vendor = driveTrainType.REV_SWERVE;
+	public static driveTrainType vendor = driveTrainType.CTRE_SWERVE;
 	public static final double kChassisWidth = Units.inchesToMeters(24.25), // Distance between Left and Right wheels
 			kChassisLength = Units.inchesToMeters(24.25), // Distance betwwen Front and Back wheels
 			kDriveBaseRadius = Units.inchesToMeters(Math.sqrt(

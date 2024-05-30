@@ -154,8 +154,8 @@
           },
           "0,0": {
             "size": [
-              15,
-              8
+              12,
+              6
             ],
             "content": {
               "_type": "Field",
@@ -181,13 +181,13 @@
               "_showGlyph": false
             }
           },
-          "0,8": {
+          "0,6": {
             "size": [
               15,
               1
             ],
             "content": {
-              "_type": "Split Button Chooser",
+              "_type": "ComboBox Chooser",
               "_source0": "network_table:///SmartDashboard/Auto Chooser",
               "_title": "SmartDashboard/Auto Chooser",
               "_glyph": 148,
@@ -272,9 +272,9 @@
     }
   ],
   "windowGeometry": {
-    "x": 1912.0,
-    "y": 82.0,
-    "width": 1936.0,
-    "height": 1048.0
+    "x": -7.199999809265137,
+    "y": -7.199999809265137,
+    "width": 1550.4000244140625,
+    "height": 830.4000244140625
   }
 }
