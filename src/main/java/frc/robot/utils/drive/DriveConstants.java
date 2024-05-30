@@ -45,7 +45,7 @@ public class DriveConstants {
 	public static boolean fieldOriented = true;
 	//135-Blocks was tested on a chassis with all CANSparkMaxes 
 	public static MotorVendor robotMotorController = MotorVendor.NEO_SPARK_MAX;
-	public static driveTrainType vendor = driveTrainType.REV_MECANUM;
+	public static driveTrainType vendor = driveTrainType.REV_SWERVE;
 	public static final double kChassisWidth = Units.inchesToMeters(24.25), // Distance between Left and Right wheels
 			kChassisLength = Units.inchesToMeters(24.25), // Distance betwwen Front and Back wheels
 			kDriveBaseRadius = Units.inchesToMeters(Math.sqrt(

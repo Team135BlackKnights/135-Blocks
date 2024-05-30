@@ -45,6 +45,7 @@ public class SwerveC extends Command {
 		switch (DriveConstants.vendor) {
 		case REV_MECANUM:
 		//TODO: add mecanum here
+		break;
 		case CTRE_SWERVE:
 			drivetrainS.applyRequest();
 			break;

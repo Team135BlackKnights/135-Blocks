@@ -1,6 +1,8 @@
 package frc.robot.subsystems.drive.Mecanum;
 
 import edu.wpi.first.math.Matrix;
+import edu.wpi.first.math.Nat;
+import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
@@ -22,6 +24,7 @@ import com.revrobotics.CANSparkBase.IdleMode;
 import com.revrobotics.CANSparkLowLevel.MotorType;
 import static edu.wpi.first.units.Units.Seconds;
 import static edu.wpi.first.units.Units.Volts;
+
 import org.ejml.simple.UnsupportedOperation;
 import org.littletonrobotics.junction.Logger;
 import com.kauailabs.navx.frc.AHRS;
@@ -40,7 +43,9 @@ import edu.wpi.first.units.Voltage;
 import edu.wpi.first.wpilibj.SerialPort.Port;
 import frc.robot.utils.drive.DriveConstants;
 import frc.robot.utils.drive.MotorConstantContainer;
-
+import edu.wpi.first.math.system.LinearSystemLoop;
+import edu.wpi.first.math.controller.LinearQuadraticRegulator;
+import edu.wpi.first.math.estimator.KalmanFilter;
 public class REVMecanumS implements DrivetrainS {
 	//TODO: mecanum sim, pathPlanner support
 	private static CANSparkBase[] sparkMotors = new CANSparkBase[4];
@@ -48,7 +53,10 @@ public class REVMecanumS implements DrivetrainS {
 	private static double[] wheelSimPositions = { 0, 0, 0, 0
 	}, wheelSimVelocities = { 0, 0, 0, 0
 	};
-	private static LinearSystem<N1, N1, N1>[] wheelLinearSystems = new LinearSystem[4];
+	private static LinearSystem<N1, N1, N1>[] linearSystems = new LinearSystem[4];
+	private static KalmanFilter<N1,N1,N1>[] wheelFilters = new KalmanFilter[4];
+	private static LinearQuadraticRegulator<N1,N1,N1>[] wheelRegulators = new LinearQuadraticRegulator[4];
+	private static LinearSystemLoop<N1,N1,N1>[] wheelSystemLoops = new LinearSystemLoop[4]; 
 	private static RelativeEncoder[] wheelRelativeEncoders = new RelativeEncoder[4];
 	private static AHRS gyro;
 	private static MecanumDriveKinematics driveKinematics;
@@ -135,16 +143,12 @@ public class REVMecanumS implements DrivetrainS {
 			wheelRelativeEncoders[i] = sparkMotors[i].getEncoder();
 			wheelRelativeEncoders[i]
 					.setPositionConversionFactor(1 / gearing * kWheelRadiusMeters);
-			switch (Constants.currentMode) {
-			case SIM:
-				wheelLinearSystems[i] = LinearSystemId.identifyVelocitySystem(
-						wheelConstantContainers[i].getKv(),
-						wheelConstantContainers[i].getKa());
-				break;
-			default:
-				break;
-			}
+			linearSystems[i] = LinearSystemId.identifyVelocitySystem(wheelConstantContainers[i].getKv(), wheelConstantContainers[i].getKa());
+			wheelFilters[i] = new KalmanFilter<N1,N1,N1>(Nat.N1(), Nat.N1(), linearSystems[i], VecBuilder.fill(3), VecBuilder.fill(.03), .02);
+			wheelRegulators[i] = new LinearQuadraticRegulator<N1,N1,N1>(linearSystems[i], VecBuilder.fill(10), VecBuilder.fill(12), .02);
+			wheelSystemLoops[i] = new LinearSystemLoop<>(linearSystems[i],wheelRegulators[i],wheelFilters[i],12,.02);
 		}
+		
 		gyro = new AHRS(Port.kUSB);
 		driveKinematics = new MecanumDriveKinematics(
 				DriveConstants.kModuleTranslations[0],
@@ -199,7 +203,9 @@ public class REVMecanumS implements DrivetrainS {
 
 	@Override
 	public void periodic() {
-
+		for (int i = 0; i < 4; i++){
+	
+		}
 	}
 
 	@Override
