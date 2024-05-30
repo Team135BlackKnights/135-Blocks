@@ -11,7 +11,7 @@ public class DriveConstants {
 	/**
 	 * What motor controllers are we using
 	 */
-	public enum MotorType {
+	public enum MotorVendor {
 
 		NEO_SPARK_MAX {
 			 @Override
@@ -40,13 +40,13 @@ public class DriveConstants {
 		MotorConstantContainer turningKpKsKvKa);
   }
   	public enum driveTrainType{
-		CTRE_SWERVE,REV_SWERVE,TANK
+		CTRE_SWERVE,REV_SWERVE,TANK,REV_MECANUM
 	}
 	public static boolean fieldOriented = true;
 	//135-Blocks was tested on a chassis with all CANSparkMaxes 
-	public static MotorType robotMotorController = MotorType.NEO_SPARK_MAX;
+	public static MotorVendor robotMotorController = MotorVendor.NEO_SPARK_MAX;
 	public static driveTrainType vendor = driveTrainType.REV_SWERVE;
-	public static double kChassisWidth = Units.inchesToMeters(24.25), // Distance between Left and Right wheels
+	public static final double kChassisWidth = Units.inchesToMeters(24.25), // Distance between Left and Right wheels
 			kChassisLength = Units.inchesToMeters(24.25), // Distance betwwen Front and Back wheels
 			kDriveBaseRadius = Units.inchesToMeters(Math.sqrt(
 					kChassisLength * kChassisLength + kChassisWidth * kChassisWidth)
@@ -160,5 +160,6 @@ public class DriveConstants {
 				new Pose3d(Units.inchesToMeters(534.5), Units.inchesToMeters(276),
 						Units.inchesToMeters(1), new Rotation3d(0, 0, 0)), // RED TOP
 		};
+		
 	}
 }

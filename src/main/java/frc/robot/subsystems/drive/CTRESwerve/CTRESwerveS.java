@@ -6,6 +6,7 @@ import com.ctre.phoenix6.SignalLogger;
 import com.ctre.phoenix6.Utils;
 import com.ctre.phoenix6.mechanisms.swerve.SwerveDrivetrain;
 import com.ctre.phoenix6.mechanisms.swerve.SwerveDrivetrainConstants;
+import com.ctre.phoenix6.mechanisms.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.mechanisms.swerve.SwerveModuleConstants;
 import com.ctre.phoenix6.mechanisms.swerve.SwerveRequest;
 import com.pathplanner.lib.auto.AutoBuilder;
@@ -28,6 +29,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 import frc.robot.Constants;
+import frc.robot.RobotContainer;
 import frc.robot.subsystems.drive.DrivetrainS;
 import frc.robot.utils.SimGamePiece;
 import frc.robot.utils.drive.DriveConstants;
@@ -47,6 +49,13 @@ public class CTRESwerveS extends SwerveDrivetrain implements DrivetrainS {
 	private double m_lastSimTime;
 	private final SwerveRequest.ApplyChassisSpeeds AutoRequest = new SwerveRequest.ApplyChassisSpeeds();
 	private final SwerveRequest.SwerveDriveBrake brake = new SwerveRequest.SwerveDriveBrake();
+	private final SwerveRequest.FieldCentric drive = new SwerveRequest.FieldCentric()
+			.withDeadband(TunerConstants.kSpeedAt12VoltsMps * 0.1)
+			.withRotationalDeadband(
+					DriveConstants.kTeleTurningMaxAcceleration * 0.1) // Add a 10% deadband
+			.withDriveRequestType(DriveRequestType.OpenLoopVoltage); // I want field-centric
+																				// driving in open loop
+
 	/**
 	 * Creates a CTRE Swerve Drivetrain
 	 * 
@@ -106,17 +115,23 @@ public class CTRESwerveS extends SwerveDrivetrain implements DrivetrainS {
 				this); // Subsystem for requirements
 		super.registerTelemetry(logger::telemeterize);
 	}
-	/**
-	 * applies the request executed by the SwerveRequest parameter
-	 * @param requestSupplier the parameter to request
-	 * runs the function
-	 */
-	public Command applyRequest(Supplier<SwerveRequest> requestSupplier) {
-		return run(() -> this.setControl(requestSupplier.get()));
+
+	@Override
+	public void applyRequest() {
+		drive.withVelocityX(-RobotContainer.driveController.getLeftY()
+							* TunerConstants.kSpeedAt12VoltsMps) // Drive forward with
+					// negative Y (forward)
+					.withVelocityY(-RobotContainer.driveController.getLeftX()
+							* TunerConstants.kSpeedAt12VoltsMps) // Drive left with negative X (left)
+					.withRotationalRate(-RobotContainer.driveController.getRightX()
+							* DriveConstants.kTeleTurningMaxAcceleration) // Drive counterclockwise with negative X (left)
+			.apply(m_requestParameters, Modules);
 	}
+
 	/**
 	 * Set the ChassisSpeeds to the drivetrain
-	 * @param speeds The speeds to be set 
+	 * 
+	 * @param speeds The speeds to be set
 	 */
 	public void setChassisSpeeds(ChassisSpeeds speeds) {
 		AutoRequest.withSpeeds(speeds).apply(m_requestParameters, Modules);
@@ -124,15 +139,19 @@ public class CTRESwerveS extends SwerveDrivetrain implements DrivetrainS {
 
 	/**
 	 * Get the ChassisSpeeds of the drivetrain
+	 * 
 	 * @return the drivetrain ChassisSpeeds
 	 */
 	@Override
 	public ChassisSpeeds getChassisSpeeds() {
-		if (super.getState().ModuleStates == null) return new ChassisSpeeds(0,0,0);
+		if (super.getState().ModuleStates == null)
+			return new ChassisSpeeds(0, 0, 0);
 		return m_kinematics.toChassisSpeeds(getState().ModuleStates);
 	}
+
 	/**
-	 * Reset the pose of the robot (it thinks the pose it's at when it's reset is the starting pose)
+	 * Reset the pose of the robot (it thinks the pose it's at when it's reset is
+	 * the starting pose)
 	 */
 	@Override
 	public void resetPose(Pose2d pose) { super.seedFieldRelative(pose); }
@@ -146,7 +165,7 @@ public class CTRESwerveS extends SwerveDrivetrain implements DrivetrainS {
 	@Override
 	public void newVisionMeasurement(Pose2d pose, double timestamp,
 			Matrix<N3, N1> estStdDevs) {
-		super.addVisionMeasurement(pose, timestamp,estStdDevs);
+		super.addVisionMeasurement(pose, timestamp, estStdDevs);
 	}
 
 	@Override
@@ -169,9 +188,7 @@ public class CTRESwerveS extends SwerveDrivetrain implements DrivetrainS {
 	 * Stops the modules
 	 */
 	@Override
-	public void stopModules() {
-		brake.apply(m_requestParameters, Modules);
-	}
+	public void stopModules() { brake.apply(m_requestParameters, Modules); }
 
 	private final SwerveRequest.SysIdSwerveTranslation TranslationCharacterization = new SwerveRequest.SysIdSwerveTranslation();
 	private final SwerveRequest.SysIdSwerveRotation RotationCharacterization = new SwerveRequest.SysIdSwerveRotation();
@@ -238,21 +255,26 @@ public class CTRESwerveS extends SwerveDrivetrain implements DrivetrainS {
 		RoutineToApply = SysIdRoutineSteer;
 		return RoutineToApply.quasistatic(direction);
 	}
+
 	/**
-	 * Zero the heading of the drivetrain (the rotation it's at is viewed as its starting rotation)
+	 * Zero the heading of the drivetrain (the rotation it's at is viewed as its
+	 * starting rotation)
 	 */
 	@Override
 	public void zeroHeading() { super.seedFieldRelative(); }
+
 	/**
 	 * Get the rotation2d of the robot
+	 * 
 	 * @return The rotation2d of the robot, goober
 	 */
 	@Override
 	public Rotation2d getRotation2d() {
 		return super.getRotation3d().toRotation2d();
 	}
+
 	@Override
-	public boolean isConnected(){
+	public boolean isConnected() {
 		return super.getPigeon2().getFault_Hardware().getValue();
 	}
 }

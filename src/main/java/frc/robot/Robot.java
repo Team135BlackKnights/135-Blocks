@@ -17,6 +17,7 @@ import frc.robot.Constants.FRCMatchState;
 import frc.robot.utils.SimGamePiece;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
+import edu.wpi.first.net.PortForwarder;
 import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj.DriverStation;
 /**
@@ -37,6 +38,8 @@ public class Robot extends LoggedRobot {
 	 */
 	@Override
 	public void robotInit() {
+		PortForwarder.add(22,"orangepi@photonvision.local",22);
+		PortForwarder.add(22,"photonvision.local",22);
 		//To check for endgame
 		//Below may be redudant
 		// Instantiate our RobotContainer.  This will perform all our button bindings, and put our
