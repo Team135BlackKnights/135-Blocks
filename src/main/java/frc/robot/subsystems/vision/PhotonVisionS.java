@@ -144,9 +144,9 @@ public class PhotonVisionS extends SubsystemBase {
 	 * @param tagsToLookFor the potential aprilTags to look for
 	 * @return Whether a requested april tag is visible (as a boolean)
 	 */
-	public static boolean aprilTagVisible(PhotonCamera Camera,
+	public static boolean aprilTagVisible(PhotonCamera camera,
 			int[] tagsToLookFor) {
-		var results = Camera.getLatestResult().getTargets();
+		var results = camera.getLatestResult().getTargets();
 		for (int targetTagNumber : tagsToLookFor) {
 			for (var target : results) {
 				if (target.getFiducialId() == targetTagNumber) {
@@ -155,6 +155,10 @@ public class PhotonVisionS extends SubsystemBase {
 			}
 		}
 		return false;
+	}
+
+	public static boolean aprilTagVisible(PhotonCamera camera) {
+		return !camera.getLatestResult().getTargets().isEmpty();
 	}
 
 	/**
