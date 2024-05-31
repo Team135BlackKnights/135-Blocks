@@ -24,7 +24,7 @@ import com.revrobotics.CANSparkBase.IdleMode;
 import com.revrobotics.CANSparkLowLevel.MotorType;
 import static edu.wpi.first.units.Units.Seconds;
 import static edu.wpi.first.units.Units.Volts;
-
+import edu.wpi.first.wpilibj.simulation.DCMotorSim;
 import org.ejml.simple.UnsupportedOperation;
 import org.littletonrobotics.junction.Logger;
 import com.kauailabs.navx.frc.AHRS;
@@ -46,6 +46,7 @@ import frc.robot.utils.drive.MotorConstantContainer;
 import edu.wpi.first.math.system.LinearSystemLoop;
 import edu.wpi.first.math.controller.LinearQuadraticRegulator;
 import edu.wpi.first.math.estimator.KalmanFilter;
+
 public class REVMecanumS implements DrivetrainS {
 	//TODO: mecanum sim, pathPlanner support
 	private static CANSparkBase[] sparkMotors = new CANSparkBase[4];
@@ -57,6 +58,7 @@ public class REVMecanumS implements DrivetrainS {
 	private static KalmanFilter<N1,N1,N1>[] wheelFilters = new KalmanFilter[4];
 	private static LinearQuadraticRegulator<N1,N1,N1>[] wheelRegulators = new LinearQuadraticRegulator[4];
 	private static LinearSystemLoop<N1,N1,N1>[] wheelSystemLoops = new LinearSystemLoop[4]; 
+	
 	private static RelativeEncoder[] wheelRelativeEncoders = new RelativeEncoder[4];
 	private static AHRS gyro;
 	private static MecanumDriveKinematics driveKinematics;
