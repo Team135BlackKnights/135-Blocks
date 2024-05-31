@@ -143,6 +143,9 @@ public class DriveToAITarget extends Command {
 		} else {
 			speeds = new ChassisSpeeds(0, 0, 0); //We either have it, or are close enough to start just intaking, so stop.
 		}
+		if (loaded){
+			isFinished = true;
+		}
 		swerveS.setChassisSpeeds(speeds);
 	}
 

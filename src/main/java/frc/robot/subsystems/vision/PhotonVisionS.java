@@ -431,8 +431,11 @@ public class PhotonVisionS extends SubsystemBase {
 					.getTagPose(tgt.getFiducialId());
 			if (tagPose.isEmpty())
 				continue;
-			if (tgt.getPoseAmbiguity() > .2)
+			if (tgt.getPoseAmbiguity() > .2){
+				avgDist += 10;
 				continue; //give zero F's about bad tags
+			}
+
 			double dist = tagPose.get().toPose2d().getTranslation()
 					.getDistance(estimatedPose.getTranslation());
 			if (dist < lowestDist) {
