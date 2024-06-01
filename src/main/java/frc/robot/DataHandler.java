@@ -475,7 +475,7 @@ public class DataHandler {
 			if (receivedData.has("timestamp")) {
 				int time = receivedData.get("timestamp").getAsInt();
 				if (time != oldTime + 1) {
-					System.out.println("SKIPPED VIA SOCKET" + oldTime);
+					SmartDashboard.putString("PiConnection", "SKIPPED VIA SOCKET" + oldTime);
 				}
 				oldTime = time;
 				//System.out.println("time: " + time);
@@ -500,9 +500,10 @@ public class DataHandler {
 			String jsonResponse = gson.toJson(responseData);
 			// Convert JSON to string and send as response
 			out.println(jsonResponse);
+			SmartDashboard.putString("PiConnection", "OK");
 		}
 		catch (Exception e) {
-			System.err.println("PI NOT DETECTED!");
+			SmartDashboard.putString("PiConnection", "PI NOT DETECTED");
 		}
 		//We are not using network tables
 		pingUSB();

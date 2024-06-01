@@ -5,47 +5,21 @@ import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.util.Units;
-import frc.robot.subsystems.drive.REVSwerve.SwerveModules.*;
 
 public class DriveConstants {
 	/**
 	 * What motor controllers are we using
 	 */
 	public enum MotorVendor {
-
-		NEO_SPARK_MAX {
-			 @Override
-			 public SwerveMotorControllers initialize(int driveMotorId, int turningMotorId,
-			 boolean driveMotorReversed, boolean turningMotorReversed,
-			 int absoluteEncoderId, double absoluteEncoderOffset,
-			 boolean absoluteEncoderReversed, MotorConstantContainer driveMotorConstantContainer,
-			 MotorConstantContainer turningKpKsKvKa) {
-				  return new CANSparkMaxSwerveModule(driveMotorId, turningMotorId, driveMotorReversed, turningMotorReversed, absoluteEncoderId, absoluteEncoderOffset, absoluteEncoderReversed, driveMotorConstantContainer, turningKpKsKvKa);
-			 }
-		},
-		VORTEX_SPARK_FLEX {
-			@Override
-			public SwerveMotorControllers initialize(int driveMotorId, int turningMotorId,
-			boolean driveMotorReversed, boolean turningMotorReversed,
-			int absoluteEncoderId, double absoluteEncoderOffset,
-			boolean absoluteEncoderReversed, MotorConstantContainer driveMotorConstantContainer,
-			MotorConstantContainer turningKpKsKvKa) {
-				 return new CANSparkFlexSwerveModule(driveMotorId, turningMotorId, driveMotorReversed, turningMotorReversed, absoluteEncoderId, absoluteEncoderOffset, absoluteEncoderReversed, driveMotorConstantContainer, turningKpKsKvKa);
-			}
-	  };
-		public abstract SwerveMotorControllers initialize(int driveMotorId, int turningMotorId,
-		boolean driveMotorReversed, boolean turningMotorReversed,
-		int absoluteEncoderId, double absoluteEncoderOffset,
-		boolean absoluteEncoderReversed, MotorConstantContainer driveMotorConstantContainer,
-		MotorConstantContainer turningKpKsKvKa);
+		NEO_SPARK_MAX,VORTEX_SPARK_FLEX,CTRE_MOTORS
   }
   	public enum driveTrainType{
-		CTRE_SWERVE,REV_SWERVE,TANK,REV_MECANUM
+		SWERVE,TANK,REV_MECANUM
 	}
 	public static boolean fieldOriented = true;
-	//135-Blocks was tested on a chassis with all CANSparkMaxes 
-	public static MotorVendor robotMotorController = MotorVendor.NEO_SPARK_MAX;
-	public static driveTrainType vendor = driveTrainType.REV_SWERVE;
+	//135-Blocks was tested on a chassis with all CANSparkMaxes, as well as all Kraken-x60s.
+	public static MotorVendor robotMotorController = MotorVendor.CTRE_MOTORS;
+	public static driveTrainType driveType = driveTrainType.SWERVE;
 	public static final double kChassisWidth = Units.inchesToMeters(24.25), // Distance between Left and Right wheels
 			kChassisLength = Units.inchesToMeters(24.25), // Distance betwwen Front and Back wheels
 			kDriveBaseRadius = Units.inchesToMeters(Math.sqrt(
@@ -98,7 +72,7 @@ public class DriveConstants {
 
 	public static class SwerveConstants {
 		public static double kWheelDiameter = Units.inchesToMeters(3.873),
-				kDriveMotorGearRatio = 1 / 6.75, kTurningMotorGearRatio = (7 / 150),
+				kDriveMotorGearRatio = 6.75, kTurningMotorGearRatio = 150/7,
 				kDriveEncoderRot2Meter = kDriveMotorGearRatio * Math.PI
 						* kWheelDiameter,
 				kDriveEncoderRPM2MeterPerSec = kDriveEncoderRot2Meter / 60,
