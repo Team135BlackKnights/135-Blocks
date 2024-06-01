@@ -500,6 +500,7 @@ public class DataHandler {
 			String jsonResponse = gson.toJson(responseData);
 			// Convert JSON to string and send as response
 			out.println(jsonResponse);
+			SmartDashboard.putString("PiConnection", "OK");
 		}
 		catch (Exception e) {
 			SmartDashboard.putString("PiConnection", "PI NOT DETECTED");

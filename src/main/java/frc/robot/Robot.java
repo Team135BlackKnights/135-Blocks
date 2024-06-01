@@ -6,7 +6,6 @@ package frc.robot;
 import org.littletonrobotics.urcl.URCL;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
-
 import org.littletonrobotics.junction.LogFileUtil;
 import org.littletonrobotics.junction.LoggedRobot;
 import org.littletonrobotics.junction.Logger;
@@ -14,12 +13,15 @@ import org.littletonrobotics.junction.networktables.NT4Publisher;
 import org.littletonrobotics.junction.wpilog.WPILOGReader;
 import org.littletonrobotics.junction.wpilog.WPILOGWriter;
 import frc.robot.Constants.FRCMatchState;
+import frc.robot.Constants.SysIdRoutines;
 import frc.robot.utils.SimGamePiece;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
+import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import edu.wpi.first.net.PortForwarder;
 import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj.DriverStation;
+
 /**
  * The VM is configured to automatically run this class, and to call the
  * functions corresponding to each mode, as described in the TimedRobot
@@ -32,14 +34,17 @@ public class Robot extends LoggedRobot {
 	private RobotContainer m_robotContainer;
 	public static boolean isRed;
 	private boolean hasBeenEnabled;
+	private SysIdRoutines runningTest = Constants.SysIdRoutines
+			.values()[0];
+
 	/**
 	 * This function is run when the robot is first started up and should be used
 	 * for any initialization code.
 	 */
 	@Override
 	public void robotInit() {
-		PortForwarder.add(22,"orangepi@photonvision.local",22);
-		PortForwarder.add(22,"photonvision.local",22);
+		PortForwarder.add(22, "orangepi@photonvision.local", 22);
+		PortForwarder.add(22, "photonvision.local", 22);
 		//To check for endgame
 		//Below may be redudant
 		// Instantiate our RobotContainer.  This will perform all our button bindings, and put our
@@ -70,7 +75,7 @@ public class Robot extends LoggedRobot {
 		Logger.start();
 		m_robotContainer = new RobotContainer();
 		DataHandler.startHandler("C:");
-
+		SmartDashboard.putString("QUEUED TEST", runningTest.toString());
 	}
 
 	/**
@@ -93,6 +98,31 @@ public class Robot extends LoggedRobot {
 		// commands, running already-scheduled commands, removing finished or interrupted commands,
 		// and running subsystem periodic() methods.  This must be called from the robot's periodic
 		// block in order for anything in the Command-based framework to work.
+		SysIdRoutines runningTest = Constants.SysIdRoutines
+				.values()[RobotContainer.currentTest];
+		SmartDashboard.putString("QUEUED TEST", runningTest.toString());
+		switch (runningTest) {
+		case swerveDrive:
+			RobotContainer.yButtonTest.whileTrue(RobotContainer.drivetrainS
+					.sysIdQuasistaticDrive(SysIdRoutine.Direction.kForward));
+			RobotContainer.bButtonTest.whileTrue(RobotContainer.drivetrainS
+					.sysIdQuasistaticDrive(SysIdRoutine.Direction.kReverse));
+			RobotContainer.aButtonTest.whileTrue(RobotContainer.drivetrainS
+					.sysIdDynamicDrive(SysIdRoutine.Direction.kForward));
+			RobotContainer.xButtonTest.whileTrue(RobotContainer.drivetrainS
+					.sysIdDynamicDrive(SysIdRoutine.Direction.kReverse));
+			break;
+		case swerveTurn:
+			RobotContainer.yButtonTest.whileTrue(RobotContainer.drivetrainS
+					.sysIdQuasistaticTurn(SysIdRoutine.Direction.kForward));
+			RobotContainer.bButtonTest.whileTrue(RobotContainer.drivetrainS
+					.sysIdQuasistaticTurn(SysIdRoutine.Direction.kReverse));
+			RobotContainer.aButtonTest.whileTrue(RobotContainer.drivetrainS
+					.sysIdDynamicTurn(SysIdRoutine.Direction.kForward));
+			RobotContainer.xButtonTest.whileTrue(RobotContainer.drivetrainS
+					.sysIdDynamicTurn(SysIdRoutine.Direction.kReverse));
+			break;
+		}
 		CommandScheduler.getInstance().run();
 	}
 
@@ -100,10 +130,9 @@ public class Robot extends LoggedRobot {
 	@Override
 	public void disabledInit() {
 		Constants.currentMatchState = FRCMatchState.DISABLED;
-		if (DriverStation.getMatchTime() == 0){
+		if (DriverStation.getMatchTime() == 0) {
 			Constants.currentMatchState = FRCMatchState.MATCHOVER;
 		}
-
 	}
 
 	@Override
@@ -146,7 +175,7 @@ public class Robot extends LoggedRobot {
 	public void teleopPeriodic() {
 		/*An FRC teleop period takes 2 minutes and 15 seconds (135 seconds). Endgame occurs during the last 20 seconds.
 		Based on this, endgame should initialize at 115 seconds and end at 135 seconds. */
-		if (DriverStation.isFMSAttached()){
+		if (DriverStation.isFMSAttached()) {
 			if (DriverStation.getMatchTime() > 30) {
 				Constants.currentMatchState = FRCMatchState.TELEOP;
 			} else if (DriverStation.getMatchTime() == 30) {
@@ -155,16 +184,16 @@ public class Robot extends LoggedRobot {
 					&& DriverStation.getMatchTime() > 0) {
 				Constants.currentMatchState = FRCMatchState.ENDGAME;
 			}
-		}else{
+		} else {
 			Constants.currentMatchState = FRCMatchState.TELEOP;
 		}
-		if(RobotContainer.driveController.getPOV() == 0){
+		if (RobotContainer.driveController.getPOV() == 0) {
 			//System.err.println("UP");
 			DataHandler.logData("[4.5,25.4]", "shouldUpdateModel");
 		}
-		if(RobotContainer.manipController.getAButton()){
+		if (RobotContainer.manipController.getAButton()) {
 			System.out.println("A");
-			DataHandler.logData("4.5","modelDistance");
+			DataHandler.logData("4.5", "modelDistance");
 		}
 	}
 
@@ -192,7 +221,8 @@ public class Robot extends LoggedRobot {
 	@Override
 	public void simulationPeriodic() {
 		SimGamePiece.updateStates(); //update position of gamePieces
-		if (Constants.currentMatchState == Constants.FRCMatchState.AUTO && !hasBeenEnabled) {
+		if (Constants.currentMatchState == Constants.FRCMatchState.AUTO
+				&& !hasBeenEnabled) {
 			SimGamePiece.resetPieces();
 			hasBeenEnabled = true;
 		} else if (Constants.currentMatchState == Constants.FRCMatchState.DISABLED) {

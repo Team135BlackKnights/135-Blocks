@@ -61,6 +61,9 @@ public final class Constants {
 		//Runs when the match is over (after endgame)
 		MATCHOVER
 	}
+	public static enum SysIdRoutines{
+		swerveDrive,swerveTurn
+	}
 
 	//put datalog constants IN THE UTIL FOR THAT FILE. 
 	public static Map<Integer, String> manCanIdsToNames() {

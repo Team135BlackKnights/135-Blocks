@@ -11,15 +11,15 @@ public class DriveConstants {
 	 * What motor controllers are we using
 	 */
 	public enum MotorVendor {
-		NEO_SPARK_MAX,VORTEX_SPARK_FLEX
+		NEO_SPARK_MAX,VORTEX_SPARK_FLEX,CTRE_MOTORS
   }
   	public enum driveTrainType{
-		CTRE_SWERVE,REV_SWERVE,TANK,REV_MECANUM
+		SWERVE,TANK,REV_MECANUM
 	}
 	public static boolean fieldOriented = true;
-	//135-Blocks was tested on a chassis with all CANSparkMaxes 
-	public static MotorVendor robotMotorController = MotorVendor.NEO_SPARK_MAX; //ONLY IF USING REV!
-	public static driveTrainType vendor = driveTrainType.REV_SWERVE;
+	//135-Blocks was tested on a chassis with all CANSparkMaxes, as well as all Kraken-x60s.
+	public static MotorVendor robotMotorController = MotorVendor.CTRE_MOTORS;
+	public static driveTrainType driveType = driveTrainType.SWERVE;
 	public static final double kChassisWidth = Units.inchesToMeters(24.25), // Distance between Left and Right wheels
 			kChassisLength = Units.inchesToMeters(24.25), // Distance betwwen Front and Back wheels
 			kDriveBaseRadius = Units.inchesToMeters(Math.sqrt(

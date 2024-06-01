@@ -1,6 +1,5 @@
 package frc.robot.commands.drive;
 
-
 import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -23,7 +22,6 @@ public class SwerveC extends Command {
 	public static double variableAngleDistance = 0;
 	public static double angleOutputDegrees = 0;
 	//private int arrayIndex = 0;
-	
 
 	public SwerveC(DrivetrainS drivetrainS) {
 		this.drivetrainS = drivetrainS;
@@ -42,16 +40,11 @@ public class SwerveC extends Command {
 
 	@Override
 	public void execute() {
-		switch (DriveConstants.vendor) {
-		case REV_MECANUM:
-		//TODO: add mecanum here
-		break;
-		case CTRE_SWERVE:
+		switch (DriveConstants.robotMotorController) {
+		case CTRE_MOTORS:
 			drivetrainS.applyRequest();
 			break;
-		case REV_SWERVE:
-		
-		case TANK:
+		default:
 			// Get desired ChassisSpeeds from controller
 			double xSpeed = -RobotContainer.driveController.getLeftY();
 			double ySpeed = -RobotContainer.driveController.getLeftX();
@@ -86,7 +79,7 @@ public class SwerveC extends Command {
 					* DriveConstants.kMaxSpeedMetersPerSecond;
 			ySpeed = yLimiter.calculate(ySpeed)
 					* DriveConstants.kMaxSpeedMetersPerSecond;
-			if (DriveConstants.vendor == DriveConstants.driveTrainType.TANK) {
+			if (DriveConstants.driveType == DriveConstants.driveTrainType.TANK) {
 				turningSpeed = turningLimiter.calculate(turningSpeed)
 						* DriveConstants.kMaxSpeedMetersPerSecond;
 			} else {
@@ -105,7 +98,7 @@ public class SwerveC extends Command {
 			} else {
 				chassisSpeeds = new ChassisSpeeds(xSpeed, ySpeed, turningSpeed);
 			}
-			if (DriveConstants.vendor == DriveConstants.driveTrainType.TANK) {
+			if (DriveConstants.driveType == DriveConstants.driveTrainType.TANK) {
 				chassisSpeeds.vyMetersPerSecond = 0;
 			}
 			// set modules to proper speeds
