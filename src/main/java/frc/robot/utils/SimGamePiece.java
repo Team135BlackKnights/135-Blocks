@@ -1,6 +1,5 @@
 package frc.robot.utils;
 
-import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.util.Units;
@@ -15,7 +14,6 @@ import frc.robot.Constants.FRCMatchState;
 import frc.robot.Robot;
 import frc.robot.RobotContainer;
 
-import java.util.function.Supplier;
 import org.littletonrobotics.junction.Logger;
 import java.util.ArrayList;
 
@@ -34,17 +32,12 @@ import java.util.ArrayList;
  * Constants
  */
 public class SimGamePiece {
-	private static Supplier<Pose2d> robotPoseSupplier = () -> new Pose2d();
 	public static int closestPieceIndex;
-	//Returns the robot pose
-	public static void setRobotPoseSupplier(Supplier<Pose2d> supplier) {
-		robotPoseSupplier = supplier;
-	}
 
 	//contains all game pieces
 	public static ArrayList<Pose3d> currentPieces = new ArrayList<Pose3d>();
 	//contains the currently held Piece pose. If multiple game pieces can be held, this must be rewritten.
-	static Pose3d heldPiecePos = new Pose3d(robotPoseSupplier.get())
+	static Pose3d heldPiecePos = new Pose3d(RobotContainer.drivetrainS.getPose())
 			.transformBy(Constants.DriveSimConstants.launcherTransform);
 	static public boolean firstIntakeCycle = true, hasPiece = false,
 			firstOutake = true;
@@ -68,7 +61,7 @@ public class SimGamePiece {
 				Commands.defer(() -> {
 					// get our start pose for the shot, and end pose.
 					final Pose3d startPose = currentPieces.get(index);
-					final Pose3d endPose = new Pose3d(robotPoseSupplier.get())
+					final Pose3d endPose = new Pose3d(RobotContainer.drivetrainS.getPose())
 							.transformBy(
 									Constants.DriveSimConstants.launcherTransform);
 					//set our duration via how long the action will take
@@ -118,7 +111,7 @@ public class SimGamePiece {
 	 */
 	public static void updateStates() {
 		Pose3d[] translator = new Pose3d[currentPieces.size()];
-		heldPiecePos = new Pose3d(robotPoseSupplier.get())
+		heldPiecePos = new Pose3d(RobotContainer.drivetrainS.getPose())
 				.transformBy(Constants.DriveSimConstants.launcherTransform);
 		for (int i = 0; i < currentPieces.size(); i++) { //for all pieces
 			if (i == 0 && hasPiece) { //if is zero, and we have a pieces, make that location the held piece relative to bot

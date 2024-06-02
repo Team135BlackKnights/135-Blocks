@@ -1,8 +1,8 @@
 package frc.robot.subsystems.drive.Mecanum;
 
+import edu.wpi.first.hal.SimDouble;
+import edu.wpi.first.hal.simulation.SimDeviceDataJNI;
 import edu.wpi.first.math.Matrix;
-import edu.wpi.first.math.Nat;
-import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
@@ -13,6 +13,8 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 import frc.robot.Constants;
 import frc.robot.Robot;
+import edu.wpi.first.wpilibj.smartdashboard.Field2d;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.subsystems.drive.DrivetrainS;
 import edu.wpi.first.math.kinematics.MecanumDriveKinematics;
 import edu.wpi.first.math.kinematics.MecanumDriveWheelPositions;
@@ -25,6 +27,7 @@ import com.revrobotics.CANSparkLowLevel.MotorType;
 import static edu.wpi.first.units.Units.Seconds;
 import static edu.wpi.first.units.Units.Volts;
 import edu.wpi.first.wpilibj.simulation.DCMotorSim;
+
 import org.ejml.simple.UnsupportedOperation;
 import org.littletonrobotics.junction.Logger;
 import com.kauailabs.navx.frc.AHRS;
@@ -34,40 +37,29 @@ import com.pathplanner.lib.util.PIDConstants;
 import com.pathplanner.lib.util.ReplanningConfig;
 import com.revrobotics.CANSparkBase;
 import com.revrobotics.CANSparkFlex;
-import edu.wpi.first.math.system.LinearSystem;
-import edu.wpi.first.math.system.plant.LinearSystemId;
+import edu.wpi.first.math.system.plant.DCMotor;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.Measure;
 import edu.wpi.first.units.Time;
 import edu.wpi.first.units.Velocity;
 import edu.wpi.first.units.Voltage;
 import edu.wpi.first.wpilibj.SerialPort.Port;
 import frc.robot.utils.drive.DriveConstants;
-import frc.robot.utils.drive.MotorConstantContainer;
-import edu.wpi.first.math.system.LinearSystemLoop;
-import edu.wpi.first.math.controller.LinearQuadraticRegulator;
-import edu.wpi.first.math.estimator.KalmanFilter;
 
 public class REVMecanumS implements DrivetrainS {
 	//TODO: mecanum sim, pathPlanner support
 	private static CANSparkBase[] sparkMotors = new CANSparkBase[4];
 	private static int[] motorIDs;
-	private static double[] wheelSimPositions = { 0, 0, 0, 0
-	}, wheelSimVelocities = { 0, 0, 0, 0
-	};
-	private static LinearSystem<N1, N1, N1>[] linearSystems = new LinearSystem[4];
-	private static KalmanFilter<N1,N1,N1>[] wheelFilters = new KalmanFilter[4];
-	private static LinearQuadraticRegulator<N1,N1,N1>[] wheelRegulators = new LinearQuadraticRegulator[4];
-	private static LinearSystemLoop<N1,N1,N1>[] wheelSystemLoops = new LinearSystemLoop[4]; 
-	
+	Field2d robotField = new Field2d();
+	private double m_simYaw;
+	private static DCMotorSim[] motorSims = new DCMotorSim[4];
 	private static RelativeEncoder[] wheelRelativeEncoders = new RelativeEncoder[4];
 	private static AHRS gyro;
 	private static MecanumDriveKinematics driveKinematics;
 	private static MecanumDrivePoseEstimator drivePoseEstimator;
-	private static MotorConstantContainer[] wheelConstantContainers = new MotorConstantContainer[4];
 	private static double maxDriveVelMetersPerSec;
-	private static Pose2d pose = new Pose2d(0,0,new Rotation2d(0));
-	private static MecanumDriveWheelSpeeds speeds = new MecanumDriveWheelSpeeds(0,0,0,0);
-	private static MecanumDriveWheelPositions positions = new MecanumDriveWheelPositions(0,0,0,0);
+
+	private static Pose2d pose = new Pose2d(0, 0, new Rotation2d(0));
 	Measure<Velocity<Voltage>> rampRate = Volts.of(1).per(Seconds.of(1)); //for going FROM ZERO PER SECOND
 	Measure<Voltage> holdVoltage = Volts.of(4);
 	Measure<Time> timeout = Seconds.of(10);
@@ -101,42 +93,34 @@ public class REVMecanumS implements DrivetrainS {
 	 * @param frontRightID                     front right motor id
 	 * @param backLeftID                       back left motor id
 	 * @param backRightID                      back right motor id
-	 * @param frontLeftMotorConstantContainer  constants for the front left motor
-	 * @param frontRightMotorConstantContainer constants for the front right
-	 *                                            motor
-	 * @param backLeftMotorConstantContainer   constants for the back right motor
-	 * @param backRightMotorConstantContainer  constants for the back left motor
-	 * @param gearing                          gearing of the motor
-	 * @param kWheelRadiusMeters               radius of the wheel in meters
+	 * @param gearing                          gearing of the motor (>1 is a reduction)
+	 * @param kWheelDiameterMeters               radius of the wheel in meters
 	 * @param maxDriveVelMetersPerSec          maximum drive speed in meters per
 	 *                                            second
 	 */
 	public REVMecanumS(int frontLeftID, int frontRightID, int backLeftID,
-			int backRightID, int maxAmps,
-			MotorConstantContainer frontLeftMotorConstantContainer,
-			MotorConstantContainer frontRightMotorConstantContainer,
-			MotorConstantContainer backLeftMotorConstantContainer,
-			MotorConstantContainer backRightMotorConstantContainer, double gearing,
-			double kWheelRadiusMeters, double maxDriveVelMetersPerSec) {
-		REVMecanumS.maxDriveVelMetersPerSec = maxDriveVelMetersPerSec;
-		wheelConstantContainers = new MotorConstantContainer[] {
-				frontLeftMotorConstantContainer, frontRightMotorConstantContainer,
-				backLeftMotorConstantContainer, backRightMotorConstantContainer
-		};
+			int backRightID, int maxAmps, double gearing,
+			double kWheelDiameterMeters) {
+
 		motorIDs = new int[] { frontLeftID, frontRightID, backLeftID, backRightID
 		};
 		for (int i = 0; i < 4; i++) {
 			switch (DriveConstants.robotMotorController) {
 			case NEO_SPARK_MAX:
 				sparkMotors[i] = new CANSparkMax(motorIDs[i], MotorType.kBrushless);
+				motorSims[i] = new DCMotorSim(DCMotor.getNEO(1), gearing, .001);
+				maxDriveVelMetersPerSec = (5676 / 60.0) / gearing * (Math.PI * kWheelDiameterMeters);
 				break;
 			case VORTEX_SPARK_FLEX:
 				sparkMotors[i] = new CANSparkFlex(motorIDs[i],
 						MotorType.kBrushless);
+						motorSims[i] = new DCMotorSim(DCMotor.getNeoVortex(1), gearing, .001);
+				maxDriveVelMetersPerSec = (6784 / 60.0) / gearing * (Math.PI * kWheelDiameterMeters);
 				break;
 			default:
 				throw new UnsupportedOperation("no REV motortype found");
 			}
+			
 			sparkMotors[i].setIdleMode(IdleMode.kBrake);
 			sparkMotors[i].enableVoltageCompensation(12);
 			sparkMotors[i].setSmartCurrentLimit(i, i);
@@ -144,13 +128,9 @@ public class REVMecanumS implements DrivetrainS {
 			sparkMotors[i].burnFlash();
 			wheelRelativeEncoders[i] = sparkMotors[i].getEncoder();
 			wheelRelativeEncoders[i]
-					.setPositionConversionFactor(1 / gearing * kWheelRadiusMeters);
-			linearSystems[i] = LinearSystemId.identifyVelocitySystem(wheelConstantContainers[i].getKv(), wheelConstantContainers[i].getKa());
-			wheelFilters[i] = new KalmanFilter<N1,N1,N1>(Nat.N1(), Nat.N1(), linearSystems[i], VecBuilder.fill(3), VecBuilder.fill(.03), .02);
-			wheelRegulators[i] = new LinearQuadraticRegulator<N1,N1,N1>(linearSystems[i], VecBuilder.fill(10), VecBuilder.fill(12), .02);
-			wheelSystemLoops[i] = new LinearSystemLoop<>(linearSystems[i],wheelRegulators[i],wheelFilters[i],12,.02);
+					.setPositionConversionFactor(gearing * kWheelDiameterMeters * Math.PI);
+			wheelRelativeEncoders[i].setVelocityConversionFactor(gearing * kWheelDiameterMeters * Math.PI);
 		}
-		
 		gyro = new AHRS(Port.kUSB);
 		driveKinematics = new MecanumDriveKinematics(
 				DriveConstants.kModuleTranslations[0],
@@ -166,7 +146,7 @@ public class REVMecanumS implements DrivetrainS {
 				new HolonomicPathFollowerConfig( // HolonomicPathFollowerConfig, this should likely live in your Constants class
 						new PIDConstants(10, 0.0, 0.0), // Translation PID constants // We didn't have the chance to optimize PID constants so there will be some error in autonomous until these values are fixed
 						new PIDConstants(5, 0.0, 0.0), // Rotation PID constants
-						DriveConstants.kMaxSpeedMetersPerSecond, // Max module speed, in m/s
+						maxDriveVelMetersPerSec, // Max module speed, in m/s
 						DriveConstants.kDriveBaseRadius, // Drive base radius in meters. Distance from robot center to furthest module.
 						new ReplanningConfig(true, true) // Default path replanning config. See the API for the options here
 				), () -> Robot.isRed, this // Reference to this subsystem to set requirements
@@ -174,53 +154,55 @@ public class REVMecanumS implements DrivetrainS {
 	}
 
 	public MecanumDriveWheelSpeeds getWheelSpeeds() {
-		switch (Constants.currentMode) {
-			case SIM:
-				return new MecanumDriveWheelSpeeds(wheelSimVelocities[0],wheelSimVelocities[1],wheelSimVelocities[2],wheelSimVelocities[3]);
-
-		
-			default:
-					return new MecanumDriveWheelSpeeds(wheelRelativeEncoders[0].getVelocity(),
-				wheelRelativeEncoders[1].getVelocity(),
-				wheelRelativeEncoders[2].getVelocity(),
-				wheelRelativeEncoders[3].getVelocity());				
-		}
-
+			return new MecanumDriveWheelSpeeds(
+					wheelRelativeEncoders[0].getVelocity(),
+					wheelRelativeEncoders[1].getVelocity(),
+					wheelRelativeEncoders[2].getVelocity(),
+					wheelRelativeEncoders[3].getVelocity());
 	}
 
 	public MecanumDriveWheelPositions getWheelPositions() {
-		switch (Constants.currentMode) {
-		case SIM:
-			return new MecanumDriveWheelPositions(wheelSimPositions[0],
-					wheelSimPositions[1], wheelSimPositions[2],
-					wheelSimPositions[3]);
-		default:
 			return new MecanumDriveWheelPositions(
 					wheelRelativeEncoders[0].getPosition(),
 					wheelRelativeEncoders[1].getPosition(),
 					wheelRelativeEncoders[2].getPosition(),
 					wheelRelativeEncoders[3].getPosition());
-		}
 	}
 
 	@Override
 	public void periodic() {
-		for (int i = 0; i < 4; i++){
-	
+		drivePoseEstimator.update(getRotation2d(), getWheelPositions());
+		System.err.println(driveKinematics.toChassisSpeeds(getWheelSpeeds()));
+		robotField.setRobotPose(getPose());
+		SmartDashboard.putData(robotField);
+		if (Constants.currentMode == Constants.Mode.SIM) {
+			for (int i=0; i < 4; i++){
+				motorSims[i].setInputVoltage(sparkMotors[i].get()*12);
+				//There is probably a *2 somewhere, which is causing this .01 instead of .02. Do not remove the TF2 Coconut Solution™.
+				motorSims[i].update(.01);
+				wheelRelativeEncoders[i].setPosition(motorSims[i].getAngularPositionRotations());
+			}
 		}
 	}
 
 	@Override
 	public void setChassisSpeeds(ChassisSpeeds speeds) {
 		MecanumDriveWheelSpeeds indSpeeds = driveKinematics.toWheelSpeeds(speeds);
-		sparkMotors[0]
-				.set(indSpeeds.frontLeftMetersPerSecond / maxDriveVelMetersPerSec);
-		sparkMotors[1]
-				.set(indSpeeds.frontRightMetersPerSecond / maxDriveVelMetersPerSec);
-		sparkMotors[2]
-				.set(indSpeeds.rearLeftMetersPerSecond / maxDriveVelMetersPerSec);
-		sparkMotors[3]
-				.set(indSpeeds.rearRightMetersPerSecond / maxDriveVelMetersPerSec);
+		System.err.println(speeds + "\n" + maxDriveVelMetersPerSec);
+		indSpeeds.desaturate(maxDriveVelMetersPerSec);
+		sparkMotors[0].set(indSpeeds.frontLeftMetersPerSecond/maxDriveVelMetersPerSec);
+		sparkMotors[1].set(indSpeeds.frontRightMetersPerSecond/maxDriveVelMetersPerSec);
+		sparkMotors[2].set(indSpeeds.rearLeftMetersPerSecond/maxDriveVelMetersPerSec);
+		sparkMotors[3].set(indSpeeds.rearRightMetersPerSecond/maxDriveVelMetersPerSec);
+		if (Constants.currentMode == Constants.Mode.SIM){
+			m_simYaw += speeds.omegaRadiansPerSecond * 1;
+			int dev = SimDeviceDataJNI.getSimDeviceHandle("navX-Sensor[0]");
+			SimDouble angle = new SimDouble(
+					SimDeviceDataJNI.getSimValueHandle(dev, "Yaw"));
+			// NavX expects clockwise positive, but sim outputs clockwise negative
+			angle.set(Math.IEEEremainder(-Units.radiansToDegrees(m_simYaw), 360));
+		}
+		
 	}
 
 	@Override
@@ -245,14 +227,18 @@ public class REVMecanumS implements DrivetrainS {
 
 	@Override
 	public void stopModules() {
-		
 		for (int i = 0; i < 4; i++) {
 			sparkMotors[i].set(0);
 		}
 	}
 
 	@Override
-	public Rotation2d getRotation2d() { return new Rotation2d(gyro.getAngle()); }
+	public Rotation2d getRotation2d() { 
+		if (Constants.currentMode == Constants.Mode.SIM){
+			return Rotation2d.fromDegrees(m_simYaw);
+		}
+		return Rotation2d.fromDegrees(gyro.getAngle()); 
+	}
 
 	/**
 	 * @exception THIS CANNOT BE DONE USING MECANUM!

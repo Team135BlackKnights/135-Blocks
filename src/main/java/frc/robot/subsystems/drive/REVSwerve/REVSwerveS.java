@@ -42,9 +42,7 @@ import static edu.wpi.first.units.Units.Seconds;
 import static edu.wpi.first.units.Units.Volts;
 import java.util.HashMap;
 
-import frc.robot.utils.drive.DriveConstants.SwerveConstants.ModulePosition;
-import java.util.function.Supplier;
-import frc.robot.utils.SimGamePiece;
+import frc.robot.utils.drive.DriveConstants.TrainConstants.ModulePosition;
 
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
@@ -54,9 +52,6 @@ import org.littletonrobotics.junction.Logger;
  */
 
 public class REVSwerveS extends SubsystemBase implements DrivetrainS {
-	private Supplier<Pose2d> pose2dSupplier = () -> {
-		return getPose();
-	};
 	private static HashMap<ModulePosition, REVSwerveModule> m_swerveModules = new HashMap<>();
 	static {
 		initalizeModules();
@@ -163,8 +158,8 @@ public class REVSwerveS extends SubsystemBase implements DrivetrainS {
 				DriveConstants.kFrontLeftAbsEncoderPort,
 				DriveConstants.kFrontLeftAbsEncoderOffsetRad,
 				DriveConstants.kFrontLeftAbsEncoderReversed,
-				DriveConstants.SwerveConstants.frontLeftDriveMotorConstantContainer,
-				DriveConstants.SwerveConstants.overallTurningMotorConstantContainer);
+				DriveConstants.TrainConstants.frontLeftDriveMotorConstantContainer,
+				DriveConstants.TrainConstants.overallTurningMotorConstantContainer);
 		REVSwerveModule front_right = new REVSwerveModule(
 				DriveConstants.kFrontRightDrivePort,
 				DriveConstants.kFrontRightTurningPort,
@@ -173,8 +168,8 @@ public class REVSwerveS extends SubsystemBase implements DrivetrainS {
 				DriveConstants.kFrontRightAbsEncoderPort,
 				DriveConstants.kFrontRightAbsEncoderOffsetRad,
 				DriveConstants.kFrontRightAbsEncoderReversed,
-				DriveConstants.SwerveConstants.frontRightDriveMotorConstantContainer,
-				DriveConstants.SwerveConstants.overallTurningMotorConstantContainer);
+				DriveConstants.TrainConstants.frontRightDriveMotorConstantContainer,
+				DriveConstants.TrainConstants.overallTurningMotorConstantContainer);
 		REVSwerveModule back_left = new REVSwerveModule(
 				DriveConstants.kBackLeftDrivePort,
 				DriveConstants.kBackLeftTurningPort,
@@ -183,8 +178,8 @@ public class REVSwerveS extends SubsystemBase implements DrivetrainS {
 				DriveConstants.kBackLeftAbsEncoderPort,
 				DriveConstants.kBackLeftAbsEncoderOffsetRad,
 				DriveConstants.kBackLeftAbsEncoderReversed,
-				DriveConstants.SwerveConstants.backLeftDriveMotorConstantContainer,
-				DriveConstants.SwerveConstants.overallTurningMotorConstantContainer);
+				DriveConstants.TrainConstants.backLeftDriveMotorConstantContainer,
+				DriveConstants.TrainConstants.overallTurningMotorConstantContainer);
 		REVSwerveModule back_right = new REVSwerveModule(
 				DriveConstants.kBackRightDrivePort,
 				DriveConstants.kBackRightTurningPort,
@@ -193,8 +188,8 @@ public class REVSwerveS extends SubsystemBase implements DrivetrainS {
 				DriveConstants.kBackRightAbsEncoderPort,
 				DriveConstants.kBackRightAbsEncoderOffsetRad,
 				DriveConstants.kBackRightAbsEncoderReversed,
-				DriveConstants.SwerveConstants.backRightDriveMotorConstantContainer,
-				DriveConstants.SwerveConstants.overallTurningMotorConstantContainer);
+				DriveConstants.TrainConstants.backRightDriveMotorConstantContainer,
+				DriveConstants.TrainConstants.overallTurningMotorConstantContainer);
 		for (ModulePosition position : ModulePosition.values()) {
 			if (position.name() == "FRONT_LEFT") {
 				m_swerveModules.put(position, front_left);
@@ -242,9 +237,6 @@ public class REVSwerveS extends SubsystemBase implements DrivetrainS {
 		SmartDashboard.putNumber("D Gain AutoLock", kD);
 		SmartDashboard.putNumber("Distance AutoLock", kDistanceMultipler);
 		autoLockController = new PIDController(kP, kI, kD);*/
-		if (Constants.currentMode == Constants.Mode.SIM) {
-			SimGamePiece.setRobotPoseSupplier(pose2dSupplier);
-		}
 	}
 
 	@Override

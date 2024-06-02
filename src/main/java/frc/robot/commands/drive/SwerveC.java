@@ -40,11 +40,11 @@ public class SwerveC extends Command {
 
 	@Override
 	public void execute() {
-		switch (DriveConstants.robotMotorController) {
-		case CTRE_MOTORS:
+		
+		if (DriveConstants.driveType == DriveConstants.driveTrainType.SWERVE
+				&& DriveConstants.robotMotorController == DriveConstants.MotorVendor.CTRE_MOTORS) {
 			drivetrainS.applyRequest();
-			break;
-		default:
+		} else {
 			// Get desired ChassisSpeeds from controller
 			double xSpeed = -RobotContainer.driveController.getLeftY();
 			double ySpeed = -RobotContainer.driveController.getLeftX();
@@ -57,20 +57,20 @@ public class SwerveC extends Command {
 			}*/
 			// If the desired ChassisSpeeds are really small (ie from controller drift) make
 			// them even smaller so that the robot doesn't move
-			xSpeed = Math.abs(xSpeed) > DriveConstants.SwerveConstants.kDeadband
+			xSpeed = Math.abs(xSpeed) > DriveConstants.TrainConstants.kDeadband
 					? xSpeed
 					: 0.0000;
-			ySpeed = Math.abs(ySpeed) > DriveConstants.SwerveConstants.kDeadband
+			ySpeed = Math.abs(ySpeed) > DriveConstants.TrainConstants.kDeadband
 					? ySpeed
 					: 0.0000;
 			/*if (SwerveS.autoLock == true && CameraS.aprilTagVisible() == true) {
 				turningSpeed = Math
-						.abs(turningSpeed) > DriveConstants.SwerveConstants.kAutoDeadband
+						.abs(turningSpeed) > DriveConstants.TrainConstants.kAutoDeadband
 								? turningSpeed
 								: 0.0000;
 			} else {*/
 			turningSpeed = Math
-					.abs(turningSpeed) > DriveConstants.SwerveConstants.kDeadband
+					.abs(turningSpeed) > DriveConstants.TrainConstants.kDeadband
 							? turningSpeed
 							: 0.0000;
 			//}
@@ -102,17 +102,16 @@ public class SwerveC extends Command {
 				chassisSpeeds.vyMetersPerSecond = 0;
 			}
 			// set modules to proper speeds
-			if (Math.abs(xSpeed) < DriveConstants.SwerveConstants.kDeadband
-					&& Math.abs(ySpeed) < DriveConstants.SwerveConstants.kDeadband
+			if (Math.abs(xSpeed) < DriveConstants.TrainConstants.kDeadband
+					&& Math.abs(ySpeed) < DriveConstants.TrainConstants.kDeadband
 					&& Math.abs(
-							turningSpeed) < DriveConstants.SwerveConstants.kDeadband) {
+							turningSpeed) < DriveConstants.TrainConstants.kDeadband) {
 				drivetrainS.setChassisSpeeds(new ChassisSpeeds(0, 0, 0));//for odom
 				drivetrainS.stopModules();
 			} else {
 				drivetrainS.setChassisSpeeds(chassisSpeeds);
 			}
-			break;
-		}
+		} 
 	}
 	/*Use this link to compute the regression model:https://planetcalc.com/5992/#google_vignette 
 	 Each of the files has an x and y output so put those in the respective lists, or use a ti-84 stats bar*/

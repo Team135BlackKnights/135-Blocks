@@ -27,6 +27,7 @@
     "types": {
       "/AdvantageKit/RealOutputs/MyMechanism": "Mechanism2d",
       "/FMSInfo": "FMSInfo",
+      "/Field": "Field2d",
       "/SmartDashboard/Auto Chooser": "String Chooser",
       "/SmartDashboard/Field": "Field2d",
       "/SmartDashboard/Mech2d": "Mechanism2d",
