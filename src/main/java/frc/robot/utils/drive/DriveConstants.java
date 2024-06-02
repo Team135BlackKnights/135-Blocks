@@ -14,12 +14,12 @@ public class DriveConstants {
 		NEO_SPARK_MAX,VORTEX_SPARK_FLEX,CTRE_MOTORS
   }
   	public enum driveTrainType{
-		SWERVE,TANK,REV_MECANUM
+		SWERVE,TANK,MECANUM
 	}
 	public static boolean fieldOriented = true;
 	//135-Blocks was tested on a chassis with all CANSparkMaxes, as well as all Kraken-x60s.
-	public static MotorVendor robotMotorController = MotorVendor.CTRE_MOTORS;
-	public static driveTrainType driveType = driveTrainType.SWERVE;
+	public static MotorVendor robotMotorController = MotorVendor.NEO_SPARK_MAX;
+	public static driveTrainType driveType = driveTrainType.MECANUM;
 	public static final double kChassisWidth = Units.inchesToMeters(24.25), // Distance between Left and Right wheels
 			kChassisLength = Units.inchesToMeters(24.25), // Distance betwwen Front and Back wheels
 			kDriveBaseRadius = Units.inchesToMeters(Math.sqrt(
@@ -70,7 +70,7 @@ public class DriveConstants {
 			kBackRightDriveReversed = false, kBackRightTurningReversed = true,
 			kBackRightAbsEncoderReversed = false;
 
-	public static class SwerveConstants {
+	public static class TrainConstants {
 		public static double kWheelDiameter = Units.inchesToMeters(3.873),
 				kDriveMotorGearRatio = 6.75, kTurningMotorGearRatio = 150/7,
 				kDriveEncoderRot2Meter = kDriveMotorGearRatio * Math.PI

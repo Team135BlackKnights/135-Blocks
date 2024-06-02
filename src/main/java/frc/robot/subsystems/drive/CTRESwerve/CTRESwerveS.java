@@ -1,6 +1,5 @@
 package frc.robot.subsystems.drive.CTRESwerve;
 
-import java.util.function.Supplier;
 
 import com.ctre.phoenix6.SignalLogger;
 import com.ctre.phoenix6.Utils;
@@ -31,7 +30,6 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 import frc.robot.Constants;
 import frc.robot.RobotContainer;
 import frc.robot.subsystems.drive.DrivetrainS;
-import frc.robot.utils.SimGamePiece;
 import frc.robot.utils.drive.DriveConstants;
 
 import static edu.wpi.first.units.Units.Volts;
@@ -41,9 +39,7 @@ import static edu.wpi.first.units.Units.Volts;
  * subsystem so it can be used in command-based projects easily.
  */
 public class CTRESwerveS extends SwerveDrivetrain implements DrivetrainS {
-	private Supplier<Pose2d> pose2dSupplier = () -> {
-		return getPose();
-	};
+
 	private static final double kSimLoopPeriod = 0.01; // 5 ms
 	private Notifier m_simNotifier = null; //Checks for updates
 	private double m_lastSimTime;
@@ -72,7 +68,6 @@ public class CTRESwerveS extends SwerveDrivetrain implements DrivetrainS {
 			startSimThread();
 			super.seedFieldRelative(
 					new Pose2d(new Translation2d(), Rotation2d.fromDegrees(90)));
-			SimGamePiece.setRobotPoseSupplier(pose2dSupplier);
 		}
 		//Pathplanner declaration
 		AutoBuilder.configureHolonomic(() -> this.getState().Pose, // Supplier of current robot pose
@@ -102,7 +97,6 @@ public class CTRESwerveS extends SwerveDrivetrain implements DrivetrainS {
 			startSimThread();
 			super.seedFieldRelative(
 					new Pose2d(new Translation2d(), Rotation2d.fromDegrees(0)));
-			SimGamePiece.setRobotPoseSupplier(pose2dSupplier);
 		}
 		AutoBuilder.configureHolonomic(() -> this.getState().Pose, // Supplier of current robot pose
 				this::seedFieldRelative, // Consumer for seeding pose against auto

@@ -113,13 +113,13 @@ public class REVSwerveModule extends SubsystemBase {
 		turningMotor.setIdleMode(IdleMode.kBrake);
 		//accounts for gear ratios
 		driveEncoder.setPositionConversionFactor(
-				DriveConstants.SwerveConstants.kDriveEncoderRot2Meter);
+				DriveConstants.TrainConstants.kDriveEncoderRot2Meter);
 		driveEncoder.setVelocityConversionFactor(
-				DriveConstants.SwerveConstants.kDriveEncoderRPM2MeterPerSec);
+				DriveConstants.TrainConstants.kDriveEncoderRPM2MeterPerSec);
 		turningEncoder.setPositionConversionFactor(
-				DriveConstants.SwerveConstants.kTurningEncoderRot2Rad);
+				DriveConstants.TrainConstants.kTurningEncoderRot2Rad);
 		turningEncoder.setVelocityConversionFactor(
-				DriveConstants.SwerveConstants.kTurningEncoderRPM2RadPerSec);
+				DriveConstants.TrainConstants.kTurningEncoderRPM2RadPerSec);
 		//creates pidController, used exclusively for turning because that has to be precise
 		turningPIDController = new PIDController(.5, 0, 0);
 		//makes the value loop around

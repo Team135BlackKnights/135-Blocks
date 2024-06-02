@@ -5,6 +5,7 @@ package frc.robot;
 
 import frc.robot.commands.drive.SwerveC;
 import frc.robot.subsystems.drive.DrivetrainS;
+import frc.robot.subsystems.drive.CTREMecanum.CTREMecanumS;
 import frc.robot.subsystems.drive.CTRESwerve.CTRESwerveS;
 import frc.robot.subsystems.drive.CTRESwerve.Telemetry;
 import frc.robot.subsystems.drive.CTRESwerve.TunerConstants;
@@ -20,6 +21,7 @@ import frc.robot.subsystems.state_space.ArmS;
 import frc.robot.subsystems.state_space.ElevatorS;
 import frc.robot.subsystems.state_space.FlywheelS;
 
+import com.ctre.phoenix6.SignalLogger;
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.revrobotics.CANSparkBase.IdleMode;
 
@@ -30,6 +32,7 @@ import java.util.function.BooleanSupplier;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 
@@ -54,7 +57,9 @@ public class RobotContainer {
 			xButtonTest = new JoystickButton(testingController, 3),
 			yButtonTest = new JoystickButton(testingController, 4),
 			leftBumperTest = new JoystickButton(testingController, 5),
-			rightBumperTest = new JoystickButton(testingController, 6);
+			rightBumperTest = new JoystickButton(testingController, 6),
+			selectButtonTest = new JoystickButton(testingController, 7),
+			startButtonTest = new JoystickButton(testingController, 8);
 	static int currentTest = 0;
 
 	// POVButton manipPOVZero = new POVButton(manipController, 0);
@@ -84,15 +89,19 @@ public class RobotContainer {
 			drivetrainS = new TankS(10, 11, 12, 13, false, false, false, false,
 					IdleMode.kBrake, 80, 7.5, Units.inchesToMeters(6));
 			break;
-		case REV_MECANUM:
-			//Placeholder values
-			drivetrainS = new REVMecanumS(10, 11, 12, 13, 80,
-					new MotorConstantContainer(1, 1, 1, 0, 0),
-					new MotorConstantContainer(1, 1, 1, 0, 0),
-					new MotorConstantContainer(1, 1, 1, 0, 0),
-					new MotorConstantContainer(1, 1, 1, 0, 0), 7.5,
-					Units.inchesToMeters(6), 10);
+		case MECANUM:
+			switch (DriveConstants.robotMotorController) {
+			case CTRE_MOTORS:
+				drivetrainS = new CTREMecanumS();
+				break;
+			case NEO_SPARK_MAX:
+			case VORTEX_SPARK_FLEX:
+				drivetrainS = new REVMecanumS(10, 11, 12, 13, 80, 7.5,
+						Units.inchesToMeters(6));
+				break;
+			}
 			break;
+		//Placeholder values
 		default:
 			throw new IllegalArgumentException(
 					"Unknown implementation type, please check DriveConstants.java!");
@@ -126,6 +135,8 @@ public class RobotContainer {
 				currentTest--;
 			}
 		}));
+		selectButtonTest.onTrue(Commands.runOnce(SignalLogger::stop));
+		startButtonTest.onTrue(Commands.runOnce(SignalLogger::start));
 	}
 
 	/**
@@ -140,7 +151,8 @@ public class RobotContainer {
 
 	public static BooleanSupplier isDriving() {
 		BooleanSupplier returnVal;
-		if (aButtonTest.getAsBoolean() || bButtonTest.getAsBoolean() || xButtonTest.getAsBoolean() || yButtonTest.getAsBoolean()) {
+		if (aButtonTest.getAsBoolean() || bButtonTest.getAsBoolean()
+				|| xButtonTest.getAsBoolean() || yButtonTest.getAsBoolean()) {
 			returnVal = () -> false;
 			return returnVal; //currently doing a test
 		}
