@@ -19,7 +19,6 @@ import frc.robot.subsystems.drive.REVSwerve.SwerveModules.REVSwerveModuleContain
 import frc.robot.subsystems.drive.REVTank.REVTankConstantContainer;
 import frc.robot.subsystems.drive.REVTank.REVTankS;
 import frc.robot.utils.drive.DriveConstants;
-import frc.robot.utils.drive.MotorConstantContainer;
 import frc.robot.commands.drive.vision.DriveToAITarget;
 
 import frc.robot.subsystems.vision.PhotonVisionS;
