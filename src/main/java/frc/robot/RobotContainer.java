@@ -5,13 +5,19 @@ package frc.robot;
 
 import frc.robot.commands.drive.SwerveC;
 import frc.robot.subsystems.drive.DrivetrainS;
+import frc.robot.subsystems.drive.CTREMecanum.CTREMecanumConstantContainer;
 import frc.robot.subsystems.drive.CTREMecanum.CTREMecanumS;
 import frc.robot.subsystems.drive.CTRESwerve.CTRESwerveS;
 import frc.robot.subsystems.drive.CTRESwerve.Telemetry;
 import frc.robot.subsystems.drive.CTRESwerve.TunerConstants;
-import frc.robot.subsystems.drive.Mecanum.REVMecanumS;
+import frc.robot.subsystems.drive.CTRETank.CTRETankConstantContainer;
+import frc.robot.subsystems.drive.CTRETank.CTRETankS;
+import frc.robot.subsystems.drive.REVMecanum.REVMecanumConstantContainer;
+import frc.robot.subsystems.drive.REVMecanum.REVMecanumS;
 import frc.robot.subsystems.drive.REVSwerve.REVSwerveS;
-import frc.robot.subsystems.drive.Tank.TankS;
+import frc.robot.subsystems.drive.REVSwerve.SwerveModules.REVSwerveModuleContainers;
+import frc.robot.subsystems.drive.REVTank.REVTankConstantContainer;
+import frc.robot.subsystems.drive.REVTank.REVTankS;
 import frc.robot.utils.drive.DriveConstants;
 import frc.robot.utils.drive.MotorConstantContainer;
 import frc.robot.commands.state_space.ArmC;
@@ -20,6 +26,9 @@ import frc.robot.commands.state_space.FlywheelC;
 import frc.robot.subsystems.state_space.ArmS;
 import frc.robot.subsystems.state_space.ElevatorS;
 import frc.robot.subsystems.state_space.FlywheelS;
+
+import frc.robot.subsystems.drive.REVSwerve.REVModuleConstantContainer;
+import frc.robot.utils.drive.DriveConstants.TrainConstants;
 
 import com.ctre.phoenix6.SignalLogger;
 import com.pathplanner.lib.auto.AutoBuilder;
@@ -81,23 +90,60 @@ public class RobotContainer {
 				break;
 			case NEO_SPARK_MAX:
 			case VORTEX_SPARK_FLEX:
-				drivetrainS = new REVSwerveS();
+				drivetrainS = new REVSwerveS(new REVModuleConstantContainer[] {
+						REVSwerveModuleContainers.frontLeftConstantContainer,
+						REVSwerveModuleContainers.frontRightConstantContainer,
+						REVSwerveModuleContainers.backLeftConstantContainer,
+						REVSwerveModuleContainers.backRightConstantContainer
+				}, DriveConstants.kMaxSpeedMetersPerSecond,
+						DriveConstants.kDriveBaseRadius);
 				break;
 			}
 			break;
 		case TANK:
-			drivetrainS = new TankS(10, 11, 12, 13, false, false, false, false,
-					IdleMode.kBrake, 80, 7.5, Units.inchesToMeters(6));
+			switch (DriveConstants.robotMotorController) {
+			case CTRE_MOTORS:
+				drivetrainS = new CTRETankS(new CTRETankConstantContainer(30,
+						DriveConstants.kFrontLeftDrivePort,
+						DriveConstants.kBackLeftDrivePort,
+						DriveConstants.kFrontRightDrivePort,
+						DriveConstants.kBackRightDrivePort,
+						TrainConstants.kDriveMotorGearRatio,
+						DriveConstants.kChassisLength,
+						TrainConstants.kDriveEncoderRot2Meter,
+						Units.inchesToMeters(6), false, false,
+						DriveConstants.kMaxSpeedMetersPerSecond));
+				break;
+			case NEO_SPARK_MAX:
+			case VORTEX_SPARK_FLEX:
+				//10, 11, 12, 13, false, false, false, false, IdleMode.kBrake, 80, 7.5, Units.inchesToMeters(6)
+				drivetrainS = new REVTankS(new REVTankConstantContainer(10, 11, 12,
+						13, false, false, false, false, IdleMode.kBrake, 80, 7.5,
+						Units.inchesToMeters(6), DriveConstants.kChassisLength));
+				break;
+			}
 			break;
 		case MECANUM:
 			switch (DriveConstants.robotMotorController) {
 			case CTRE_MOTORS:
-				drivetrainS = new CTREMecanumS();
+				drivetrainS = new CTREMecanumS(new CTREMecanumConstantContainer(30,
+						DriveConstants.kFrontLeftDrivePort,
+						DriveConstants.kBackLeftDrivePort,
+						DriveConstants.kFrontRightDrivePort,
+						DriveConstants.kBackRightDrivePort,
+						DriveConstants.kChassisWidth,
+						TrainConstants.kDriveMotorGearRatio,
+						TrainConstants.kDriveEncoderRot2Meter,
+						DriveConstants.kMaxSpeedMetersPerSecond,
+						DriveConstants.kDriveBaseRadius,
+						DriveConstants.kModuleTranslations));
 				break;
 			case NEO_SPARK_MAX:
 			case VORTEX_SPARK_FLEX:
-				drivetrainS = new REVMecanumS(10, 11, 12, 13, 80, 7.5,
-						Units.inchesToMeters(6));
+				//10, 11, 12, 13, 80, 7.5,
+				drivetrainS = new REVMecanumS(new REVMecanumConstantContainer(10,
+						11, 12, 13, 80, 7.5, TrainConstants.kWheelDiameter,
+						DriveConstants.kModuleTranslations, Units.inchesToMeters(6)));
 				break;
 			}
 			break;

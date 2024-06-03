@@ -1,4 +1,4 @@
-package frc.robot.subsystems.drive.Tank;
+package frc.robot.subsystems.drive.REVTank;
 
 import org.littletonrobotics.junction.Logger;
 
@@ -10,7 +10,6 @@ import com.revrobotics.CANSparkBase;
 import com.revrobotics.CANSparkFlex;
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.RelativeEncoder;
-import com.revrobotics.CANSparkBase.IdleMode;
 import com.revrobotics.CANSparkLowLevel.MotorType;
 
 import edu.wpi.first.hal.SimDouble;
@@ -44,15 +43,14 @@ import frc.robot.utils.drive.DriveConstants;
 import static edu.wpi.first.units.Units.Seconds;
 import static edu.wpi.first.units.Units.Volts;
 
-public class TankS implements DrivetrainS {
+public class REVTankS implements DrivetrainS {
 	private Pose2d pose = new Pose2d();
 	private static AHRS gyro = new AHRS();
 	private DifferentialDrivePoseEstimator poseEstimator;
 	private static CANSparkBase[] motors = new CANSparkBase[4];
 	private static RelativeEncoder[] encoders = new RelativeEncoder[4];
 	private static final DCMotorSim[] motorSimModels = new DCMotorSim[4];
-	private DifferentialDriveKinematics differentialDriveKinematics = new DifferentialDriveKinematics(
-			DriveConstants.kChassisLength);
+	private DifferentialDriveKinematics differentialDriveKinematics;
 	private DifferentialDriveWheelPositions wheelPositions;
 	private DifferentialDriveWheelSpeeds wheelSpeeds;
 	Measure<Velocity<Voltage>> rampRate = Volts.of(1).per(Seconds.of(1)); //for going FROM ZERO PER SECOND
@@ -88,30 +86,28 @@ public class TankS implements DrivetrainS {
 	 double dtSeconds = 0.02;
 	 double kDriveEncoderRot2Meter, maxSpeed;
 	Field2d robotField = new Field2d();
-	public TankS(int leftMasterID, int leftFollowerID, int rightMasterID,
-			int rightFollowerID, boolean leftMasterInverted,
-			boolean leftFollowerInverted, boolean rightMasterInverted,
-			boolean rightFollowerInverted, IdleMode idleMode, int maxAmps,
-			double gearing, double kWheelDiameterMeters) {
-		int[] motorIDs = {leftMasterID, leftFollowerID, rightMasterID, rightFollowerID};
-		boolean[] motorsInverted = {leftMasterInverted, leftFollowerInverted, rightMasterInverted, rightFollowerInverted};
+	public REVTankS(REVTankConstantContainer container) {
+			differentialDriveKinematics	 = new DifferentialDriveKinematics(
+			container.getChassisLength());
+		int[] motorIDs = {container.getLeftMasterID(), container.getLeftFollowerID(), container.getRightMasterID(), container.getRightFollowerID()};
+		boolean[] motorsInverted = {container.getLeftMasterInverted(), container.getLeftFollowerInverted(), container.getRightMasterInverted(), container.getRightFollowerInverted()};
 		for (int i = 0; i <4; i++){
 			switch (DriveConstants.robotMotorController) {
 				case NEO_SPARK_MAX:
 				motors[i] = new CANSparkMax(motorIDs[i], MotorType.kBrushless);
-				motorSimModels[i] = new DCMotorSim(DCMotor.getNEO(1), gearing, .001);
-				this.maxSpeed = (5676 / 60.0) / gearing * (Math.PI * kWheelDiameterMeters);
+				motorSimModels[i] = new DCMotorSim(DCMotor.getNEO(1), container.getGearing(), .001);
+				this.maxSpeed = (5676 / 60.0) / container.getGearing() * (Math.PI * container.getWheelDiameterMeters());
 					break;
 				case VORTEX_SPARK_FLEX:
 				motors[i] = new CANSparkFlex(motorIDs[i], MotorType.kBrushless);
-				motorSimModels[i] = new DCMotorSim(DCMotor.getNeoVortex(1), gearing, .001);
-				this.maxSpeed = (6784 / 60.0) / gearing * (Math.PI * kWheelDiameterMeters);
+				motorSimModels[i] = new DCMotorSim(DCMotor.getNeoVortex(1), container.getGearing(), .001);
+				this.maxSpeed = (6784 / 60.0) / container.getGearing() * (Math.PI * container.getWheelDiameterMeters());
 
 				break;
 				default:
 					break;
 			}
-			 kDriveEncoderRot2Meter = gearing * Math.PI* kWheelDiameterMeters;
+			 kDriveEncoderRot2Meter = container.getGearing() * Math.PI* container.getWheelDiameterMeters();
 			encoders[i] = motors[i].getEncoder();
 			encoders[i].setPositionConversionFactor(kDriveEncoderRot2Meter);
 			encoders[i].setVelocityConversionFactor(kDriveEncoderRot2Meter);
@@ -119,9 +115,9 @@ public class TankS implements DrivetrainS {
 			if (i%2 == 1){
 				motors[i].follow(motors[i-1]);
 			}
-			motors[i].setIdleMode(idleMode);
+			motors[i].setIdleMode(container.getIdleMode());
 			motors[i].enableVoltageCompensation(12);
-			motors[i].setSmartCurrentLimit(maxAmps, maxAmps);
+			motors[i].setSmartCurrentLimit(container.getMaxAmps(), container.getMaxAmps());
 			motors[i].clearFaults();
 			motors[i].burnFlash();
 		}

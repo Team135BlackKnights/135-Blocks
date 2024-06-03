@@ -48,9 +48,11 @@ An example branch directory could be:
 ## Usage
 
 Refer to the [PyDriverStation](https://github.com/Team135BlackKnights/PyDriverStation) repository for instructions on how to use the API for the neural network.
-
+ 
 
 ## Blocks
+
+
 ## Cameras, Photon-Vision, and Limelight
 
 This block contains:
@@ -112,7 +114,7 @@ This block contains:
 - `LEDConstantColorC`: Displays a constant color.
 - `LEDRainbowC`: Cycles through the rainbow at a given interval.
 
-### Note
+#### Note
 The system saves images on boot, so that if the USB is unplugged during the match, no problems occur.
 
 ### Simulation
@@ -125,4 +127,23 @@ This block contains:
 
 - Pre-made single-acting and double-acting solenoids.
 - A (questionable) function to hold pneumatic cylinders at certain positions using a bang-bang PID-like controller.
-  
+
+
+ ## Wrappers
+ 
+ All blocks need two wrappers to be used in order to function:
+ 
+  - `MotorConstantContainer`:  A wrapper that holds characterization values (ks, kv, ka, kp, kd) of a particualr motor. Throws an error if incorrect value is input. Used for state-space models and drivetrain simulation.
+  - Individual drivetrain constant containers: Constant containers that hold values necessary to create a drivetrain to know which constants are needed (Example: `REVModuleConstantContainer`)
+
+ ## MatchState 
+
+ This value lets you see what part of the FRC Match the robot is in, including endgame.
+
+ ## Getting Started
+ In order to get started with this system, first make a fork of this repository. After that is done, merge the branches with the features that you need into the main branch, and tweak constants accordingly. If you want to use simulation, make sure you are familiar with AdvantageKit, 
+ AdvantageScope and URCL as this repository relies on all three to function. 
+
+ ## Workflow
+ This repository is designed so that multiple programmers can merge their work in from separate branches without any issues. In order to accomplish this, create a folder with the name of each branch under all of the `utils` folders.  If this is done correctly, the only merge issues that  
+ need to be resolved should be in Robot.java and RobotConstantContainer.java.

@@ -107,9 +107,9 @@ public class DataHandler {
 				}
 			}
 			System.err.println(port + "GOOD!");
-			if (Constants.currentMode == Constants.Mode.SIM){
-				PortForwarder.add(port,"localhost",port);
-			}else{
+			if (Constants.currentMode == Constants.Mode.SIM) {
+				PortForwarder.add(port, "localhost", port);
+			} else {
 				PortForwarder.add(port, "10.1.35.2", port);
 			}
 			serverSocket.setSoTimeout(1);
@@ -422,6 +422,16 @@ public class DataHandler {
 		return Double.parseDouble(outputList[index]);
 	}
 
+	private static List<Double> makeDoubleList(String data) {
+		String formattedData = data.replace("[", "").replace("]", "").trim();
+		String[] outputs = formattedData.split("\\s+");
+		List<Double> outputList = new ArrayList<>();
+		for (String numberString : outputs) {
+			outputList.add(Double.parseDouble(numberString));
+		}
+		return outputList;
+	}
+
 	/**
 	 * Updates state of the handler, and continually sends any data via network
 	 * tables. Whenever we have a change in NetworkTables, log that as well.q
@@ -475,24 +485,19 @@ public class DataHandler {
 			if (receivedData.has("timestamp")) {
 				int time = receivedData.get("timestamp").getAsInt();
 				if (time != oldTime + 1) {
-					SmartDashboard.putString("PiConnection", "SKIPPED VIA SOCKET" + oldTime);
+					SmartDashboard.putString("PiConnection",
+							"SKIPPED VIA SOCKET" + oldTime);
 				}
 				oldTime = time;
 				//System.out.println("time: " + time);
 			}
 			if (receivedData.has("outputs")) {
-				if(responseData.containsKey("modelDistance")){
+				if (responseData.containsKey("modelDistance")) {
 					responseData.remove("modelDistance");
 				}
 				String rawData = receivedData.get("outputs").getAsString();
-				rawData = rawData.replace("[", "").replace("]","").trim();
-				String[] outputs = rawData.split("\\s+");
-				List<Double> outputList = new ArrayList<>();
-				for (String numberString : outputs){
-					outputList.add(Double.parseDouble(numberString));
-				}
-				System.out.println(outputList);
-				
+				List<Double> list = makeDoubleList(rawData);
+				System.out.println(list);
 				//Remove brackets
 			}
 			responseData.put("status", "running");
