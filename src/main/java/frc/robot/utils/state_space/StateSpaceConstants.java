@@ -6,7 +6,7 @@ import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 import frc.robot.RobotContainer;
 import frc.robot.utils.drive.DriveConstants;
-import frc.robot.utils.drive.MotorConstantContainer;
+import frc.robot.utils.MotorConstantContainer;
 
 public class StateSpaceConstants {
 	public static boolean debug = true;
