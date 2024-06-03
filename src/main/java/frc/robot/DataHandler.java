@@ -500,15 +500,6 @@ public class DataHandler {
 				System.out.println(list);
 				//Remove brackets
 			}
-			if (receivedData.has("movingArm")) {
-				if (responseData.containsKey("pressedB")) {
-					responseData.remove("pressedB");
-				}
-			}
-			if (receivedData.has("voltages")) {
-				String rawData = receivedData.get("voltages").getAsString();
-				List<Double> voltages = makeDoubleList(rawData);
-			}
 			responseData.put("status", "running");
 			// Prepare response JSON
 			String jsonResponse = gson.toJson(responseData);
