@@ -25,7 +25,7 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 import frc.robot.Constants;
 import frc.robot.Robot;
 import frc.robot.subsystems.drive.DrivetrainS;
-import frc.robot.utils.drive.DriveConstants;
+
 
 import static edu.wpi.first.units.Units.Seconds;
 import static edu.wpi.first.units.Units.Volts;
@@ -48,33 +48,17 @@ import com.pathplanner.lib.util.PathPlannerLogging;
 import com.pathplanner.lib.util.ReplanningConfig;
 
 public class CTRETankS implements DrivetrainS {
-	private Pigeon2 pigeon = new Pigeon2(30);
-	private TalonFX rightLeader = new TalonFX(
-			DriveConstants.kFrontRightDrivePort);
-	private TalonFX rightFollower = new TalonFX(
-			DriveConstants.kBackRightDrivePort);
-	private TalonFX leftLeader = new TalonFX(DriveConstants.kFrontLeftDrivePort);
-	private TalonFX leftFollower = new TalonFX(
-			DriveConstants.kBackLeftDrivePort);
-	private TalonFX[] motors = {rightLeader,rightFollower,leftLeader,leftFollower};
-	private static final DCMotorSim[] motorSimModels = {
-			new DCMotorSim(DCMotor.getKrakenX60Foc(1),
-					DriveConstants.TrainConstants.kDriveMotorGearRatio, 0.001),
-			new DCMotorSim(DCMotor.getKrakenX60Foc(1),
-					DriveConstants.TrainConstants.kDriveMotorGearRatio, 0.001),
-			new DCMotorSim(DCMotor.getKrakenX60Foc(1),
-					DriveConstants.TrainConstants.kDriveMotorGearRatio, 0.001),
-			new DCMotorSim(DCMotor.getKrakenX60Foc(1),
-					DriveConstants.TrainConstants.kDriveMotorGearRatio, 0.001)
-	};
+	private static double kMaxSpeedMetersPerSecond, kWheelDiameter, kDriveMotorGearRatio;
+	private Pigeon2 pigeon;
+	private TalonFX rightLeader, rightFollower, leftLeader, leftFollower;
+	private TalonFX[] motors;
+	private static DCMotorSim[] motorSimModels;
 	private double dtSeconds = 0.02;
-	private DifferentialDriveKinematics kinematics = new DifferentialDriveKinematics(
-			DriveConstants.kChassisLength);
+	private DifferentialDriveKinematics kinematics;
 	private DifferentialDriveWheelPositions wheelPositions;
 	private DifferentialDriveWheelSpeeds wheelSpeeds;
-	private DifferentialDrivePoseEstimator poseEstimator = new DifferentialDrivePoseEstimator(kinematics, getRotation2d(), getLeftMeters(), getRightMeters(), getPose());
 	Field2d robotField = new Field2d();
-	public Pose2d pose = new Pose2d(0, 0, getRotation2d());
+	public Pose2d pose;
 	private final VelocityDutyCycle m_motorRequest = new VelocityDutyCycle(0);
 	private final VoltageOut m_voltReq = new VoltageOut(0.0);
 	Measure<Velocity<Voltage>> rampRate = Volts.of(1).per(Seconds.of(1)); //for going FROM ZERO PER SECOND
@@ -90,23 +74,55 @@ public class CTRETankS implements DrivetrainS {
 				leftLeader.setControl(m_voltReq.withOutput(volts.in(Volts)));
 				rightLeader.setControl(m_voltReq.withOutput(volts.in(Volts)));
 			}, null, this));
-
-	public CTRETankS() {
+	private DifferentialDrivePoseEstimator poseEstimator;
+	/**
+	 * Creates a new CTRE tank drivetrain
+	 * @param container the container to hold the constants
+	 * @see CTRETankConstantContainer
+	 */
+	public CTRETankS(CTRETankConstantContainer container) {
+		kMaxSpeedMetersPerSecond = container.getMaxSpeedMetersPerSecond();
+		kWheelDiameter = container.getWheelDiameter();
+		kDriveMotorGearRatio = container.getDriveGearRatio();
+		pigeon = new Pigeon2(container.getPigeonID());
+		rightLeader = new TalonFX(container.getRightLeaderID());
+		rightFollower = new TalonFX(container.getRightFollowerID());
+		leftLeader = new TalonFX(container.getLeftLeaderID());
+		leftFollower = new TalonFX(container.getLeftFollowerID());
+		motors = new TalonFX[] { rightLeader, rightFollower, leftLeader,
+				leftFollower
+		};
+		motorSimModels = new DCMotorSim[] {
+				new DCMotorSim(DCMotor.getKrakenX60Foc(1),
+						container.getDriveGearRatio(), 0.001),
+				new DCMotorSim(DCMotor.getKrakenX60Foc(1),
+						container.getDriveGearRatio(), 0.001),
+				new DCMotorSim(DCMotor.getKrakenX60Foc(1),
+						container.getDriveGearRatio(), 0.001),
+				new DCMotorSim(DCMotor.getKrakenX60Foc(1),
+						container.getDriveGearRatio(), 0.001)
+		};
+		kinematics = new DifferentialDriveKinematics(
+			container.getChassisLength());
+		pose = new Pose2d(0, 0, getRotation2d());
+		poseEstimator = new DifferentialDrivePoseEstimator(
+			kinematics, getRotation2d(), getLeftMeters(), getRightMeters(),
+			getPose());
 		//do main motors
 		TalonFXConfigurator leftConfigurator = leftLeader.getConfigurator();
 		TalonFXConfiguration motorConfig = new TalonFXConfiguration();
 		motorConfig.CurrentLimits.StatorCurrentLimitEnable = false;
 		motorConfig.CurrentLimits.StatorCurrentLimit = 1000;
 		motorConfig.MotorOutput.Inverted = InvertedValue
-				.valueOf((DriveConstants.kFrontLeftDriveReversed) ? 1 : 0);
+				.valueOf((container.getLeftLeaderReversed()) ? 1 : 0);
 		motorConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
-		motorConfig.Feedback.SensorToMechanismRatio = DriveConstants.TrainConstants.kDriveEncoderRot2Meter;
+		motorConfig.Feedback.SensorToMechanismRatio = container.getDriveEncoderRot2Meter();
 		motorConfig.Slot0.kP = .02;
 		leftConfigurator.apply(motorConfig);
 		//adjust motorConfig for rightSide
 		TalonFXConfigurator rightConfig = rightLeader.getConfigurator();
 		motorConfig.MotorOutput.Inverted = InvertedValue
-				.valueOf((DriveConstants.kFrontRightDriveReversed) ? 1 : 0);
+				.valueOf((container.getRightLeaderReversed()) ? 1 : 0);
 		rightConfig.apply(motorConfig);
 		//do followers
 		leftFollower.setControl(new Follower(leftLeader.getDeviceID(), false));
@@ -116,7 +132,6 @@ public class CTRETankS implements DrivetrainS {
 		AutoBuilder.configureLTV(this::getPose, this::resetPose,
 				this::getChassisSpeeds, this::setChassisSpeeds, .02,
 				new ReplanningConfig(true, true), () -> Robot.isRed, this);
-
 	}
 
 	private double getLeftMeters() {
@@ -152,9 +167,9 @@ public class CTRETankS implements DrivetrainS {
 	private double metersPerSecondToRotationsPerSecond(
 			double velocityMetersPerSecond) {
 		double wheelCircumferenceMeters = Math.PI
-				* DriveConstants.TrainConstants.kWheelDiameter;
+				* kWheelDiameter;
 		return (velocityMetersPerSecond / wheelCircumferenceMeters)
-				* DriveConstants.TrainConstants.kDriveMotorGearRatio;
+				* kDriveMotorGearRatio;
 	}
 
 	public Rotation2d LastAngle = new Rotation2d();
@@ -167,14 +182,16 @@ public class CTRETankS implements DrivetrainS {
 		pose = poseEstimator.getEstimatedPosition();
 		if (Constants.currentMode == Constants.Mode.SIM) {
 			for (int i = 0; i < motors.length; i++) {
-			var motorSim = motors[i].getSimState();
-			motorSim.setSupplyVoltage(12);
-			motorSimModels[i].setInputVoltage(motorSim.getMotorVoltage());
-			motorSimModels[i].update(dtSeconds);
-			motorSim.setRawRotorPosition(
-					motorSimModels[i].getAngularPositionRotations());
-			motorSim.setRotorVelocity(Units.radiansToRotations(
-					motorSimModels[i].getAngularVelocityRadPerSec()));}
+				var motorSim = motors[i].getSimState();
+				motorSim.setSupplyVoltage(12);
+				motorSimModels[i].setInputVoltage(motorSim.getMotorVoltage());
+				//There is probably a *2 somewhere, which is causing this .01 instead of .02. Do not remove the TF2 Coconut Solution™.
+				motorSimModels[i].update(dtSeconds / 2);
+				motorSim.setRawRotorPosition(
+						motorSimModels[i].getAngularPositionRotations());
+				motorSim.setRotorVelocity(Units.radiansToRotations(
+						motorSimModels[i].getAngularVelocityRadPerSec()));
+			}
 		}
 		robotField.setRobotPose(getPose());
 		SmartDashboard.putData(robotField);
@@ -202,7 +219,7 @@ public class CTRETankS implements DrivetrainS {
 	public void setChassisSpeeds(ChassisSpeeds speeds) {
 		DifferentialDriveWheelSpeeds wheelSpeeds = kinematics
 				.toWheelSpeeds(speeds);
-		wheelSpeeds.desaturate(DriveConstants.kMaxSpeedMetersPerSecond);
+		wheelSpeeds.desaturate(kMaxSpeedMetersPerSecond);
 		double leftVelocityRotationsPerSecond = metersPerSecondToRotationsPerSecond(
 				wheelSpeeds.leftMetersPerSecond);
 		// Set the motor control to the converted velocity

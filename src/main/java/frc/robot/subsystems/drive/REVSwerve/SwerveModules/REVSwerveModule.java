@@ -14,7 +14,7 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
-
+import frc.robot.utils.drive.DriveConstants.TrainConstants.ModulePosition;
 import com.revrobotics.CANSparkBase;
 import com.revrobotics.CANSparkFlex;
 
@@ -23,10 +23,11 @@ import com.revrobotics.CANSparkFlex;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
+import frc.robot.subsystems.drive.REVSwerve.REVModuleConstantContainer;
 import frc.robot.utils.drive.DriveConstants;
-import frc.robot.utils.drive.MotorConstantContainer;
 
 public class REVSwerveModule extends SubsystemBase {
+	private static ModulePosition position;
 	private CANSparkBase driveMotor;
 	private CANSparkBase turningMotor;
 	private RelativeEncoder driveEncoder;
@@ -48,61 +49,64 @@ public class REVSwerveModule extends SubsystemBase {
 	//private final AnalogInput absoluteEncoder; // Use either AnalogInput or CANCoder depending on the absolute encoder
 	//private final CANCoder absoluteEncoder;
 	/**
-	 * Sim still needs some way to be implemented (maybe use a wrapper?) is
-	 * literally the CANSparkMax swerve module code but I did CTRL+F and replaced
-	 * CANSparkFlex with CANSparkMax -Nish
-	 * 
 	 * @param driveMotorId            Drive CANSparkFlex Motor ID
 	 * @param turningMotorId          Turning CANSparkFlex Motor ID
 	 * @param driveMotorReversed      True if Motor is Reversed
 	 * @param turningMotorReversed    True if Motor is Reversed
-	 * @param absoluteEncoderId       Turning Absolute Encoder ID
 	 * @param absoluteEncoderOffset   Offset of Absolute Encoder in Radians
 	 * @param absoluteEncoderReversed True if Encoder is Reversed
 	 */
-	public REVSwerveModule(int driveMotorId, int turningMotorId,
-			boolean driveMotorReversed, boolean turningMotorReversed,
-			int absoluteEncoderId, double absoluteEncoderOffset,
-			boolean absoluteEncoderReversed,
-			MotorConstantContainer driveMotorConstantContainer,
-			MotorConstantContainer turningKpKsKvKa) {
+	public REVSwerveModule(REVModuleConstantContainer container) {
+		position = container.getModulePosition();
+		switch (position) {
+		case FRONT_LEFT:
+		this.m_moduleNumber = 0;
+			break;
+		case FRONT_RIGHT:
+		this.m_moduleNumber = 1;
+			break;
+		case BACK_LEFT:
+			this.m_moduleNumber = 2;
+			break;
+		case BACK_RIGHT:
+		this.m_moduleNumber = 3;
+			break;
+		default:
+		this.m_moduleNumber = -1;
+			break;
+		}
 		/*turningFeedForward = new SimpleMotorFeedforward(
 		 turningKpKsKvKa[1], turningKpKsKvKa[2], turningKpKsKvKa[3]);*/
 		driveFeedForward = new SimpleMotorFeedforward(
-				driveMotorConstantContainer.getKs(),
-				driveMotorConstantContainer.getKv(),
-				driveMotorConstantContainer.getKa());
-		if (turningMotorId == 17) {
-			m_moduleNumber = 0; //frontLeft
-		} else if (turningMotorId == 11) {
-			m_moduleNumber = 1; //frontRight
-		} else if (turningMotorId == 15) {
-			m_moduleNumber = 2; //backLeft
-		} else if (turningMotorId == 13) {
-			m_moduleNumber = 3; //backRight
-		}
+				container.getDriveMotorConstantContainer().getKs(),
+				container.getDriveMotorConstantContainer().getKv(),
+				container.getDriveMotorConstantContainer().getKa());
 		//sets values of the encoder offset and whether its reversed
-		absoluteEncoderOffsetRad = absoluteEncoderOffset;
-		this.absoluteEncoderReversed = absoluteEncoderReversed;
+		absoluteEncoderOffsetRad = container.getAbsoluteEncoderOffset();
+		this.absoluteEncoderReversed = container.getAbsoluteEncoderReversed();
 		//absoluteEncoder = new AnalogInput(absoluteEncoderId);
 		//absoluteEncoder = new CANCoder(absoluteEncoderId);
 		//declares motors
 		switch (DriveConstants.robotMotorController) {
 		case NEO_SPARK_MAX:
 			System.err.println("Detected Spark Max");
-			driveMotor = new CANSparkMax(driveMotorId, MotorType.kBrushless);
-			turningMotor = new CANSparkMax(turningMotorId, MotorType.kBrushless);
+			driveMotor = new CANSparkMax(container.getDriveMotorID(),
+					MotorType.kBrushless);
+			turningMotor = new CANSparkMax(container.getTurningMotorID(),
+					MotorType.kBrushless);
 			break;
 		case VORTEX_SPARK_FLEX:
 			System.err.println("Detected Spark Flex");
-			driveMotor = new CANSparkFlex(driveMotorId, MotorType.kBrushless);
-			turningMotor = new CANSparkFlex(turningMotorId, MotorType.kBrushless);
+			driveMotor = new CANSparkFlex(container.getDriveMotorID(),
+					MotorType.kBrushless);
+			turningMotor = new CANSparkFlex(container.getTurningMotorID(),
+					MotorType.kBrushless);
 		default:
 			break;
 		}
 		//checks to see if they're inverted
-		driveMotor.setInverted(driveMotorReversed);
-		turningMotor.setInverted(turningMotorReversed);
+		driveMotor.setInverted(container.getDriveMotorReversed());
+		turningMotor.setInverted(container.getTurningMotorReversed());
 		//sets the absolute encoder value (called way because we have breakout boards in the motors)
 		absoluteEncoder = turningMotor.getAnalog(Mode.kAbsolute);
 		//relative encoder declarations
@@ -124,8 +128,9 @@ public class REVSwerveModule extends SubsystemBase {
 		turningPIDController = new PIDController(.5, 0, 0);
 		//makes the value loop around
 		turningPIDController.enableContinuousInput(-Math.PI, Math.PI);
-		drivePIDController = new PIDController(driveMotorConstantContainer.getP(),
-				0, driveMotorConstantContainer.getD());
+		drivePIDController = new PIDController(
+				container.getDriveMotorConstantContainer().getP(), 0,
+				container.getDriveMotorConstantContainer().getD());
 	}
 
 	public double getDrivePosition() {

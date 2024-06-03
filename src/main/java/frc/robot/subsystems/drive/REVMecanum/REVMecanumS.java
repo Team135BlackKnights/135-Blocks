@@ -1,10 +1,11 @@
-package frc.robot.subsystems.drive.Mecanum;
+package frc.robot.subsystems.drive.REVMecanum;
 
 import edu.wpi.first.hal.SimDouble;
 import edu.wpi.first.hal.simulation.SimDeviceDataJNI;
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
@@ -45,9 +46,7 @@ import edu.wpi.first.units.Velocity;
 import edu.wpi.first.units.Voltage;
 import edu.wpi.first.wpilibj.SerialPort.Port;
 import frc.robot.utils.drive.DriveConstants;
-
 public class REVMecanumS implements DrivetrainS {
-	//TODO: mecanum sim, pathPlanner support
 	private static CANSparkBase[] sparkMotors = new CANSparkBase[4];
 	private static int[] motorIDs;
 	Field2d robotField = new Field2d();
@@ -57,8 +56,9 @@ public class REVMecanumS implements DrivetrainS {
 	private static AHRS gyro;
 	private static MecanumDriveKinematics driveKinematics;
 	private static MecanumDrivePoseEstimator drivePoseEstimator;
-	private static double maxDriveVelMetersPerSec;
-
+	private static double maxDriveVelMetersPerSec, kDriveBaseRadius;
+	private static Translation2d[] kModuleTranslations;
+	private static double gearing, kWheelDiameterMeters;
 	private static Pose2d pose = new Pose2d(0, 0, new Rotation2d(0));
 	Measure<Velocity<Voltage>> rampRate = Volts.of(1).per(Seconds.of(1)); //for going FROM ZERO PER SECOND
 	Measure<Voltage> holdVoltage = Volts.of(4);
@@ -85,30 +85,25 @@ public class REVMecanumS implements DrivetrainS {
 			}, null // No log consumer, since data is recorded by URCL
 					, this));
 
-	/**
-	 * Constructs the mecanum drive object, supports both CANSparkMAXs and
-	 * CANSparkFlexs
-	 * 
-	 * @param frontLeftID                      front left motor id
-	 * @param frontRightID                     front right motor id
-	 * @param backLeftID                       back left motor id
-	 * @param backRightID                      back right motor id
-	 * @param gearing                          gearing of the motor (>1 is a reduction)
-	 * @param kWheelDiameterMeters               radius of the wheel in meters
-	 * @param maxDriveVelMetersPerSec          maximum drive speed in meters per
-	 *                                            second
-	 */
-	public REVMecanumS(int frontLeftID, int frontRightID, int backLeftID,
-			int backRightID, int maxAmps, double gearing,
-			double kWheelDiameterMeters) {
 
-		motorIDs = new int[] { frontLeftID, frontRightID, backLeftID, backRightID
+	/**
+	 * Constructs a REV Mecanum Drivetrain. 
+	 * @param container the container that holds the constants 
+	 * @see REVMecanumConstantContainer
+	 */
+	public REVMecanumS(REVMecanumConstantContainer container) {
+
+		motorIDs = new int[] { container.getFrontLeftID(), container.getFrontRightID(), container.getBackLeftID(), container.getBackRightID()
 		};
+		gearing = container.getGearing();
+		kWheelDiameterMeters = container.getWheelDiameters();
+		kModuleTranslations = container.getTranslation2ds();
+		kDriveBaseRadius = container.getDriveBaseRadius();
 		for (int i = 0; i < 4; i++) {
 			switch (DriveConstants.robotMotorController) {
 			case NEO_SPARK_MAX:
 				sparkMotors[i] = new CANSparkMax(motorIDs[i], MotorType.kBrushless);
-				motorSims[i] = new DCMotorSim(DCMotor.getNEO(1), gearing, .001);
+				motorSims[i] = new DCMotorSim(DCMotor.getNEO(1),gearing , .001);
 				maxDriveVelMetersPerSec = (5676 / 60.0) / gearing * (Math.PI * kWheelDiameterMeters);
 				break;
 			case VORTEX_SPARK_FLEX:
@@ -133,10 +128,10 @@ public class REVMecanumS implements DrivetrainS {
 		}
 		gyro = new AHRS(Port.kUSB);
 		driveKinematics = new MecanumDriveKinematics(
-				DriveConstants.kModuleTranslations[0],
-				DriveConstants.kModuleTranslations[1],
-				DriveConstants.kModuleTranslations[2],
-				DriveConstants.kModuleTranslations[3]);
+				kModuleTranslations[0],
+				kModuleTranslations[1],
+				kModuleTranslations[2],
+				kModuleTranslations[3]);
 		drivePoseEstimator = new MecanumDrivePoseEstimator(driveKinematics,
 				getRotation2d(), getWheelPositions(), pose);
 		AutoBuilder.configureHolonomic(this::getPose, // Robot pose supplier
@@ -147,7 +142,7 @@ public class REVMecanumS implements DrivetrainS {
 						new PIDConstants(10, 0.0, 0.0), // Translation PID constants // We didn't have the chance to optimize PID constants so there will be some error in autonomous until these values are fixed
 						new PIDConstants(5, 0.0, 0.0), // Rotation PID constants
 						maxDriveVelMetersPerSec, // Max module speed, in m/s
-						DriveConstants.kDriveBaseRadius, // Drive base radius in meters. Distance from robot center to furthest module.
+						kDriveBaseRadius, // Drive base radius in meters. Distance from robot center to furthest module.
 						new ReplanningConfig(true, true) // Default path replanning config. See the API for the options here
 				), () -> Robot.isRed, this // Reference to this subsystem to set requirements
 		);
@@ -172,7 +167,6 @@ public class REVMecanumS implements DrivetrainS {
 	@Override
 	public void periodic() {
 		drivePoseEstimator.update(getRotation2d(), getWheelPositions());
-		System.err.println(driveKinematics.toChassisSpeeds(getWheelSpeeds()));
 		robotField.setRobotPose(getPose());
 		SmartDashboard.putData(robotField);
 		if (Constants.currentMode == Constants.Mode.SIM) {
@@ -188,7 +182,6 @@ public class REVMecanumS implements DrivetrainS {
 	@Override
 	public void setChassisSpeeds(ChassisSpeeds speeds) {
 		MecanumDriveWheelSpeeds indSpeeds = driveKinematics.toWheelSpeeds(speeds);
-		System.err.println(speeds + "\n" + maxDriveVelMetersPerSec);
 		indSpeeds.desaturate(maxDriveVelMetersPerSec);
 		sparkMotors[0].set(indSpeeds.frontLeftMetersPerSecond/maxDriveVelMetersPerSec);
 		sparkMotors[1].set(indSpeeds.frontRightMetersPerSecond/maxDriveVelMetersPerSec);

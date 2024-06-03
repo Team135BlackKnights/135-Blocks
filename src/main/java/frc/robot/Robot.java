@@ -46,8 +46,6 @@ public class Robot extends LoggedRobot {
 	public void robotInit() {
 		PortForwarder.add(22, "orangepi@photonvision.local", 22);
 		PortForwarder.add(22, "photonvision.local", 22);
-		//To check for endgame
-		//Below may be redudant
 		// Instantiate our RobotContainer.  This will perform all our button bindings, and put our
 		// autonomous chooser on the dashboard
 		Logger.recordMetadata("ProjectName", "The Chef"); // Set a metadata value
@@ -195,7 +193,8 @@ public class Robot extends LoggedRobot {
 		}
 		if (RobotContainer.manipController.getAButton()) {
 			System.out.println("A");
-			DataHandler.logData("4.5", "modelDistance");
+			DataHandler.logData("log","pressedB");
+			//DataHandler.logData("4.5", "modelDistance");
 		}
 	}
 

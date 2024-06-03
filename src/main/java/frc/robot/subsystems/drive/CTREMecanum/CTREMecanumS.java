@@ -40,44 +40,25 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 import frc.robot.Constants;
 import frc.robot.Robot;
 import frc.robot.subsystems.drive.DrivetrainS;
-import frc.robot.utils.drive.DriveConstants;
 import static edu.wpi.first.units.Units.Seconds;
 import static edu.wpi.first.units.Units.Volts;
 import org.littletonrobotics.junction.Logger;
 
 public class CTREMecanumS implements DrivetrainS {
-	private static Pigeon2 pigeon = new Pigeon2(30);
-	private static final TalonFX[] motors = {
-			new TalonFX(DriveConstants.kFrontLeftDrivePort),
-			new TalonFX(DriveConstants.kFrontRightDrivePort),
-			new TalonFX(DriveConstants.kBackLeftDrivePort),
-			new TalonFX(DriveConstants.kBackRightDrivePort)
-	};
+	private static Pigeon2 pigeon;
+	private static TalonFX[] motors;
+	private static double kWheelDiameter, kDriveBaseRadius, kMaxSpeedMetersPerSecond, kDriveMotorGearRatio;
 	private static double dtSeconds = 0.02;
-	MecanumDriveKinematics kinematics = new MecanumDriveKinematics(
-			DriveConstants.kModuleTranslations[0],
-			DriveConstants.kModuleTranslations[1],
-			DriveConstants.kModuleTranslations[2],
-			DriveConstants.kModuleTranslations[3]);
+	MecanumDriveKinematics kinematics;
 	MecanumDriveWheelSpeeds wheelSpeeds = new MecanumDriveWheelSpeeds(0, 0, 0,
 			0);
-	private static final DCMotorSim[] motorSimModels = {
-			new DCMotorSim(DCMotor.getKrakenX60Foc(1),
-					DriveConstants.TrainConstants.kDriveMotorGearRatio, 0.001),
-			new DCMotorSim(DCMotor.getKrakenX60Foc(1),
-					DriveConstants.TrainConstants.kDriveMotorGearRatio, 0.001),
-			new DCMotorSim(DCMotor.getKrakenX60Foc(1),
-					DriveConstants.TrainConstants.kDriveMotorGearRatio, 0.001),
-			new DCMotorSim(DCMotor.getKrakenX60Foc(1),
-					DriveConstants.TrainConstants.kDriveMotorGearRatio, 0.001)
-	};
+	private static DCMotorSim[] motorSimModels;
 	private final VelocityDutyCycle m_motorRequest = new VelocityDutyCycle(0);
 	MecanumDriveWheelPositions wheelPositions = new MecanumDriveWheelPositions(0,
 			0, 0, 0);
-	public Pose2d pose = new Pose2d(0, 0, getRotation2d());
+	public Pose2d pose;
 	Field2d robotField = new Field2d();
-	MecanumDrivePoseEstimator poseEstimator = new MecanumDrivePoseEstimator(
-			kinematics, getRotation2d(), wheelPositions, pose);
+	MecanumDrivePoseEstimator poseEstimator;
 	private final VoltageOut m_voltReq = new VoltageOut(0.0);
 	Measure<Velocity<Voltage>> rampRate = Volts.of(1).per(Seconds.of(1)); //for going FROM ZERO PER SECOND
 	Measure<Voltage> holdVoltage = Volts.of(4);
@@ -93,8 +74,40 @@ public class CTREMecanumS implements DrivetrainS {
 					motor.setControl(m_voltReq.withOutput(volts.in(Volts)));
 				}
 			}, null, this));
-
-	public CTREMecanumS() {
+	/**
+	 * Constructs a CTRE Mecanum Drivetrain
+	 * @param container the container that holds all the drivetrain constants
+	 * @see CTREMecanumConstantContainer
+	 */
+	public CTREMecanumS(CTREMecanumConstantContainer container) {
+		kMaxSpeedMetersPerSecond = container.getMaxSpeedMetersPerSecond();
+		kWheelDiameter = container.getWheelDiameterMeters();
+		kDriveBaseRadius = container.getDriveBaseRadius();
+		kDriveMotorGearRatio = container.getDriveMotorGearRatio();
+		pigeon = new Pigeon2(container.getPigeonID());
+		motors = new TalonFX[]{
+			new TalonFX(container.getFrontLeftID()),
+			new TalonFX(container.getFrontRightID()),
+			new TalonFX(container.getBackLeftID()),
+			new TalonFX(container.getBackRightID())};
+		pose = new Pose2d(0, 0, getRotation2d());
+		kinematics = new MecanumDriveKinematics(
+			container.getTranslation2ds()[0],
+			container.getTranslation2ds()[1],
+			container.getTranslation2ds()[2],
+			container.getTranslation2ds()[3]);
+		poseEstimator = new MecanumDrivePoseEstimator(
+			kinematics, getRotation2d(), wheelPositions, pose);	
+			motorSimModels  = new DCMotorSim[]{
+			new DCMotorSim(DCMotor.getKrakenX60Foc(1),
+					container.getDriveMotorGearRatio(), 0.001),
+			new DCMotorSim(DCMotor.getKrakenX60Foc(1),
+					container.getDriveMotorGearRatio(), 0.001),
+			new DCMotorSim(DCMotor.getKrakenX60Foc(1),
+					container.getDriveMotorGearRatio(), 0.001),
+			new DCMotorSim(DCMotor.getKrakenX60Foc(1),
+					container.getDriveMotorGearRatio(), 0.001)
+	};
 		for (TalonFX motor : motors) {
 			var talonFXConfigurator = motor.getConfigurator();
 			TalonFXConfiguration motorConfig = new TalonFXConfiguration();
@@ -102,7 +115,7 @@ public class CTREMecanumS implements DrivetrainS {
 			motorConfig.CurrentLimits.StatorCurrentLimit = 1000;
 			motorConfig.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
 			motorConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
-			motorConfig.Feedback.SensorToMechanismRatio = DriveConstants.TrainConstants.kDriveEncoderRot2Meter;
+			motorConfig.Feedback.SensorToMechanismRatio = container.getDriveEncoderRot2Meter();
 			motorConfig.Slot0.kP = .02;
 			talonFXConfigurator.apply(motorConfig);
 		}
@@ -113,8 +126,8 @@ public class CTREMecanumS implements DrivetrainS {
 				new HolonomicPathFollowerConfig( // HolonomicPathFollowerConfig, this should likely live in your Constants class
 						new PIDConstants(10, 0.0, 0.0), // Translation PID constants // We didn't have the chance to optimize PID constants so there will be some error in autonomous until these values are fixed
 						new PIDConstants(5, 0.0, 0.0), // Rotation PID constants
-						DriveConstants.kMaxSpeedMetersPerSecond, // Max module speed, in m/s
-						DriveConstants.kDriveBaseRadius, // Drive base radius in meters. Distance from robot center to furthest module.
+						kMaxSpeedMetersPerSecond, // Max module speed, in m/s
+						kDriveBaseRadius, // Drive base radius in meters. Distance from robot center to furthest module.
 						new ReplanningConfig(true, true) // Default path replanning config. See the API for the options here
 				), () -> Robot.isRed, this // Reference to this subsystem to set requirements
 		);
@@ -140,9 +153,9 @@ public class CTREMecanumS implements DrivetrainS {
 	private double metersPerSecondToRotationsPerSecond(
 			double velocityMetersPerSecond) {
 		double wheelCircumferenceMeters = Math.PI
-				* DriveConstants.TrainConstants.kWheelDiameter;
+				* kWheelDiameter;
 		return (velocityMetersPerSecond / wheelCircumferenceMeters)
-				* DriveConstants.TrainConstants.kDriveMotorGearRatio;
+				* kDriveMotorGearRatio;
 	}
 	public Rotation2d LastAngle = new Rotation2d();
 

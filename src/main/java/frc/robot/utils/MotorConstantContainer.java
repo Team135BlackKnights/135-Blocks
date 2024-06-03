@@ -1,4 +1,4 @@
-package frc.robot.utils.drive;
+package frc.robot.utils;
 
 /**
  * Class designed to hold the values for Kp, Ks, Kv for state-space models and P and D for PID loops. Remember to check whether your loop should be position or velocity
