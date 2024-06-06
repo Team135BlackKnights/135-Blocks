@@ -37,7 +37,8 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
-
+import frc.robot.commands.drive.servos.ServoC;
+import frc.robot.subsystems.drive.servos.ServoS;
 /**
  * THIS CODE REQUIRES WPILIB 2024 AND PATHPLANNER 2024 IT WILL NOT WORK
  * OTHERWISE
@@ -68,6 +69,7 @@ public class RobotContainer {
 	 * commands.
 	 */
 	public RobotContainer() {
+		final ServoS servoS = new ServoS();
 		//We check to see what drivetrain type we have here, and create the correct drivetrain system based on that. 
 		//If we get something wacky, throw an error
 		switch (DriveConstants.driveType) {
@@ -142,7 +144,9 @@ public class RobotContainer {
 			throw new IllegalArgumentException(
 					"Unknown implementation type, please check DriveConstants.java!");
 		}
+		
 		drivetrainS.setDefaultCommand(new SwerveC(drivetrainS));
+		servoS.setDefaultCommand(new ServoC(servoS));
 		autoChooser = AutoBuilder.buildAutoChooser();
 		SmartDashboard.putData("Auto Chooser", autoChooser);
 		// Configure the trigger bindings
