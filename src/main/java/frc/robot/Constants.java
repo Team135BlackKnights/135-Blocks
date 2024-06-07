@@ -65,7 +65,7 @@ public final class Constants {
 	public static enum SysIdRoutines{
 		swerveDrive,swerveTurn
 	}
-
+	public static int PowerDistributionID = 1;
 	//put datalog constants IN THE UTIL FOR THAT FILE. 
 	public static Map<Integer, String> manCanIdsToNames() {
 		HashMap<Integer, String> map = new HashMap<>();

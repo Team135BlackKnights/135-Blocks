@@ -27,6 +27,8 @@ import edu.wpi.first.units.Measure;
 import edu.wpi.first.units.Time;
 import edu.wpi.first.units.Velocity;
 import edu.wpi.first.units.Voltage;
+import edu.wpi.first.util.sendable.Sendable;
+import edu.wpi.first.util.sendable.SendableBuilder;
 import edu.wpi.first.wpilibj.SerialPort.Port;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -222,6 +224,30 @@ public class REVSwerveS extends SubsystemBase implements DrivetrainS {
 				m_swerveModules.put(position, back_right);
 			}
 		}
+		SmartDashboard.putData("Swerve Drive", new Sendable() {
+			@Override
+			public void initSendable(SendableBuilder builder) {
+				builder.setSmartDashboardType("SwerveDrive");
+				builder.addDoubleProperty("Front Left Angle",
+						() -> m_swerveModules.get(ModulePosition.FRONT_LEFT).getHeadingRotation2d().getRadians(), null);
+				builder.addDoubleProperty("Front Left Velocity",
+						() -> m_swerveModules.get(ModulePosition.FRONT_LEFT).getDriveVelocity(), null);
+				builder.addDoubleProperty("Front Right Angle",
+						() -> m_swerveModules.get(ModulePosition.FRONT_RIGHT).getHeadingRotation2d().getRadians(), null);
+				builder.addDoubleProperty("Front Right Velocity",
+						() -> m_swerveModules.get(ModulePosition.FRONT_RIGHT).getDriveVelocity(), null);
+				builder.addDoubleProperty("Back Left Angle",
+						() -> m_swerveModules.get(ModulePosition.BACK_LEFT).getHeadingRotation2d().getRadians(), null);
+				builder.addDoubleProperty("Back Left Velocity",
+						() -> m_swerveModules.get(ModulePosition.BACK_LEFT).getDriveVelocity(), null);
+				builder.addDoubleProperty("Back Right Angle",
+						() -> m_swerveModules.get(ModulePosition.BACK_RIGHT).getHeadingRotation2d().getRadians(), null);
+				builder.addDoubleProperty("Back Right Velocity",
+						() -> m_swerveModules.get(ModulePosition.BACK_RIGHT).getDriveVelocity(), null);
+				builder.addDoubleProperty("Robot Angle",
+						() -> Units.degreesToRadians(getHeading()), null);
+			}
+		});
 	}
 
 	@Override

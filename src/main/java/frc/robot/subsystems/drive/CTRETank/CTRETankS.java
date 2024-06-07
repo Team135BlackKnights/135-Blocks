@@ -18,6 +18,7 @@ import edu.wpi.first.units.Measure;
 import edu.wpi.first.units.Time;
 import edu.wpi.first.units.Velocity;
 import edu.wpi.first.units.Voltage;
+import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.simulation.DCMotorSim;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -186,7 +187,7 @@ public class CTRETankS implements DrivetrainS {
 		if (Constants.currentMode == Constants.Mode.SIM) {
 			for (int i = 0; i < motors.length; i++) {
 				var motorSim = motors[i].getSimState();
-				motorSim.setSupplyVoltage(12);
+				motorSim.setSupplyVoltage(RobotController.getBatteryVoltage());
 				motorSimModels[i].setInputVoltage(motorSim.getMotorVoltage());
 				//There is probably a *2 somewhere, which is causing this .01 instead of .02. Do not remove the TF2 Coconut Solution™.
 				motorSimModels[i].update(dtSeconds / 2);
@@ -288,7 +289,13 @@ public class CTRETankS implements DrivetrainS {
 		throw new UnsupportedOperationException(
 				"Unimplemented method 'sysIdQuasistaticTurn'");
 	}
-
+	@Override
+	public double getCurrent() {
+		return motorSimModels[0].getCurrentDrawAmps()
+				+ motorSimModels[1].getCurrentDrawAmps()
+				+ motorSimModels[2].getCurrentDrawAmps()
+				+ motorSimModels[3].getCurrentDrawAmps();
+	}
 	@Override
 	public Command sysIdDynamicDrive(Direction direction) {
 		return m_sysIdRoutine.quasistatic(direction);

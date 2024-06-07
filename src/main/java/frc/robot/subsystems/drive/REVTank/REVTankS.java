@@ -32,6 +32,7 @@ import edu.wpi.first.units.Measure;
 import edu.wpi.first.units.Time;
 import edu.wpi.first.units.Velocity;
 import edu.wpi.first.units.Voltage;
+import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.simulation.DCMotorSim;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -193,7 +194,7 @@ public class REVTankS implements DrivetrainS {
 		pose = poseEstimator.update(getRotation2d(), getWheelPositions());
 		if (Constants.currentMode == Constants.Mode.SIM) {
 			for (int i=0; i < 4; i+=2){
-				motorSimModels[i].setInputVoltage(motors[i].get()*12);
+				motorSimModels[i].setInputVoltage(motors[i].get()*RobotController.getBatteryVoltage());
 				motorSimModels[i].update(dtSeconds);
 				encoders[i].setPosition(motorSimModels[i].getAngularPositionRotations());
 			}
@@ -299,7 +300,13 @@ public class REVTankS implements DrivetrainS {
 	public double getYawVelocity() {
 		return fieldVelocity.dtheta; //?
 	}
-
+	@Override
+	public double getCurrent() {
+		return motorSimModels[0].getCurrentDrawAmps()
+				+ motorSimModels[1].getCurrentDrawAmps()
+				+ motorSimModels[2].getCurrentDrawAmps()
+				+ motorSimModels[3].getCurrentDrawAmps();
+	}
 	@Override
 	public Twist2d getFieldVelocity() {
 		return fieldVelocity;

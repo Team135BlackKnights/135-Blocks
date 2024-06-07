@@ -18,13 +18,17 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Twist2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.util.sendable.Sendable;
+import edu.wpi.first.util.sendable.SendableBuilder;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.Notifier;
 import edu.wpi.first.wpilibj.RobotController;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
@@ -81,6 +85,7 @@ public class CTRESwerveS extends SwerveDrivetrain implements DrivetrainS {
 						.orElse(Alliance.Blue) == Alliance.Red, // Assume the path needs to be flipped for Red vs Blue, this is normally the case
 				this); // Subsystem for requirements
 		super.registerTelemetry(logger::telemeterize);
+
 	}
 
 	/**
@@ -109,6 +114,27 @@ public class CTRESwerveS extends SwerveDrivetrain implements DrivetrainS {
 						.orElse(Alliance.Blue) == Alliance.Red, // Assume the path needs to be flipped for Red vs Blue, this is normally the case
 				this); // Subsystem for requirements
 		super.registerTelemetry(logger::telemeterize);
+		SwerveModuleState[] moduleStates = super.m_moduleStates;
+		SmartDashboard.putData("Swerve Drive", new Sendable() {
+  @Override
+  public void initSendable(SendableBuilder builder) {
+    builder.setSmartDashboardType("SwerveDrive");
+
+    builder.addDoubleProperty("Front Left Angle", () -> moduleStates[0].angle.getRadians(), null);
+    builder.addDoubleProperty("Front Left Velocity", () -> moduleStates[0].speedMetersPerSecond, null);
+
+    builder.addDoubleProperty("Front Right Angle", () -> moduleStates[1].angle.getRadians(), null);
+    builder.addDoubleProperty("Front Right Velocity", () -> moduleStates[1].speedMetersPerSecond, null);
+
+    builder.addDoubleProperty("Back Left Angle", () -> moduleStates[2].angle.getRadians(), null);
+    builder.addDoubleProperty("Back Left Velocity", () -> moduleStates[2].speedMetersPerSecond, null);
+
+    builder.addDoubleProperty("Back Right Angle", () -> moduleStates[3].angle.getRadians(), null);
+    builder.addDoubleProperty("Back Right Velocity", () -> moduleStates[3].speedMetersPerSecond, null);
+
+    builder.addDoubleProperty("Robot Angle", () -> getPose().getRotation().plus(new Rotation2d(Units.degreesToRadians(-90))).getRadians(), null); //🥥🥥🥥
+  }
+});
 	}
 
 	@Override
@@ -181,7 +207,17 @@ public class CTRESwerveS extends SwerveDrivetrain implements DrivetrainS {
 		});
 		m_simNotifier.startPeriodic(kSimLoopPeriod);
 	}
-
+	@Override
+	public double getCurrent() {
+		return Math.abs(super.Modules[0].getDriveMotor().getStatorCurrent().getValueAsDouble())
+				+ Math.abs(super.Modules[0].getSteerMotor().getStatorCurrent().getValueAsDouble())
+				+ Math.abs(super.Modules[1].getDriveMotor().getStatorCurrent().getValueAsDouble())
+				+ Math.abs(super.Modules[1].getSteerMotor().getStatorCurrent().getValueAsDouble())
+				+ Math.abs(super.Modules[2].getDriveMotor().getStatorCurrent().getValueAsDouble())
+				+ Math.abs(super.Modules[2].getSteerMotor().getStatorCurrent().getValueAsDouble())
+				+ Math.abs(super.Modules[3].getDriveMotor().getStatorCurrent().getValueAsDouble())
+				+ Math.abs(super.Modules[3].getSteerMotor().getStatorCurrent().getValueAsDouble());
+	}
 	/**
 	 * Stops the modules
 	 */

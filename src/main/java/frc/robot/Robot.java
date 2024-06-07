@@ -22,6 +22,9 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import edu.wpi.first.net.PortForwarder;
 import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.RobotController;
+import edu.wpi.first.wpilibj.simulation.BatterySim;
+import edu.wpi.first.wpilibj.simulation.RoboRioSim;
 
 /**
  * The VM is configured to automatically run this class, and to call the
@@ -220,6 +223,8 @@ public class Robot extends LoggedRobot {
 	/** This function is called periodically whilst in simulation. */
 	@Override
 	public void simulationPeriodic() {
+		RoboRioSim.setVInVoltage(BatterySim.calculateDefaultBatteryLoadedVoltage(RobotContainer.getCurrentDraw()));
+		SmartDashboard.putNumber("Robot Voltage", RobotController.getBatteryVoltage());
 		SimGamePiece.updateStates(); //update position of gamePieces
 		if (Constants.currentMatchState == Constants.FRCMatchState.AUTO
 				&& !hasBeenEnabled) {

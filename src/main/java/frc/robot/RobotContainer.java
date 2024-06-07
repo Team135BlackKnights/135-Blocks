@@ -32,7 +32,9 @@ import com.pathplanner.lib.auto.AutoBuilder;
 import com.revrobotics.CANSparkBase.IdleMode;
 
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.wpilibj.PowerDistribution;
 import edu.wpi.first.wpilibj.XboxController;
+
 import java.util.function.BooleanSupplier;
 
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
@@ -53,6 +55,7 @@ public class RobotContainer {
 	@SuppressWarnings("unused")
 	private final PhotonVisionS photonVisionS = new PhotonVisionS();
 	private final SendableChooser<Command> autoChooser;
+	static PowerDistribution PDH = new PowerDistribution(Constants.PowerDistributionID, PowerDistribution.ModuleType.kRev);
 	public static XboxController driveController = new XboxController(0);
 	public static XboxController manipController = new XboxController(1);
 	public static XboxController testingController = new XboxController(5);
@@ -153,6 +156,7 @@ public class RobotContainer {
 		autoChooser = AutoBuilder.buildAutoChooser();
 		SmartDashboard.putData("Auto Chooser", autoChooser);
 		// Configure the trigger bindings
+		
 		configureBindings();
 	}
 
@@ -190,7 +194,15 @@ public class RobotContainer {
 		// An example command will be run in autonomous
 		return autoChooser.getSelected();
 	}
-
+	/**
+	 * For SIMULATION ONLY, return the estimated current draw of the robot.
+	 * @return Current in amps.
+	 */
+	public static double[] getCurrentDraw(){
+		return new double[]{
+			drivetrainS.getCurrent()
+		};
+	}
 	public static BooleanSupplier isDriving() {
 		BooleanSupplier returnVal;
 		if (aButtonTest.getAsBoolean() || bButtonTest.getAsBoolean()

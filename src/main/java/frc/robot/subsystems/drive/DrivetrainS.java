@@ -121,4 +121,7 @@ public interface DrivetrainS extends Subsystem {
 	default void applyRequest() {
 		throw new UnsupportedOperationException("No support for requests.");
 	}
+	default double getCurrent(){
+		return 0;
+	}
 }
