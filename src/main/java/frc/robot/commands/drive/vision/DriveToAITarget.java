@@ -66,38 +66,23 @@ public class DriveToAITarget extends Command {
 
 	@Override
 	public void execute() {
-
+	
 		double tx, ty, distance = 0;
 		boolean tv;
+		
 		if (Constants.currentMode == Mode.SIM) {
-			//In sim, we simply grab the 
-			//Computing distance
+			//In simulation, get the current pose, and set the degree value to 
 			currentPose = swerveS.getPose();
-			//THESE ARE IN M E T E R S 
-			tx = targetPieceLocation.getX()
-					- currentPose.getX(); 
-			ty = targetPieceLocation.getY()
-					- currentPose.getY();
-			distance = Math
-					.sqrt(Math.pow(tx, 2) + Math.pow(ty, 2));
-			distance -= DriveConstants.kChassisLength;
-			distance = Units.metersToInches(distance);
+
+			tx = Units.radiansToDegrees(Math.atan((targetPieceLocation.getY()-currentPose.getY())/(targetPieceLocation.getX()
+					- currentPose.getX())));
+			tx -= currentPose.getRotation().getDegrees(); 
+			tx *=-1;
+			double d = currentPose.getTranslation().getDistance(targetPieceLocation);
+			double tyRad = Math.PI - Units.degreesToRadians(VisionConstants.limeLightAngleOffsetDegrees) - (Math.PI * 0.5D - Math.atan(d / (Units.inchesToMeters(VisionConstants.limelightLensHeightoffFloorInches))));
+			ty = Units.radiansToDegrees(tyRad);
 			tv = true;
-			// Calculate the angle to aim towards the target
-			double angleToTarget;
-			if (tx == 0) {
-				angleToTarget = 90;
-			} else {
-				angleToTarget = Math.atan2(ty, tx); // Calculate angle in radians
-				angleToTarget = Math.toDegrees(angleToTarget);
-			}
-			// Convert angle to degrees if necessary
-			// Adjust the robot's orientation towards the target
-			// Example: Set the desired heading for your motion control system
-			desiredHeading = angleToTarget;
-			currentHeading = swerveS.getRotation2d().getDegrees();
-			error = -1 * (currentHeading - desiredHeading);
-			error = PhotonVisionS.closerAngleToZero(error);
+			
 		} else {
 			//THESE ARE IN D E G R E E S 
 			tx = LimelightHelpers.getTX(
@@ -106,26 +91,22 @@ public class DriveToAITarget extends Command {
 					VisionConstants.limelightName);
 			ty = LimelightHelpers.getTY(
 					VisionConstants.limelightName);
-			error = -tx; //tx is negative
-			distance = PhotonVisionS.calculateDistanceFromtY(ty); //returns inches
 		}
+		error = -tx; //tx is negative
+		distance = PhotonVisionS.calculateDistanceFromtY(ty); //returns inches
 		if (VisionConstants.debug){
+			SmartDashboard.putNumber("tx", tx);
+			SmartDashboard.putNumber("ty",ty);
 			SmartDashboard.putNumber("ANGLE ERROR", error);
 			SmartDashboard.putNumber("DISTANCE", distance);
 		}
 		// SmartDashboard.putBoolean("Piece Loaded?", IntakeS.PieceIsLoaded());
-		if (Constants.currentMode == Mode.REAL) {
 			if (PhotonVisionS.calculateDistanceFromtY(ty) <= 4.5) { //less than 4.5 inches away, STOP!
 				close = true;
 			}
 			if (Constants.currentMatchState == FRCMatchState.AUTO && timer.get() > VisionConstants.DriveToAIMaxAutoTime){
 				isFinished = true; //if in auto, and greater than max time, STOP ENTIRE COMMAND
 			}
-		} else {
-			if (distance <= 4.5) {
-				close = true;
-			}
-		}
 		if (tv == false && loaded == false
 				&& close == false) {
 			// We don't see the target, seek for the target by spinning in place at a safe speed.
