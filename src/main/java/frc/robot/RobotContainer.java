@@ -19,6 +19,10 @@ import frc.robot.subsystems.drive.REVSwerve.SwerveModules.REVSwerveModuleContain
 import frc.robot.subsystems.drive.REVTank.REVTankConstantContainer;
 import frc.robot.subsystems.drive.REVTank.REVTankS;
 import frc.robot.utils.drive.DriveConstants;
+import frc.robot.commands.drive.vision.DriveToAITarget;
+
+import frc.robot.subsystems.vision.PhotonVisionS;
+import frc.robot.utils.vision.VisionConstants;
 
 import frc.robot.subsystems.drive.REVSwerve.REVModuleConstantContainer;
 import frc.robot.utils.drive.DriveConstants.TrainConstants;
@@ -46,6 +50,8 @@ public class RobotContainer {
 	// The robot's subsystems and commands are defined here...
 	public static DrivetrainS drivetrainS;
 	private Telemetry logger = null;
+	@SuppressWarnings("unused")
+	private final PhotonVisionS photonVisionS = new PhotonVisionS();
 	private final SendableChooser<Command> autoChooser;
 	public static XboxController driveController = new XboxController(0);
 	public static XboxController manipController = new XboxController(1);
@@ -155,6 +161,7 @@ public class RobotContainer {
 				.onTrue(new InstantCommand(() -> drivetrainS.zeroHeading()));
 		//Example Drive To 2024 Amp Pose, Bind to what you need.
 		//yButtonDrive.and(isDriving()).onTrue(new DriveToPose(drivetrainS, false,new Pose2d(1.9,7.7,new Rotation2d(Units.degreesToRadians(90)))));
+		VisionConstants.Controls.autoIntake.whileTrue(new DriveToAITarget(drivetrainS));
 		//swerve DRIVE tests
 		rightBumperTest.onTrue(new InstantCommand(() -> {
 			if (currentTest == Constants.SysIdRoutines.values().length - 1) {
