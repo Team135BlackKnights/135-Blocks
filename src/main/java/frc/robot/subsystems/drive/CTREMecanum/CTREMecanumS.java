@@ -19,6 +19,8 @@ import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.estimator.MecanumDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.geometry.Twist2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.MecanumDriveKinematics;
 import edu.wpi.first.math.kinematics.MecanumDriveWheelPositions;
@@ -31,6 +33,8 @@ import edu.wpi.first.units.Measure;
 import edu.wpi.first.units.Time;
 import edu.wpi.first.units.Velocity;
 import edu.wpi.first.units.Voltage;
+import edu.wpi.first.wpilibj.RobotController;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.simulation.DCMotorSim;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -50,12 +54,14 @@ public class CTREMecanumS implements DrivetrainS {
 	private static double kWheelDiameter, kDriveBaseRadius, kMaxSpeedMetersPerSecond, kDriveMotorGearRatio;
 	private static double dtSeconds = 0.02;
 	MecanumDriveKinematics kinematics;
+	private Twist2d fieldVelocity = new Twist2d();
 	MecanumDriveWheelSpeeds wheelSpeeds = new MecanumDriveWheelSpeeds(0, 0, 0,
 			0);
 	private static DCMotorSim[] motorSimModels;
 	private final VelocityDutyCycle m_motorRequest = new VelocityDutyCycle(0);
 	MecanumDriveWheelPositions wheelPositions = new MecanumDriveWheelPositions(0,
 			0, 0, 0);
+	private static double updateTime;
 	public Pose2d pose;
 	Field2d robotField = new Field2d();
 	MecanumDrivePoseEstimator poseEstimator;
@@ -96,6 +102,7 @@ public class CTREMecanumS implements DrivetrainS {
 			container.getTranslation2ds()[1],
 			container.getTranslation2ds()[2],
 			container.getTranslation2ds()[3]);
+		updateTime = Timer.getFPGATimestamp();
 		poseEstimator = new MecanumDrivePoseEstimator(
 			kinematics, getRotation2d(), wheelPositions, pose);	
 			motorSimModels  = new DCMotorSim[]{
@@ -144,6 +151,7 @@ public class CTREMecanumS implements DrivetrainS {
 
 	public void updateWheelPositions() {
 		double[] wheelPos = getWheelPositionMeters();
+		updateTime = Timer.getFPGATimestamp();
 		wheelPositions.frontLeftMeters = wheelPos[0];
 		wheelPositions.frontRightMeters = wheelPos[1];
 		wheelPositions.rearLeftMeters = wheelPos[2];
@@ -153,7 +161,7 @@ public class CTREMecanumS implements DrivetrainS {
 	private double metersPerSecondToRotationsPerSecond(
 			double velocityMetersPerSecond) {
 		double wheelCircumferenceMeters = Math.PI
-				* kWheelDiameter;
+				* kWheelDiameter/2; //may be buggin?
 		return (velocityMetersPerSecond / wheelCircumferenceMeters)
 				* kDriveMotorGearRatio;
 	}
@@ -181,13 +189,14 @@ public class CTREMecanumS implements DrivetrainS {
 			// Set the motor control to the converted velocity
 			motors[i].setControl(
 					m_motorRequest.withVelocity(velocityRotationsPerSecond));
+			System.err.println(motors[i].get());
 		}
 	}
 
 	@Override
 	public void periodic() {
 		updateWheelPositions();
-		poseEstimator.update(getRotation2d(), wheelPositions);
+		poseEstimator.updateWithTime(updateTime,getRotation2d(), wheelPositions);
 		pose = poseEstimator.getEstimatedPosition();
 		robotField.setRobotPose(getPose());
 		SmartDashboard.putData(robotField);
@@ -212,7 +221,7 @@ public class CTREMecanumS implements DrivetrainS {
 		if (Constants.currentMode == Constants.Mode.SIM) {
 			for (int i = 0; i < motors.length; i++) {
 				var motorSim = motors[i].getSimState();
-				motorSim.setSupplyVoltage(12);
+				motorSim.setSupplyVoltage(RobotController.getBatteryVoltage());
 				motorSimModels[i].setInputVoltage(motorSim.getMotorVoltage());
 				motorSimModels[i].update(dtSeconds);
 				motorSim.setRawRotorPosition(
@@ -221,6 +230,12 @@ public class CTREMecanumS implements DrivetrainS {
 						motorSimModels[i].getAngularVelocityRadPerSec()));
 			}
 		}
+		ChassisSpeeds m_ChassisSpeeds = kinematics.toChassisSpeeds(wheelSpeeds);
+		Translation2d linearFieldVelocity = new Translation2d(
+			m_ChassisSpeeds.vxMetersPerSecond,
+				m_ChassisSpeeds.vyMetersPerSecond).rotateBy(getRotation2d());
+		fieldVelocity = new Twist2d(linearFieldVelocity.getX(),
+				linearFieldVelocity.getY(), m_ChassisSpeeds.omegaRadiansPerSecond);
 	}
 
 	@Override
@@ -283,4 +298,22 @@ public class CTREMecanumS implements DrivetrainS {
 	public boolean isConnected() {
 		return pigeon.getFault_Hardware().getValue();
 	}
+	@Override
+	public double getYawVelocity() { 
+		if (Constants.currentMode == Constants.Mode.REAL){
+			return Units.degreesToRadians(pigeon.getAngularVelocityZWorld().getValueAsDouble());
+		}
+		return getChassisSpeeds().omegaRadiansPerSecond;
+	}
+	@Override
+	public double getCurrent() {
+		return motorSimModels[0].getCurrentDrawAmps()
+				+ motorSimModels[1].getCurrentDrawAmps()
+				+ motorSimModels[2].getCurrentDrawAmps()
+				+ motorSimModels[3].getCurrentDrawAmps();
+	}
+	@Override
+	public Twist2d getFieldVelocity() { 
+	return fieldVelocity;
+ }
 }

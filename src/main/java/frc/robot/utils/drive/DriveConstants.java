@@ -7,8 +7,8 @@ import edu.wpi.first.math.util.Units;
 import frc.robot.utils.MotorConstantContainer;
 
 public class DriveConstants {
-	//
-	public static MotorVendor robotMotorController = MotorVendor.NEO_SPARK_MAX;
+	//ONLY CTRE_SWERVE IS *FULLY* CURRENT DRAW ACCURATE IN SIM
+	public static MotorVendor robotMotorController = MotorVendor.CTRE_MOTORS;
 	public static driveTrainType driveType = driveTrainType.SWERVE;
 
 	/**

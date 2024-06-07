@@ -4,6 +4,8 @@ import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.estimator.DifferentialDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.geometry.Twist2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.DifferentialDriveKinematics;
 import edu.wpi.first.math.kinematics.DifferentialDriveWheelPositions;
@@ -16,6 +18,7 @@ import edu.wpi.first.units.Measure;
 import edu.wpi.first.units.Time;
 import edu.wpi.first.units.Velocity;
 import edu.wpi.first.units.Voltage;
+import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.simulation.DCMotorSim;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -25,7 +28,7 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 import frc.robot.Constants;
 import frc.robot.Robot;
 import frc.robot.subsystems.drive.DrivetrainS;
-
+import frc.robot.utils.drive.Position;
 
 import static edu.wpi.first.units.Units.Seconds;
 import static edu.wpi.first.units.Units.Volts;
@@ -55,8 +58,9 @@ public class CTRETankS implements DrivetrainS {
 	private static DCMotorSim[] motorSimModels;
 	private double dtSeconds = 0.02;
 	private DifferentialDriveKinematics kinematics;
-	private DifferentialDriveWheelPositions wheelPositions;
+	private Position<DifferentialDriveWheelPositions> wheelPositions;
 	private DifferentialDriveWheelSpeeds wheelSpeeds;
+	private Twist2d fieldVelocity = new Twist2d();
 	Field2d robotField = new Field2d();
 	public Pose2d pose;
 	private final VelocityDutyCycle m_motorRequest = new VelocityDutyCycle(0);
@@ -176,14 +180,14 @@ public class CTRETankS implements DrivetrainS {
 
 	@Override
 	public void periodic() {
-		wheelPositions = getWheelPositions();
+		wheelPositions = getPositionsWithTimestamp(getWheelPositions());
 		wheelSpeeds = getWheelSpeeds();
-		poseEstimator.update(getRotation2d(), getWheelPositions());
+		poseEstimator.updateWithTime(wheelPositions.getTimestamp(),getRotation2d(), wheelPositions.getPositions());
 		pose = poseEstimator.getEstimatedPosition();
 		if (Constants.currentMode == Constants.Mode.SIM) {
 			for (int i = 0; i < motors.length; i++) {
 				var motorSim = motors[i].getSimState();
-				motorSim.setSupplyVoltage(12);
+				motorSim.setSupplyVoltage(RobotController.getBatteryVoltage());
 				motorSimModels[i].setInputVoltage(motorSim.getMotorVoltage());
 				//There is probably a *2 somewhere, which is causing this .01 instead of .02. Do not remove the TF2 Coconut Solution™.
 				motorSimModels[i].update(dtSeconds / 2);
@@ -213,6 +217,12 @@ public class CTRETankS implements DrivetrainS {
 					poses.toArray(new Pose2d[poses.size()]));
 			robotField.getObject("path").setPoses(poses);
 		});
+		ChassisSpeeds m_ChassisSpeeds = kinematics.toChassisSpeeds(wheelSpeeds);
+		Translation2d linearFieldVelocity = new Translation2d(
+			m_ChassisSpeeds.vxMetersPerSecond,
+				m_ChassisSpeeds.vyMetersPerSecond).rotateBy(getRotation2d());
+		fieldVelocity = new Twist2d(linearFieldVelocity.getX(),
+				linearFieldVelocity.getY(), m_ChassisSpeeds.omegaRadiansPerSecond);
 	}
 
 	@Override
@@ -245,7 +255,7 @@ public class CTRETankS implements DrivetrainS {
 
 	@Override
 	public void resetPose(Pose2d pose) {
-		poseEstimator.resetPosition(getRotation2d(), wheelPositions, pose);
+		poseEstimator.resetPosition(getRotation2d(), wheelPositions.getPositions(), pose);
 	}
 
 	@Override
@@ -279,7 +289,13 @@ public class CTRETankS implements DrivetrainS {
 		throw new UnsupportedOperationException(
 				"Unimplemented method 'sysIdQuasistaticTurn'");
 	}
-
+	@Override
+	public double getCurrent() {
+		return motorSimModels[0].getCurrentDrawAmps()
+				+ motorSimModels[1].getCurrentDrawAmps()
+				+ motorSimModels[2].getCurrentDrawAmps()
+				+ motorSimModels[3].getCurrentDrawAmps();
+	}
 	@Override
 	public Command sysIdDynamicDrive(Direction direction) {
 		return m_sysIdRoutine.quasistatic(direction);
@@ -297,4 +313,17 @@ public class CTRETankS implements DrivetrainS {
 	public boolean isConnected() {
 		return pigeon.getFault_Hardware().getValue();
 	}
+
+@Override
+	public double getYawVelocity() { 
+		if (Constants.currentMode == Constants.Mode.REAL){
+			return Units.degreesToRadians(pigeon.getAngularVelocityZWorld().getValueAsDouble());
+		}
+		return getChassisSpeeds().omegaRadiansPerSecond;
+	}
+
+	@Override
+	public Twist2d getFieldVelocity() { 
+	return fieldVelocity;
+ }
 }
