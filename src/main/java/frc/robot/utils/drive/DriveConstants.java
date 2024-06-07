@@ -8,7 +8,7 @@ import frc.robot.utils.MotorConstantContainer;
 
 public class DriveConstants {
 	//
-	public static MotorVendor robotMotorController = MotorVendor.NEO_SPARK_MAX;
+	public static MotorVendor robotMotorController = MotorVendor.CTRE_MOTORS;
 	public static driveTrainType driveType = driveTrainType.SWERVE;
 
 	/**

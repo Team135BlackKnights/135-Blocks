@@ -1,6 +1,5 @@
 package frc.robot.subsystems.drive.CTRESwerve;
 
-
 import com.ctre.phoenix6.SignalLogger;
 import com.ctre.phoenix6.Utils;
 import com.ctre.phoenix6.mechanisms.swerve.SwerveDrivetrain;
@@ -17,9 +16,11 @@ import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.geometry.Twist2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.Notifier;
@@ -39,18 +40,18 @@ import static edu.wpi.first.units.Units.Volts;
  * subsystem so it can be used in command-based projects easily.
  */
 public class CTRESwerveS extends SwerveDrivetrain implements DrivetrainS {
-
 	private static final double kSimLoopPeriod = 0.01; // 5 ms
 	private Notifier m_simNotifier = null; //Checks for updates
 	private double m_lastSimTime;
+	private double deadband = .1;
 	private final SwerveRequest.ApplyChassisSpeeds AutoRequest = new SwerveRequest.ApplyChassisSpeeds();
 	private final SwerveRequest.SwerveDriveBrake brake = new SwerveRequest.SwerveDriveBrake();
 	private final SwerveRequest.FieldCentric drive = new SwerveRequest.FieldCentric()
-			.withDeadband(TunerConstants.kSpeedAt12VoltsMps * 0.1)
+			.withDeadband(TunerConstants.kSpeedAt12VoltsMps * deadband)
 			.withRotationalDeadband(
-					DriveConstants.kTeleTurningMaxAcceleration * 0.1) // Add a 10% deadband
+					DriveConstants.kTeleTurningMaxAcceleration * deadband) // Add a 10% deadband
 			.withDriveRequestType(DriveRequestType.OpenLoopVoltage); // I want field-centric
-																				// driving in open loop
+	// driving in open loop
 
 	/**
 	 * Creates a CTRE Swerve Drivetrain
@@ -113,13 +114,16 @@ public class CTRESwerveS extends SwerveDrivetrain implements DrivetrainS {
 	@Override
 	public void applyRequest() {
 		drive.withVelocityX(-RobotContainer.driveController.getLeftY()
-							* TunerConstants.kSpeedAt12VoltsMps) // Drive forward with
-					// negative Y (forward)
-					.withVelocityY(-RobotContainer.driveController.getLeftX()
-							* TunerConstants.kSpeedAt12VoltsMps) // Drive left with negative X (left)
-					.withRotationalRate(-RobotContainer.driveController.getRightX()
-							* DriveConstants.kTeleTurningMaxAcceleration) // Drive counterclockwise with negative X (left)
-			.apply(m_requestParameters, Modules);
+				* TunerConstants.kSpeedAt12VoltsMps) // Drive forward with
+				// negative Y (forward)
+				.withVelocityY(-RobotContainer.driveController.getLeftX()
+						* TunerConstants.kSpeedAt12VoltsMps) // Drive left with negative X (left)
+				.withRotationalRate(-RobotContainer.driveController.getRightX()
+						* DriveConstants.kTeleTurningMaxAcceleration)
+				.withDeadband(TunerConstants.kSpeedAt12VoltsMps * deadband)
+				.withRotationalDeadband(
+						DriveConstants.kTeleTurningMaxAcceleration * deadband) // Drive counterclockwise with negative X (left)
+				.apply(m_requestParameters, Modules);
 	}
 
 	/**
@@ -128,7 +132,7 @@ public class CTRESwerveS extends SwerveDrivetrain implements DrivetrainS {
 	 * @param speeds The speeds to be set
 	 */
 	public void setChassisSpeeds(ChassisSpeeds speeds) {
-		AutoRequest.withSpeeds(speeds).apply(m_requestParameters, Modules);
+		AutoRequest.withSpeeds(speeds.times(2)).apply(m_requestParameters, Modules);
 	}
 
 	/**
@@ -270,5 +274,32 @@ public class CTRESwerveS extends SwerveDrivetrain implements DrivetrainS {
 	@Override
 	public boolean isConnected() {
 		return super.getPigeon2().getFault_Hardware().getValue();
+	}
+
+	@Override
+	public double getYawVelocity() {
+		if (Constants.currentMode == Constants.Mode.REAL) {
+			return Units.degreesToRadians(super.getPigeon2()
+					.getAngularVelocityZWorld().getValueAsDouble());
+		}
+		return super.getState().speeds.omegaRadiansPerSecond;
+	}
+
+	@Override
+	public Twist2d getFieldVelocity() {
+		ChassisSpeeds m_ChassisSpeeds = super.getState().speeds;
+		Translation2d linearFieldVelocity = new Translation2d(
+				m_ChassisSpeeds.vxMetersPerSecond,
+				m_ChassisSpeeds.vyMetersPerSecond).rotateBy(getRotation2d());
+		return new Twist2d(linearFieldVelocity.getX(), linearFieldVelocity.getY(),
+				m_ChassisSpeeds.omegaRadiansPerSecond);
+	}
+
+	@Override
+	public void changeDeadband(double newDeadband) {
+		deadband = newDeadband;
+		drive.Deadband = TunerConstants.kSpeedAt12VoltsMps * deadband;
+		drive.RotationalDeadband = DriveConstants.kTeleTurningMaxAcceleration
+				* deadband;
 	}
 }

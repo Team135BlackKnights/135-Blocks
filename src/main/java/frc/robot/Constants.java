@@ -34,7 +34,7 @@ public final class Constants {
 	}
 	//FRCMatchState of the robot
 	public static FRCMatchState currentMatchState = FRCMatchState.DISABLED;
-
+	public static boolean isTuningPID = true;
 	/**
 	 * Allows the robot to utilize switch statements to efficiently figure out
 	 * the match period it's in. The current FRCMatchState is stored in

@@ -57,6 +57,7 @@ public class RobotContainer {
 	public static XboxController manipController = new XboxController(1);
 	public static XboxController testingController = new XboxController(5);
 	static JoystickButton xButtonDrive = new JoystickButton(driveController, 3),
+			//yButtonDrive = new JoystickButton(driveController, 4), //used for DriveToPose
 			aButtonTest = new JoystickButton(testingController, 1),
 			bButtonTest = new JoystickButton(testingController, 2),
 			xButtonTest = new JoystickButton(testingController, 3),
@@ -158,6 +159,8 @@ public class RobotContainer {
 	private void configureBindings() {
 		xButtonDrive.and(isDriving())
 				.onTrue(new InstantCommand(() -> drivetrainS.zeroHeading()));
+		//Example Drive To 2024 Amp Pose, Bind to what you need.
+		//yButtonDrive.and(isDriving()).onTrue(new DriveToPose(drivetrainS, false,new Pose2d(1.9,7.7,new Rotation2d(Units.degreesToRadians(90)))));
 		VisionConstants.Controls.autoIntake.whileTrue(new DriveToAITarget(drivetrainS));
 		//swerve DRIVE tests
 		rightBumperTest.onTrue(new InstantCommand(() -> {
