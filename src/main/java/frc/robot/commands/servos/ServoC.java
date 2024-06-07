@@ -1,7 +1,7 @@
-package frc.robot.commands.drive.servos;
+package frc.robot.commands.servos;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
-import frc.robot.subsystems.drive.servos.ServoS;
+import frc.robot.subsystems.servos.ServoS;
 public class ServoC extends Command{
 	private ServoS servoS;
 	public ServoC(ServoS servoS){

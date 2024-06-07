@@ -1,8 +1,8 @@
 package frc.robot.utils.servos;
 
-import edu.wpi.first.math.system.plant.DCMotor;
+
 import edu.wpi.first.math.util.Units;
-import edu.wpi.first.wpilibj.simulation.DCMotorSim;
+
 import frc.robot.utils.servos.ServoConstantContainer.ServoType;
 import frc.robot.utils.servos.ServoConstantContainer.SimServoMode;
 
@@ -16,12 +16,12 @@ public class ServoSim {
 	 */
 	
 
-	private DCMotorSim simMotor;
+
 	private double[] bounds = { 0, 0
 	};
-	private double positionDegrees = 0, velocityDegreesPerSecond = 0;
+	private double positionDegrees = 0, velocityDegreesPerSecond = 0, maxRPM = 0, setpoint = 0;
 	SimServoMode simMode;
-	DCMotor motor;
+
 
 	public ServoSim(SimServoMode runMode, ServoType type,
 			double gearing, double initialPositionDegrees) {
@@ -29,14 +29,14 @@ public class ServoSim {
 		positionDegrees = initialPositionDegrees;
 		switch (type) {
 		case REVSmartServo:
-			motor = ServoConstantContainer.ServoMotorConstants.SimREVSmartServo;
+				maxRPM = 3;
 			break;
 		default:
-			motor = ServoConstantContainer.ServoMotorConstants.SimREVSmartServo;
+
 			break;
 		}
 		//Momentum is obnoxiously low, shaft doesnt have that much inertia
-		simMotor = new DCMotorSim(motor, gearing, .000001);
+
 	}
 
 	/**
@@ -63,7 +63,7 @@ public class ServoSim {
 	 */
 	public void set(double percent) {
 		//RIO can only output a max of 5 volts on a pwm
-		simMotor.setInputVoltage(percent*5);
+
 	}
 
 	/**
@@ -91,14 +91,14 @@ public class ServoSim {
 		switch (simMode) {
 		case INRANGE:
 			if ((positionDegrees < bounds[0] && velocityDegreesPerSecond < 0) || (positionDegrees > bounds[1] && velocityDegreesPerSecond > 0)){
-				simMotor.setInputVoltage(0);
+
 
 			}
 		
 		default:
 			
-			velocityDegreesPerSecond = Units.degreesToRadians(simMotor.getAngularVelocityRadPerSec())/60;
-			positionDegrees = Units.degreesToRadians(simMotor.getAngularPositionRad());
+	
+
 			break;
 		}
 
