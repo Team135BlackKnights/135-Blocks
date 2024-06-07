@@ -18,6 +18,8 @@ import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.estimator.DifferentialDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.geometry.Twist2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.DifferentialDriveKinematics;
 import edu.wpi.first.math.kinematics.DifferentialDriveWheelPositions;
@@ -30,6 +32,7 @@ import edu.wpi.first.units.Measure;
 import edu.wpi.first.units.Time;
 import edu.wpi.first.units.Velocity;
 import edu.wpi.first.units.Voltage;
+import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.simulation.DCMotorSim;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -40,6 +43,8 @@ import frc.robot.Constants;
 import frc.robot.Robot;
 import frc.robot.subsystems.drive.DrivetrainS;
 import frc.robot.utils.drive.DriveConstants;
+import frc.robot.utils.drive.Position;
+
 import static edu.wpi.first.units.Units.Seconds;
 import static edu.wpi.first.units.Units.Volts;
 
@@ -48,10 +53,11 @@ public class REVTankS implements DrivetrainS {
 	private static AHRS gyro = new AHRS();
 	private DifferentialDrivePoseEstimator poseEstimator;
 	private static CANSparkBase[] motors = new CANSparkBase[4];
+	private Twist2d fieldVelocity = new Twist2d();
 	private static RelativeEncoder[] encoders = new RelativeEncoder[4];
 	private static final DCMotorSim[] motorSimModels = new DCMotorSim[4];
 	private DifferentialDriveKinematics differentialDriveKinematics;
-	private DifferentialDriveWheelPositions wheelPositions;
+	private Position<DifferentialDriveWheelPositions> wheelPositions;
 	private DifferentialDriveWheelSpeeds wheelSpeeds;
 	Measure<Velocity<Voltage>> rampRate = Volts.of(1).per(Seconds.of(1)); //for going FROM ZERO PER SECOND
 	Measure<Voltage> holdVoltage = Volts.of(4);
@@ -183,12 +189,12 @@ public class REVTankS implements DrivetrainS {
 	}
 	@Override
 	public void periodic() {
-		wheelPositions = getWheelPositions();
+		wheelPositions = getPositionsWithTimestamp(getWheelPositions());
 		wheelSpeeds = getWheelSpeeds();
 		pose = poseEstimator.update(getRotation2d(), getWheelPositions());
 		if (Constants.currentMode == Constants.Mode.SIM) {
 			for (int i=0; i < 4; i+=2){
-				motorSimModels[i].setInputVoltage(motors[i].get()*12);
+				motorSimModels[i].setInputVoltage(motors[i].get()*RobotController.getBatteryVoltage());
 				motorSimModels[i].update(dtSeconds);
 				encoders[i].setPosition(motorSimModels[i].getAngularPositionRotations());
 			}
@@ -213,6 +219,12 @@ public class REVTankS implements DrivetrainS {
 					poses.toArray(new Pose2d[poses.size()]));
 			robotField.getObject("path").setPoses(poses);
 		});
+		ChassisSpeeds m_ChassisSpeeds = differentialDriveKinematics.toChassisSpeeds(wheelSpeeds);
+		Translation2d linearFieldVelocity = new Translation2d(
+			m_ChassisSpeeds.vxMetersPerSecond,
+				m_ChassisSpeeds.vyMetersPerSecond).rotateBy(getRotation2d());
+		fieldVelocity = new Twist2d(linearFieldVelocity.getX(),
+				linearFieldVelocity.getY(), m_ChassisSpeeds.omegaRadiansPerSecond);
 	}
 
 	private DifferentialDriveWheelSpeeds getWheelSpeeds() {
@@ -232,7 +244,7 @@ public class REVTankS implements DrivetrainS {
 
 	@Override
 	public void resetPose(Pose2d pose) {
-		poseEstimator.resetPosition(getRotation2d(), wheelPositions, pose);
+		poseEstimator.resetPosition(getRotation2d(), wheelPositions.getPositions(), pose);
 	}
 
 	@Override
@@ -278,10 +290,26 @@ public class REVTankS implements DrivetrainS {
 	@Override
 	public void zeroHeading() {
 		gyro.reset();
-		poseEstimator.resetPosition(getRotation2d(), wheelPositions, pose);
+		poseEstimator.resetPosition(getRotation2d(), wheelPositions.getPositions(), pose);
 	}
 	@Override
 	public boolean isConnected(){
 		return gyro.isConnected();
 	}
+	@Override
+	public double getYawVelocity() {
+		return fieldVelocity.dtheta; //?
+	}
+	@Override
+	public double getCurrent() {
+		return motorSimModels[0].getCurrentDrawAmps()
+				+ motorSimModels[1].getCurrentDrawAmps()
+				+ motorSimModels[2].getCurrentDrawAmps()
+				+ motorSimModels[3].getCurrentDrawAmps();
+	}
+	@Override
+	public Twist2d getFieldVelocity() {
+		return fieldVelocity;
+	 }
+	
 }

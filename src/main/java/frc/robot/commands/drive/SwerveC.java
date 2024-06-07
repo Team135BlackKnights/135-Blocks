@@ -43,6 +43,7 @@ public class SwerveC extends Command {
 		
 		if (DriveConstants.driveType == DriveConstants.driveTrainType.SWERVE
 				&& DriveConstants.robotMotorController == DriveConstants.MotorVendor.CTRE_MOTORS) {
+			
 			drivetrainS.applyRequest();
 		} else {
 			// Get desired ChassisSpeeds from controller

@@ -9,6 +9,7 @@ import com.pathplanner.lib.util.ReplanningConfig;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.geometry.Twist2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.hal.SimDouble;
@@ -26,6 +27,8 @@ import edu.wpi.first.units.Measure;
 import edu.wpi.first.units.Time;
 import edu.wpi.first.units.Velocity;
 import edu.wpi.first.units.Voltage;
+import edu.wpi.first.util.sendable.Sendable;
+import edu.wpi.first.util.sendable.SendableBuilder;
 import edu.wpi.first.wpilibj.SerialPort.Port;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -44,6 +47,7 @@ import static edu.wpi.first.units.Units.Volts;
 import java.util.HashMap;
 
 import frc.robot.utils.drive.DriveConstants.TrainConstants.ModulePosition;
+import frc.robot.utils.drive.Position;
 
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
@@ -59,12 +63,13 @@ public class REVSwerveS extends SubsystemBase implements DrivetrainS {
 	//Whether the swerve drivetrain should be taken over by our auto drive to note feature (in the Vision branch)
 	public Pose2d robotPosition = new Pose2d(0, 0, getRotation2d());
 	Field2d robotField = new Field2d();
+	private Twist2d fieldVelocity = new Twist2d();
 	// LIST MODULES IN THE SAME EXACT ORDER USED WHEN DECLARING SwerveDriveKinematics
 	ChassisSpeeds m_ChassisSpeeds;
 	static Vector<N3> stateStdDevs = VecBuilder.fill(0.1, 0.1, 0.1);
 	static Vector<N3> visionStdDevs = VecBuilder.fill(1, 1, 1);
 	public SwerveDrivePoseEstimator poseEstimator;
-	SwerveModulePosition[] m_modulePositions;
+	Position<SwerveModulePosition[]> m_modulePositions;
 	private double m_simYaw;
 	Measure<Velocity<Voltage>> rampRate = Volts.of(1).per(Seconds.of(1)); //for going FROM ZERO PER SECOND
 	Measure<Voltage> holdVoltage = Volts.of(8);
@@ -91,13 +96,13 @@ public class REVSwerveS extends SubsystemBase implements DrivetrainS {
 	/**
 	 * Creates a new REVSwerve Drivetrain with 8 CANSparkMaxes or 8
 	 * CANSparkFlexes
+	 * 
 	 * @param maxSpeed                 the max speed of the drivetrain
 	 * @param driveBaseRadius          the radius of the drivetrain
 	 * @param moduleConstantContainers the moduleConstantContainers for each
 	 *                                    module as an array of {frontLeft,
-	 *                                    frontRight, backLeft, backRight} 
+	 *                                    frontRight, backLeft, backRight}
 	 * @see REVModuleConstantContainer
-	 * 
 	 */
 	public REVSwerveS(REVModuleConstantContainer[] moduleConstantContainers,
 			double maxSpeed, double driveBaseRadius) {
@@ -111,10 +116,10 @@ public class REVSwerveS extends SubsystemBase implements DrivetrainS {
 		};
 		kDriveKinematics = new SwerveDriveKinematics(kModuleTranslations);
 		m_ChassisSpeeds = kDriveKinematics.toChassisSpeeds(getModuleStates());
+		m_modulePositions = getPositionsWithTimestamp(getModulePositions());
 		poseEstimator = new SwerveDrivePoseEstimator(kDriveKinematics,
-				getRotation2d(), getModulePositions(), robotPosition, stateStdDevs,
-				visionStdDevs);
-		m_modulePositions = getModulePositions();
+				getRotation2d(), m_modulePositions.getPositions(), robotPosition,
+				stateStdDevs, visionStdDevs);
 		kMaxSpeedMetersPerSecond = maxSpeed;
 		kDriveBaseRadius = driveBaseRadius;
 		// Waits for the RIO to finishing booting
@@ -219,14 +224,38 @@ public class REVSwerveS extends SubsystemBase implements DrivetrainS {
 				m_swerveModules.put(position, back_right);
 			}
 		}
+		SmartDashboard.putData("Swerve Drive", new Sendable() {
+			@Override
+			public void initSendable(SendableBuilder builder) {
+				builder.setSmartDashboardType("SwerveDrive");
+				builder.addDoubleProperty("Front Left Angle",
+						() -> m_swerveModules.get(ModulePosition.FRONT_LEFT).getHeadingRotation2d().getRadians(), null);
+				builder.addDoubleProperty("Front Left Velocity",
+						() -> m_swerveModules.get(ModulePosition.FRONT_LEFT).getDriveVelocity(), null);
+				builder.addDoubleProperty("Front Right Angle",
+						() -> m_swerveModules.get(ModulePosition.FRONT_RIGHT).getHeadingRotation2d().getRadians(), null);
+				builder.addDoubleProperty("Front Right Velocity",
+						() -> m_swerveModules.get(ModulePosition.FRONT_RIGHT).getDriveVelocity(), null);
+				builder.addDoubleProperty("Back Left Angle",
+						() -> m_swerveModules.get(ModulePosition.BACK_LEFT).getHeadingRotation2d().getRadians(), null);
+				builder.addDoubleProperty("Back Left Velocity",
+						() -> m_swerveModules.get(ModulePosition.BACK_LEFT).getDriveVelocity(), null);
+				builder.addDoubleProperty("Back Right Angle",
+						() -> m_swerveModules.get(ModulePosition.BACK_RIGHT).getHeadingRotation2d().getRadians(), null);
+				builder.addDoubleProperty("Back Right Velocity",
+						() -> m_swerveModules.get(ModulePosition.BACK_RIGHT).getDriveVelocity(), null);
+				builder.addDoubleProperty("Robot Angle",
+						() -> Units.degreesToRadians(getHeading()), null);
+			}
+		});
 	}
 
 	@Override
 	public void zeroHeading() {
 		debounce = 0;
 		gyro.reset();
-		poseEstimator.resetPosition(gyro.getRotation2d(), m_modulePositions,
-				robotPosition);
+		poseEstimator.resetPosition(gyro.getRotation2d(),
+				m_modulePositions.getPositions(), robotPosition);
 	}
 
 	public static double getHeading() {
@@ -257,10 +286,12 @@ public class REVSwerveS extends SubsystemBase implements DrivetrainS {
 		//SmartDashboard.putBoolean("Auto Lock", autoLock);
 		SmartDashboard.putNumber("Robot Heading (getPose)",
 				getPose().getRotation().getDegrees());
-		m_modulePositions = getModulePositions();
+		m_modulePositions = getPositionsWithTimestamp(getModulePositions());
 		// LIST MODULES IN THE SAME EXACT ORDER USED WHEN DECLARING SwerveDriveKinematics
 		m_ChassisSpeeds = kDriveKinematics.toChassisSpeeds(getModuleStates());
-		robotPosition = poseEstimator.update(getRotation2d(), m_modulePositions);
+		robotPosition = poseEstimator.updateWithTime(
+				m_modulePositions.getTimestamp(), getRotation2d(),
+				m_modulePositions.getPositions());
 		for (REVSwerveModule module : m_swerveModules.values()) {
 			var modulePositionFromChassis = kModuleTranslations[module
 					.getModuleNumber()].rotateBy(getRotation2d())
@@ -293,6 +324,11 @@ public class REVSwerveS extends SubsystemBase implements DrivetrainS {
 				getModuleStates());
 		Logger.recordOutput("Swerve/Display/Rotation",
 				getRotation2d().getDegrees());
+		Translation2d linearFieldVelocity = new Translation2d(
+				m_ChassisSpeeds.vxMetersPerSecond,
+				m_ChassisSpeeds.vyMetersPerSecond).rotateBy(getRotation2d());
+		fieldVelocity = new Twist2d(linearFieldVelocity.getX(),
+				linearFieldVelocity.getY(), m_ChassisSpeeds.omegaRadiansPerSecond);
 	}
 
 	@AutoLogOutput(key = "Odometry/Robot")
@@ -305,7 +341,8 @@ public class REVSwerveS extends SubsystemBase implements DrivetrainS {
 	@Override
 	public void resetPose(Pose2d pose) {
 		// LIST MODULES IN THE SAME EXACT ORDER USED WHEN DECLARING SwerveDriveKinematics
-		poseEstimator.resetPosition(getRotation2d(), m_modulePositions, pose);
+		poseEstimator.resetPosition(getRotation2d(),
+				m_modulePositions.getPositions(), pose);
 	}
 
 	@Override
@@ -349,4 +386,12 @@ public class REVSwerveS extends SubsystemBase implements DrivetrainS {
 			DriveConstants.fieldOriented = false;
 		}
 	}
+
+	@Override
+	public double getYawVelocity() {
+		return fieldVelocity.dtheta; //?
+	}
+
+	@Override
+	public Twist2d getFieldVelocity() { return fieldVelocity; }
 }

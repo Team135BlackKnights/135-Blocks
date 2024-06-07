@@ -3,12 +3,16 @@ package frc.robot.subsystems.drive;
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Twist2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Subsystem;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
+import frc.robot.utils.drive.DriveConstants;
+import frc.robot.utils.drive.Position;
 
 public interface DrivetrainS extends Subsystem {
 	/**
@@ -22,7 +26,9 @@ public interface DrivetrainS extends Subsystem {
 	 * @return the ChassisSpeeds of the drivetrain
 	 */
 	ChassisSpeeds getChassisSpeeds();
-
+	default void changeDeadband(double newDeadband){
+		DriveConstants.TrainConstants.kDeadband = newDeadband;
+	}
 	/**
 	 * Reset the drivetrain's odometry to a particular pose
 	 * 
@@ -55,6 +61,13 @@ public interface DrivetrainS extends Subsystem {
 	 * @return the angle of the drivetrain as a rotation2d (in degrees)
 	 */
 	Rotation2d getRotation2d();
+  /** Returns the current yaw velocity (Z rotation) in radians per second. */
+  public double getYawVelocity();
+    /**
+   * Returns the measured X, Y, and theta field velocities in meters per sec. The components of the
+   * twist are velocities and NOT changes in position.
+   */
+  public Twist2d getFieldVelocity();
 
 	/**
 	 * SysID Command for drivetrain characterization
@@ -98,10 +111,17 @@ public interface DrivetrainS extends Subsystem {
 	 */
 	boolean isConnected();
 
+	default <T> Position<T> getPositionsWithTimestamp(T positions) {
+        double timestamp = Timer.getFPGATimestamp();
+        return new Position<>(positions, timestamp);
+    }
 	/**
 	 * CTRE Nonsense
 	 */
 	default void applyRequest() {
 		throw new UnsupportedOperationException("No support for requests.");
+	}
+	default double getCurrent(){
+		return 0;
 	}
 }
