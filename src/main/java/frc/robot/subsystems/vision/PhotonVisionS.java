@@ -273,7 +273,6 @@ public class PhotonVisionS extends SubsystemBase {
 				// We do this because we should trust cam estimates with closer apriltags than farther ones.
 				Matrix<N3, N1> estStdDevs = getEstimationStdDevs(estPose,
 						cEstimator, cCam);
-				SmartDashboard.putString("CAMERAUPDATE", cCam.getName());
 				String response = shouldAcceptVision(time, estStdDevs, estPose,
 						RobotContainer.drivetrainS.getPose(),
 						RobotContainer.drivetrainS.getChassisSpeeds(), aprilTagList);
@@ -304,8 +303,11 @@ public class PhotonVisionS extends SubsystemBase {
 						}
 					}
 				}
-				SmartDashboard.putNumberArray("OFFSETS",
-						VisionConstants.FieldConstants.aprilTagOffsets);
+				if (VisionConstants.debug){
+					SmartDashboard.putString("CAMERAUPDATE", cCam.getName());
+					SmartDashboard.putNumberArray("OFFSETS",
+							VisionConstants.FieldConstants.aprilTagOffsets);
+				}
 			});
 		}
 	}
