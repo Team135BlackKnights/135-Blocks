@@ -4,6 +4,7 @@
 package frc.robot;
 
 import frc.robot.commands.drive.SwerveC;
+import frc.robot.commands.servos.ServoC;
 import frc.robot.subsystems.drive.DrivetrainS;
 import frc.robot.subsystems.drive.CTREMecanum.CTREMecanumConstantContainer;
 import frc.robot.subsystems.drive.CTREMecanum.CTREMecanumS;
@@ -19,6 +20,7 @@ import frc.robot.subsystems.drive.REVSwerve.SwerveModules.REVSwerveModuleContain
 import frc.robot.subsystems.drive.REVTank.REVTankConstantContainer;
 import frc.robot.subsystems.drive.REVTank.REVTankS;
 import frc.robot.utils.RunTest;
+import frc.robot.subsystems.servos.ServoS;
 import frc.robot.utils.drive.DriveConstants;
 
 import frc.robot.subsystems.drive.REVSwerve.REVModuleConstantContainer;
@@ -73,6 +75,7 @@ public class RobotContainer {
 	 * commands.
 	 */
 	public RobotContainer() {
+		final ServoS servoS = new ServoS();
 		//We check to see what drivetrain type we have here, and create the correct drivetrain system based on that. 
 		//If we get something wacky, throw an error
 		switch (DriveConstants.driveType) {
@@ -147,7 +150,9 @@ public class RobotContainer {
 			throw new IllegalArgumentException(
 					"Unknown implementation type, please check DriveConstants.java!");
 		}
+		
 		drivetrainS.setDefaultCommand(new SwerveC(drivetrainS));
+		servoS.setDefaultCommand(new ServoC(servoS));
 		autoChooser = AutoBuilder.buildAutoChooser();
 		SmartDashboard.putData("Auto Chooser", autoChooser);
 		// Configure the trigger bindings
