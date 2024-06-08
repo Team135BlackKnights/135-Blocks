@@ -18,6 +18,7 @@ import frc.robot.subsystems.drive.REVSwerve.REVSwerveS;
 import frc.robot.subsystems.drive.REVSwerve.SwerveModules.REVSwerveModuleContainers;
 import frc.robot.subsystems.drive.REVTank.REVTankConstantContainer;
 import frc.robot.subsystems.drive.REVTank.REVTankS;
+import frc.robot.utils.RunTest;
 import frc.robot.utils.drive.DriveConstants;
 import frc.robot.commands.state_space.ArmC;
 import frc.robot.commands.state_space.ElevatorC;
@@ -37,14 +38,13 @@ import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.PowerDistribution;
 import edu.wpi.first.wpilibj.XboxController;
 
-import java.util.function.BooleanSupplier;
-
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
+import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 
 /**
  * THIS CODE REQUIRES WPILIB 2024 AND PATHPLANNER 2024 IT WILL NOT WORK
@@ -58,7 +58,8 @@ public class RobotContainer {
 	private final ArmS armS = new ArmS();
 	private final ElevatorS elevatorS = new ElevatorS();
 	private final SendableChooser<Command> autoChooser;
-	static PowerDistribution PDH = new PowerDistribution(Constants.PowerDistributionID, PowerDistribution.ModuleType.kRev);
+	static PowerDistribution PDH = new PowerDistribution(
+			Constants.PowerDistributionID, PowerDistribution.ModuleType.kRev);
 	public static XboxController driveController = new XboxController(0);
 	public static XboxController manipController = new XboxController(1);
 	public static XboxController testingController = new XboxController(5);
@@ -163,20 +164,30 @@ public class RobotContainer {
 		autoChooser = AutoBuilder.buildAutoChooser();
 		SmartDashboard.putData("Auto Chooser", autoChooser);
 		// Configure the trigger bindings
-		
 		configureBindings();
 	}
 
 	private void configureBindings() {
-		xButtonDrive.and(isDriving())
+		xButtonDrive
+				.and(aButtonTest.or(bButtonTest).or(xButtonTest).or(yButtonTest)
+						.negate())
 				.onTrue(new InstantCommand(() -> drivetrainS.zeroHeading()));
+		yButtonTest.whileTrue(
+				new RunTest(SysIdRoutine.Direction.kForward, true, drivetrainS));
+		bButtonTest.whileTrue(
+				new RunTest(SysIdRoutine.Direction.kReverse, true, drivetrainS));
+		aButtonTest.whileTrue(
+				new RunTest(SysIdRoutine.Direction.kForward, false, drivetrainS));
+		xButtonTest.whileTrue(
+				new RunTest(SysIdRoutine.Direction.kReverse, false, drivetrainS));
 		//Example Drive To 2024 Amp Pose, Bind to what you need.
-		//yButtonDrive.and(isDriving()).whileTrue(new DriveToPose(drivetrainS, false,new Pose2d(1.9,7.7,new Rotation2d(Units.degreesToRadians(90)))));
+		//yButtonDrive.and(aButtonTest.or(bButtonTest).or(xButtonTest).or(yButtonTest).negate()).whileTrue(new DriveToPose(drivetrainS, false,new Pose2d(1.9,7.7,new Rotation2d(Units.degreesToRadians(90)))));
 		//swerve DRIVE tests
 		//When user hits right bumper, go to next test, or wrap back to starting test for SysID.
 		rightBumperTest.onTrue(new InstantCommand(() -> {
 			if (currentTest == Constants.SysIdRoutines.values().length - 1) {
 				currentTest = 0;
+				System.out.println("looping");
 			} else {
 				currentTest++;
 			}
@@ -185,11 +196,11 @@ public class RobotContainer {
 		leftBumperTest.onTrue(new InstantCommand(() -> {
 			if (currentTest == 0) {
 				currentTest = Constants.SysIdRoutines.values().length - 1;
+				System.out.println("looping");
 			} else {
 				currentTest--;
 			}
 		}));
-
 		//When using CTRE, be sure to hit Start so that the motors are logged via CTRE (For SysId)
 		selectButtonTest.onTrue(Commands.runOnce(SignalLogger::stop));
 		startButtonTest.onTrue(Commands.runOnce(SignalLogger::start));
@@ -204,23 +215,14 @@ public class RobotContainer {
 		// An example command will be run in autonomous
 		return autoChooser.getSelected();
 	}
+
 	/**
 	 * For SIMULATION ONLY, return the estimated current draw of the robot.
+	 * 
 	 * @return Current in amps.
 	 */
-	public static double[] getCurrentDraw(){
-		return new double[]{
-			Math.min(drivetrainS.getCurrent(),200)
+	public static double[] getCurrentDraw() {
+		return new double[] { Math.min(drivetrainS.getCurrent(), 200)
 		};
-	}
-	public static BooleanSupplier isDriving() {
-		BooleanSupplier returnVal;
-		if (aButtonTest.getAsBoolean() || bButtonTest.getAsBoolean()
-				|| xButtonTest.getAsBoolean() || yButtonTest.getAsBoolean()) {
-			returnVal = () -> false;
-			return returnVal; //currently doing a test
-		}
-		returnVal = () -> true;
-		return returnVal;
 	}
 }

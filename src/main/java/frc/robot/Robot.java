@@ -17,7 +17,6 @@ import frc.robot.Constants.SysIdRoutines;
 import frc.robot.utils.SimGamePiece;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
-import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import edu.wpi.first.net.PortForwarder;
 import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj.DriverStation;
@@ -37,7 +36,7 @@ public class Robot extends LoggedRobot {
 	private RobotContainer m_robotContainer;
 	public static boolean isRed;
 	private boolean hasBeenEnabled;
-	private SysIdRoutines runningTest = Constants.SysIdRoutines
+	public static SysIdRoutines runningTest = Constants.SysIdRoutines
 			.values()[0];
 
 	/**
@@ -99,31 +98,9 @@ public class Robot extends LoggedRobot {
 		// commands, running already-scheduled commands, removing finished or interrupted commands,
 		// and running subsystem periodic() methods.  This must be called from the robot's periodic
 		// block in order for anything in the Command-based framework to work.
-		SysIdRoutines runningTest = Constants.SysIdRoutines
+		runningTest = Constants.SysIdRoutines
 				.values()[RobotContainer.currentTest];
 		SmartDashboard.putString("QUEUED TEST", runningTest.toString());
-		switch (runningTest) {
-		case swerveDrive:
-			RobotContainer.yButtonTest.whileTrue(RobotContainer.drivetrainS
-					.sysIdQuasistaticDrive(SysIdRoutine.Direction.kForward));
-			RobotContainer.bButtonTest.whileTrue(RobotContainer.drivetrainS
-					.sysIdQuasistaticDrive(SysIdRoutine.Direction.kReverse));
-			RobotContainer.aButtonTest.whileTrue(RobotContainer.drivetrainS
-					.sysIdDynamicDrive(SysIdRoutine.Direction.kForward));
-			RobotContainer.xButtonTest.whileTrue(RobotContainer.drivetrainS
-					.sysIdDynamicDrive(SysIdRoutine.Direction.kReverse));
-			break;
-		case swerveTurn:
-			RobotContainer.yButtonTest.whileTrue(RobotContainer.drivetrainS
-					.sysIdQuasistaticTurn(SysIdRoutine.Direction.kForward));
-			RobotContainer.bButtonTest.whileTrue(RobotContainer.drivetrainS
-					.sysIdQuasistaticTurn(SysIdRoutine.Direction.kReverse));
-			RobotContainer.aButtonTest.whileTrue(RobotContainer.drivetrainS
-					.sysIdDynamicTurn(SysIdRoutine.Direction.kForward));
-			RobotContainer.xButtonTest.whileTrue(RobotContainer.drivetrainS
-					.sysIdDynamicTurn(SysIdRoutine.Direction.kReverse));
-			break;
-		}
 		CommandScheduler.getInstance().run();
 	}
 
