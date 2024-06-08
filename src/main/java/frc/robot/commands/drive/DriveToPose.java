@@ -1,9 +1,4 @@
-// Copyright (c) 2023 FRC 6328
-// http://github.com/Mechanical-Advantage
-//
-// Use of this source code is governed by an MIT-style
-// license that can be found in the LICENSE file at
-// the root directory of this project.
+//A lot of this code is borrowed from 6328's 2023 Repo.
 
 package frc.robot.commands.drive;
 
@@ -38,7 +33,7 @@ public class DriveToPose extends Command {
   private double driveErrorAbs;
   private double thetaErrorAbs;
   private Translation2d lastSetpointTranslation;
-
+  //allow live updating via LoggableTunedNumbers
   private static final LoggableTunedNumber driveKp = new LoggableTunedNumber("DriveToPose/DriveKp");
   private static final LoggableTunedNumber driveKd = new LoggableTunedNumber("DriveToPose/DriveKd");
   private static final LoggableTunedNumber thetaKp = new LoggableTunedNumber("DriveToPose/ThetaKp");
@@ -67,7 +62,7 @@ public class DriveToPose extends Command {
       new LoggableTunedNumber("DriveToPose/FFMinRadius");
   private static final LoggableTunedNumber ffMaxRadius =
       new LoggableTunedNumber("DriveToPose/FFMaxRadius");
-
+ //Default the TunedNumbers on boot
   static {
         driveKp.initDefault(2.0);
         driveKd.initDefault(0.0);
@@ -118,7 +113,7 @@ public class DriveToPose extends Command {
     var currentPose = drive.getPose();
     driveController.reset(
         currentPose.getTranslation().getDistance(poseSupplier.get().getTranslation()),
-        Math.min(
+        Math.min(   //get our CURRENT speed, and rotate it by our actual position.
             0.0,
             -new Translation2d(drive.getFieldVelocity().dx, drive.getFieldVelocity().dy)
                 .rotateBy(
@@ -131,7 +126,7 @@ public class DriveToPose extends Command {
                 .getX()));
     thetaController.reset(currentPose.getRotation().getRadians(), drive.getRotation2d().getRadians());
     lastSetpointTranslation = drive.getPose().getTranslation();
-	 drive.changeDeadband(.01);
+	 drive.changeDeadband(.01); //Make sure the commands aren't trying to move tiny movements when the drivetrain wont allow it
   }
 
   @Override
@@ -175,7 +170,8 @@ public class DriveToPose extends Command {
     // Calculate drive speed
     double currentDistance =
         currentPose.getTranslation().getDistance(poseSupplier.get().getTranslation());
-    double ffScaler =
+   //how fast should we be moving relative to distance? use circles based off relative distances to figure that out. 
+	double ffScaler =
         MathUtil.clamp(
             (currentDistance - ffMinRadius.get()) / (ffMaxRadius.get() - ffMinRadius.get()),
             0.0,
@@ -186,8 +182,8 @@ public class DriveToPose extends Command {
         driveController.getSetpoint().velocity);
     double driveVelocityScalar =
         driveController.getSetpoint().velocity * ffScaler
-            + driveController.calculate(driveErrorAbs, 0.0);
-    if (currentDistance < driveController.getPositionTolerance()) driveVelocityScalar = 0.0;
+            + driveController.calculate(driveErrorAbs, 0.0); //Go to error of zero from wanted pose, using ff
+    if (currentDistance < driveController.getPositionTolerance()) driveVelocityScalar = 0.0; //if there, STOP.
     lastSetpointTranslation =
         new Pose2d(
                 targetPose.getTranslation(),
@@ -200,7 +196,7 @@ public class DriveToPose extends Command {
     double thetaVelocity =
         thetaController.getSetpoint().velocity * ffScaler
             + thetaController.calculate(
-                currentPose.getRotation().getRadians(), targetPose.getRotation().getRadians());
+                currentPose.getRotation().getRadians(), targetPose.getRotation().getRadians()); //Go to target rotation using FF.
     thetaErrorAbs =
         Math.abs(currentPose.getRotation().minus(targetPose.getRotation()).getRadians());
     if (thetaErrorAbs < thetaController.getPositionTolerance()) thetaVelocity = 0.0;
@@ -211,31 +207,31 @@ public class DriveToPose extends Command {
                 new Translation2d(),
                 currentPose.getTranslation().minus(targetPose.getTranslation()).getAngle())
             .transformBy(GeomUtil.translationToTransform(driveVelocityScalar, 0.0))
-            .getTranslation();
+            .getTranslation(); //Calculate X and Y speeds from driveVelocity scalar.
     drive.setChassisSpeeds(
         ChassisSpeeds.fromFieldRelativeSpeeds(
-            driveVelocity.getX(), driveVelocity.getY(), thetaVelocity, currentPose.getRotation()));
+            driveVelocity.getX(), driveVelocity.getY(), thetaVelocity, currentPose.getRotation())); //assert that we are relative to the current pose
     // Log data
-    Logger.recordOutput("DriveToPose/DistanceMeasured", currentDistance);
+    Logger.recordOutput("DriveToPose/DistanceError", currentDistance);
     Logger
         .recordOutput("DriveToPose/DistanceSetpoint", driveController.getSetpoint().position);
     Logger
-        .recordOutput("DriveToPose/ThetaMeasured", currentPose.getRotation().getRadians());
+        .recordOutput("DriveToPose/ThetaMeasured", currentPose.getRotation().getDegrees());
     Logger
-        .recordOutput("DriveToPose/ThetaSetpoint", thetaController.getSetpoint().position);
+        .recordOutput("DriveToPose/ThetaSetpoint", Units.radiansToDegrees(thetaController.getSetpoint().position));
     Logger
         .recordOutput(
             "Odometry/DriveToPoseSetpoint",
             new Pose2d(
                 lastSetpointTranslation, new Rotation2d(thetaController.getSetpoint().position)));
     Logger.recordOutput("Odometry/DriveToPoseGoal", targetPose);
-	 if (atGoal()) running = false;
+	 if (atGoal()) running = false; //If we've reached our goal, stop command.
 
   }
 
   @Override
   public void end(boolean interrupted) {
-	 drive.changeDeadband(.1);
+	 drive.changeDeadband(.1); //go back to normal deadband
     drive.stopModules();
 
   }
@@ -245,7 +241,7 @@ public class DriveToPose extends Command {
     return driveController.atGoal() && thetaController.atGoal();
   }
 
-  /** Checks if the robot pose is within the allowed drive and theta tolerances. */
+  /** Checks if the robot pose is within the custom drive and theta tolerances. */
   public boolean withinTolerance(double driveTolerance, Rotation2d thetaTolerance) {
     return Math.abs(driveErrorAbs) < driveTolerance
         && Math.abs(thetaErrorAbs) < thetaTolerance.getRadians();
