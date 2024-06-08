@@ -110,7 +110,12 @@ public interface DrivetrainS extends Subsystem {
 	 * @return if the gyro drivetrain is connected
 	 */
 	boolean isConnected();
-
+	/**
+	 * Create a position wrapper which contains the positions, and the timestamps.
+	 * @param <T> The type of position, MechanumWheelPositions or SwerveModulePositions[] or tank's.
+	 * @param positions with both a timestamp and position.
+	 * @return
+	 */
 	default <T> Position<T> getPositionsWithTimestamp(T positions) {
         double timestamp = Timer.getFPGATimestamp();
         return new Position<>(positions, timestamp);
