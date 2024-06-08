@@ -12,6 +12,11 @@ public class ServoConstantContainer {
 		//Free current amps is a random guess
 		public static DCMotor SimREVSmartServo = new DCMotor(5, 1.32389775, 1, .4, 0.124666375, 1);
 	}
+	/**
+	 * The mode to run the servo in
+	 * INRANGE is traditional servo operation,
+	 * CONTINUOUS is running it like a motor
+	 */
 	public enum SimServoMode {
 		INRANGE, CONTINUOUS
 	}

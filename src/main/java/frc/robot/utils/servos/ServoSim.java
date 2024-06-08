@@ -1,6 +1,5 @@
 package frc.robot.utils.servos;
 
-
 import frc.robot.utils.servos.ServoConstantContainer.ServoType;
 import frc.robot.utils.servos.ServoConstantContainer.SimServoMode;
 
@@ -8,18 +7,28 @@ import frc.robot.utils.servos.ServoConstantContainer.SimServoMode;
  * Class to handle simulation of a servo
  */
 public class ServoSim {
-	private double[] bounds = { 0, 0 };
+	private double[] bounds = { 0, 0
+	};
 	private double positionDegrees = 0, velocityDegreesPerSecond = 0,
-			maxDegreesPerSecond = 0, setpoint = 0, deltaTheta = 0;
+			maxDegreesPerSecond = 0, setpoint = 0, deltaTheta = 0, deadband = 0,
+			simDtSeconds;
 	SimServoMode simMode;
-
-	public ServoSim(SimServoMode runMode, ServoType type, double gearing,
-			double initialPositionDegrees) {
+	/**
+	 * Creates a new servo simulation
+	 * @param runMode How the servo is running (continuously or in range)
+	 * @param type the type of servo (REVSmartServo is the only supported one currently)
+	 * @param initialPositionDegrees starting position of the servo
+	 * @param dtSeconds Length of time between periodics
+	 */
+	public ServoSim(SimServoMode runMode, ServoType type, 
+			double initialPositionDegrees, double dtSeconds) {
 		simMode = runMode;
 		positionDegrees = initialPositionDegrees;
 		switch (type) {
 		case REVSmartServo:
 			maxDegreesPerSecond = 428.571429;
+			simDtSeconds = dtSeconds;
+			deadband = maxDegreesPerSecond*simDtSeconds;
 			break;
 		default:
 			break;
@@ -74,11 +83,13 @@ public class ServoSim {
 	public void setAngle(double degrees) {
 		switch (simMode) {
 		case INRANGE:
-			if (setpoint < bounds[0]){
+			if (setpoint < bounds[0]) {
 				setpoint = bounds[0];
 			}
-			if (setpoint > bounds[1]){
+			if (setpoint > bounds[1]) {
 				setpoint = bounds[1];
+			} else {
+				setpoint = degrees;
 			}
 			break;
 		default:
@@ -101,29 +112,34 @@ public class ServoSim {
 	public double getAngularPositionDegrees() { return positionDegrees; }
 
 	/**
-	 * Call this in a periodic to update the servo state
-	 * 
-	 * @param dtSeconds the time since this was last called (in periodic this
-	 *                     should be .02)
+	 * Call this to update your servo state (typically done in a periodic). Call this function in the dtSeconds specified in the constructor
 	 */
-	public void updateServoSim(double dtSeconds) {
+	public void updateServoSim() {
 		switch (simMode) {
 		//computes where it should be next
 		case INRANGE:
+			double deltaPos = setpoint-positionDegrees;
 			double nextPos = (positionDegrees
-					+ velocityDegreesPerSecond * dtSeconds)%360;
-			//If its not within bounds, ignore it
+					+ maxDegreesPerSecond * simDtSeconds*Math.signum(deltaPos))%360;
+				
+			//If its not within bounds, don't set it to nextPos
 			if (!(nextPos < bounds[0] && velocityDegreesPerSecond < 0)
 					&& !(nextPos > bounds[1] && velocityDegreesPerSecond > 0)) {
-				//If nextPos is beyond the setpoint, ignore it
+				//If nextPos is beyond the setpoint, don't set it to nextPos
 				if (!(velocityDegreesPerSecond > 0 && nextPos > setpoint)
 						&& !(velocityDegreesPerSecond < 0 && nextPos < setpoint)) {
-					positionDegrees = nextPos;
+				//if its in deadband, go to setpoint
+					if (Math.abs(deltaPos) < deadband){
+						positionDegrees = setpoint;
+					}else{
+						positionDegrees = nextPos;
+					}
+					
 				}
 			}
 		default:
 			//This is just p = p0 + v0t
-			positionDegrees += velocityDegreesPerSecond * dtSeconds;
+			positionDegrees += velocityDegreesPerSecond * simDtSeconds;
 			positionDegrees %= 360;
 			break;
 		}
