@@ -13,9 +13,15 @@ package frc.robot.utils;
  */
 public class MotorConstantContainer {
 	private static double[] valueHolderArray = new double[5];
-
-	public MotorConstantContainer(double Ks, double Kv, double Ka, double P,
-			double D) {
+	/**
+	 * Create our SysID constant holder, and alert to any possible SysID mistakes.
+	 * @param Ks
+	 * @param Kv
+	 * @param Ka
+	 * @param P
+	 * @param D
+	 */
+	public MotorConstantContainer(double Ks, double Kv, double Ka, double P, double D) {
 		if ((Ka <= 0) || (Kv <= 0)) {
 			throw new ArithmeticException("Ka and Kv must be greater than 0");
 		} else if ((P < 0) || (D < 0)) {
@@ -29,14 +35,39 @@ public class MotorConstantContainer {
 			valueHolderArray[4] = D;
 		}
 	}
-
-	public double getKs() { return valueHolderArray[0]; }
-
-	public double getKv() { return valueHolderArray[1]; }
-
-	public double getKa() { return valueHolderArray[2]; }
-
-	public double getP() { return valueHolderArray[3]; }
-
-	public double getD() { return valueHolderArray[4]; }
+	/**
+	 * 
+	 * @return Ks SysID constant
+	 */
+	public double getKs() {
+		 return valueHolderArray[0]; 
+		}
+	/**
+	 * 
+	 * @return Kv SysID constant
+	 */
+	public double getKv() { 
+		return valueHolderArray[1]; 
+	}
+	/**
+	 * 
+	 * @return Ka SysID constant
+	 */
+	public double getKa() { 
+		return valueHolderArray[2]; 
+	}
+	/**
+	 * 
+	 * @return PID P SysID constant
+	 */
+	public double getP() { 
+		return valueHolderArray[3]; 
+	}
+	/**
+	 * 
+	 * @return PID D SysID constant IF using a position controller
+	 */
+	public double getD() { 
+		return valueHolderArray[4]; 
+	}
 }

@@ -171,8 +171,9 @@ public class RobotContainer {
 		xButtonDrive.and(isDriving())
 				.onTrue(new InstantCommand(() -> drivetrainS.zeroHeading()));
 		//Example Drive To 2024 Amp Pose, Bind to what you need.
-		//yButtonDrive.and(isDriving()).onTrue(new DriveToPose(drivetrainS, false,new Pose2d(1.9,7.7,new Rotation2d(Units.degreesToRadians(90)))));
+		//yButtonDrive.and(isDriving()).whileTrue(new DriveToPose(drivetrainS, false,new Pose2d(1.9,7.7,new Rotation2d(Units.degreesToRadians(90)))));
 		//swerve DRIVE tests
+		//When user hits right bumper, go to next test, or wrap back to starting test for SysID.
 		rightBumperTest.onTrue(new InstantCommand(() -> {
 			if (currentTest == Constants.SysIdRoutines.values().length - 1) {
 				currentTest = 0;
@@ -180,6 +181,7 @@ public class RobotContainer {
 				currentTest++;
 			}
 		}));
+		//When user hits left bumper, go to next test, or wrap back to starting test for SysID.
 		leftBumperTest.onTrue(new InstantCommand(() -> {
 			if (currentTest == 0) {
 				currentTest = Constants.SysIdRoutines.values().length - 1;
@@ -187,6 +189,8 @@ public class RobotContainer {
 				currentTest--;
 			}
 		}));
+
+		//When using CTRE, be sure to hit Start so that the motors are logged via CTRE (For SysId)
 		selectButtonTest.onTrue(Commands.runOnce(SignalLogger::stop));
 		startButtonTest.onTrue(Commands.runOnce(SignalLogger::start));
 	}

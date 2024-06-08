@@ -76,7 +76,7 @@ public class Robot extends LoggedRobot {
 		Logger.start();
 		m_robotContainer = new RobotContainer();
 		DataHandler.startHandler("C:");
-		SmartDashboard.putString("QUEUED TEST", runningTest.toString());
+		SmartDashboard.putString("QUEUED TEST", runningTest.toString()); //Put what Test we're going to run on the test controller.
 	}
 
 	/**
