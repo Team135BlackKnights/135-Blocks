@@ -13,14 +13,18 @@ public class ServoSim {
 			maxDegreesPerSecond = 0, setpoint = 0, deltaTheta = 0, deadband = 0,
 			simDtSeconds;
 	SimServoMode simMode;
+
 	/**
 	 * Creates a new servo simulation
-	 * @param runMode How the servo is running (continuously or in range)
-	 * @param type the type of servo (REVSmartServo is the only supported one currently)
+	 * 
+	 * @param runMode                How the servo is running (continuously or in
+	 *                                  range)
+	 * @param type                   the type of servo (REVSmartServo is the only
+	 *                                  supported one currently)
 	 * @param initialPositionDegrees starting position of the servo
-	 * @param dtSeconds Length of time between periodics
+	 * @param dtSeconds              Length of time between periodics
 	 */
-	public ServoSim(SimServoMode runMode, ServoType type, 
+	public ServoSim(SimServoMode runMode, ServoType type,
 			double initialPositionDegrees, double dtSeconds) {
 		simMode = runMode;
 		positionDegrees = initialPositionDegrees;
@@ -28,7 +32,7 @@ public class ServoSim {
 		case REVSmartServo:
 			maxDegreesPerSecond = 428.571429;
 			simDtSeconds = dtSeconds;
-			deadband = maxDegreesPerSecond*simDtSeconds;
+			deadband = maxDegreesPerSecond * simDtSeconds;
 			break;
 		default:
 			break;
@@ -69,7 +73,13 @@ public class ServoSim {
 				throw new ArithmeticException(
 						"Percent must be greater than zero for case INRANGE");
 			}
-			setpoint = bounds[0] + deltaTheta * percent;
+			setpoint = bounds[0] + deltaTheta * percent; //-90 + 180*.02
+			if (setpoint <= bounds[0]) {
+				setpoint = bounds[0];
+			}
+			else if (setpoint >= bounds[1]) {
+				setpoint = bounds[1];
+			}
 			break;
 		}
 	}
@@ -83,10 +93,10 @@ public class ServoSim {
 	public void setAngle(double degrees) {
 		switch (simMode) {
 		case INRANGE:
-			if (setpoint < bounds[0]) {
+			if (setpoint <= bounds[0]) {
 				setpoint = bounds[0];
 			}
-			if (setpoint > bounds[1]) {
+			else if (setpoint >= bounds[1]) {
 				setpoint = bounds[1];
 			} else {
 				setpoint = degrees;
@@ -112,29 +122,29 @@ public class ServoSim {
 	public double getAngularPositionDegrees() { return positionDegrees; }
 
 	/**
-	 * Call this to update your servo state (typically done in a periodic). Call this function in the dtSeconds specified in the constructor
+	 * Call this to update your servo state (typically done in a periodic). Call
+	 * this function in the dtSeconds specified in the constructor
 	 */
 	public void updateServoSim() {
 		switch (simMode) {
 		//computes where it should be next
 		case INRANGE:
-			double deltaPos = setpoint-positionDegrees;
+			double deltaPos = setpoint - positionDegrees; //95 -90  = 5
 			double nextPos = (positionDegrees
-					+ maxDegreesPerSecond * simDtSeconds*Math.signum(deltaPos))%360;
-				
+					+ maxDegreesPerSecond * simDtSeconds * Math.signum(deltaPos))
+					% 360;
 			//If its not within bounds, don't set it to nextPos
 			if (!(nextPos < bounds[0] && velocityDegreesPerSecond < 0)
 					&& !(nextPos > bounds[1] && velocityDegreesPerSecond > 0)) {
 				//If nextPos is beyond the setpoint, don't set it to nextPos
 				if (!(velocityDegreesPerSecond > 0 && nextPos > setpoint)
 						&& !(velocityDegreesPerSecond < 0 && nextPos < setpoint)) {
-				//if its in deadband, go to setpoint
-					if (Math.abs(deltaPos) < deadband){
+					//if its in deadband, go to setpoint
+					if (Math.abs(deltaPos) < deadband) {
 						positionDegrees = setpoint;
-					}else{
+					} else {
 						positionDegrees = nextPos;
 					}
-					
 				}
 			}
 		default:

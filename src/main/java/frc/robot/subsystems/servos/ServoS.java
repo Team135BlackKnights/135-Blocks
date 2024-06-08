@@ -11,12 +11,12 @@ import frc.robot.Constants;
 import frc.robot.utils.servos.ServoConstantContainer;
 
 public class ServoS extends SubsystemBase{
-	public Servo servo;
-	public ServoSim servoSim;
+	private Servo servo;
+	private ServoSim servoSim;
 	public ServoS(){
 				servo = new Servo(ServoConstantContainer.servoPWMPort);
 				servoSim = new ServoSim(SimServoMode.INRANGE, ServoType.REVSmartServo, 0, .02);
-				servoSim.setSimBounds(-90, 90);
+				servoSim.setSimBounds(ServoConstantContainer.lowerBound, ServoConstantContainer.upperBound);
 				
 	}
 	public void setServoDegrees(double degrees){
@@ -28,6 +28,25 @@ public class ServoS extends SubsystemBase{
 			default:
 				servoSim.setAngle(degrees);
 				break;
+		}
+	}
+	public void setServoPercent(double percent){
+		switch (Constants.currentMode) {
+			case REAL:
+				servo.set(percent);
+				break;
+		
+			default:
+				servoSim.set(percent);
+				break;
+		}
+	}
+	public double getServoDegrees(){
+		switch (Constants.currentMode) {
+			case REAL:
+				return ServoConstantContainer.lowerBound + servo.getPosition() * (ServoConstantContainer.upperBound - ServoConstantContainer.lowerBound); 
+			default:
+				return servoSim.getAngularPositionDegrees();
 		}
 	}
 	@Override
