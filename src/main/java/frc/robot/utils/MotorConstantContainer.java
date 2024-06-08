@@ -1,18 +1,15 @@
 package frc.robot.utils;
 
 /**
- * Class designed to hold the values for Kp, Ks, Kv for state-space models and P and D for PID loops. Remember to check whether your loop should be position or velocity
- * @param Kp
- * The Kp value from SysID, used in state-space
- * @param Ks
- * The Ks value from SysID, used in state-space
- * @param Kv
- * The Kv value from SysID, used in state-space
- * @param P
- * The P value from SysID, used in PID loops
- * @param D
- * the D Value from SysId, used in PID loops
+ * Class designed to hold the values for Kp, Ks, Kv for state-space models and P
+ * and D for PID loops. Remember to check whether your loop should be position
+ * or velocity
  * 
+ * @param Kp The Kp value from SysID, used in state-space
+ * @param Ks The Ks value from SysID, used in state-space
+ * @param Kv The Kv value from SysID, used in state-space
+ * @param P  The P value from SysID, used in PID loops
+ * @param D  the D Value from SysId, used in PID loops
  */
 public class MotorConstantContainer {
 	private static double[] valueHolderArray = new double[5];
