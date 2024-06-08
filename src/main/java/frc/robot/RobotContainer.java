@@ -201,7 +201,7 @@ public class RobotContainer {
 	 */
 	public static double[] getCurrentDraw(){
 		return new double[]{
-			drivetrainS.getCurrent()
+			Math.min(drivetrainS.getCurrent(),200)
 		};
 	}
 	public static BooleanSupplier isDriving() {
