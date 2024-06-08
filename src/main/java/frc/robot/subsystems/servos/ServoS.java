@@ -16,6 +16,7 @@ public class ServoS extends SubsystemBase{
 				servo = new Servo(ServoConstantContainer.servoPWMPort);
 				servoSim = new ServoSim(SimServoMode.CONTINUOUS, ServoType.REVSmartServo, 1, 0);
 				servoSim.setSimBounds(-90, 90);
+				
 	}
 	public void setServoDegrees(double degrees){
 		servo.set(degrees);

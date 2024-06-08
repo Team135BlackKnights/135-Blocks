@@ -1,8 +1,6 @@
 package frc.robot.utils.servos;
 
 
-import edu.wpi.first.math.util.Units;
-
 import frc.robot.utils.servos.ServoConstantContainer.ServoType;
 import frc.robot.utils.servos.ServoConstantContainer.SimServoMode;
 
@@ -10,37 +8,27 @@ import frc.robot.utils.servos.ServoConstantContainer.SimServoMode;
  * Class to handle simulation of a servo
  */
 public class ServoSim {
-	/**
-	 * Assigns the mode of the servo in simulation (in range is within a certain
-	 * set of bounds, continuous means to continually rotate)
-	 */
-	
-
-
-	private double[] bounds = { 0, 0
-	};
-	private double positionDegrees = 0, velocityDegreesPerSecond = 0, maxRPM = 0, setpoint = 0;
+	private double[] bounds = { 0, 0 };
+	private double positionDegrees = 0, velocityDegreesPerSecond = 0,
+			maxDegreesPerSecond = 0, setpoint = 0, deltaTheta = 0;
 	SimServoMode simMode;
 
-
-	public ServoSim(SimServoMode runMode, ServoType type,
-			double gearing, double initialPositionDegrees) {
+	public ServoSim(SimServoMode runMode, ServoType type, double gearing,
+			double initialPositionDegrees) {
 		simMode = runMode;
 		positionDegrees = initialPositionDegrees;
 		switch (type) {
 		case REVSmartServo:
-				maxRPM = 3;
+			maxDegreesPerSecond = 428.571429;
 			break;
 		default:
-
 			break;
 		}
 		//Momentum is obnoxiously low, shaft doesnt have that much inertia
-
 	}
 
 	/**
-	 * Set the bounds of a simulated servo in Degrees
+	 * Set the bounds of a simulated servo in Degrees. This must be called
 	 * 
 	 * @param leftBound  The leftmost position the servo can go to (in Degrees)
 	 * @param rightBound The rightmost position the servo can go to (in Degrees)
@@ -48,6 +36,7 @@ public class ServoSim {
 	public void setSimBounds(double leftBound, double rightBound) {
 		bounds = new double[] { leftBound, rightBound
 		};
+		deltaTheta = rightBound - leftBound;
 		//Assumes servo starts at leftBound
 		positionDegrees = leftBound;
 	}
@@ -58,12 +47,45 @@ public class ServoSim {
 	 * range, set it to a constant PERCENTAGE of the max velocity
 	 * 
 	 * @param percent the percent to set the servo to (-1 to 1) if the servo is
-	 *                   continuous, set to a position from (0 to 1.0) if it is
-	 *                   in range mode
+	 *                   continuous, the position to be set to from (0 to 1.0) if
+	 *                   it is in range mode
 	 */
 	public void set(double percent) {
-		//RIO can only output a max of 5 volts on a pwm
+		switch (simMode) {
+		case CONTINUOUS:
+			velocityDegreesPerSecond = maxDegreesPerSecond * percent;
+			break;
+		default:
+			if (percent < 0) {
+				throw new ArithmeticException(
+						"Percent must be greater than zero for case INRANGE");
+			}
+			setpoint = bounds[0] + deltaTheta * percent;
+			break;
+		}
+	}
 
+	/**
+	 * Sets the angle of the servo. ONLY WORKS IN INRANGE MODE, will do nothing
+	 * in continuous mode
+	 * 
+	 * @param degrees
+	 */
+	public void setAngle(double degrees) {
+		switch (simMode) {
+		case INRANGE:
+			if (setpoint < bounds[0]){
+				setpoint = bounds[0];
+			}
+			if (setpoint > bounds[1]){
+				setpoint = bounds[1];
+			}
+			break;
+		default:
+			System.err.println("SetAngle should not be called in continuous!");
+			//does nothing here
+			break;
+		}
 	}
 
 	/**
@@ -85,22 +107,25 @@ public class ServoSim {
 	 *                     should be .02)
 	 */
 	public void updateServoSim(double dtSeconds) {
-		//This is just using kinematics formulas,
-		//We calculate velocity from maxRPM times voltage
-		//And position from that times the dt
 		switch (simMode) {
+		//computes where it should be next
 		case INRANGE:
-			if ((positionDegrees < bounds[0] && velocityDegreesPerSecond < 0) || (positionDegrees > bounds[1] && velocityDegreesPerSecond > 0)){
-
-
+			double nextPos = (positionDegrees
+					+ velocityDegreesPerSecond * dtSeconds)%360;
+			//If its not within bounds, ignore it
+			if (!(nextPos < bounds[0] && velocityDegreesPerSecond < 0)
+					&& !(nextPos > bounds[1] && velocityDegreesPerSecond > 0)) {
+				//If nextPos is beyond the setpoint, ignore it
+				if (!(velocityDegreesPerSecond > 0 && nextPos > setpoint)
+						&& !(velocityDegreesPerSecond < 0 && nextPos < setpoint)) {
+					positionDegrees = nextPos;
+				}
 			}
-		
 		default:
-			
-	
-
+			//This is just p = p0 + v0t
+			positionDegrees += velocityDegreesPerSecond * dtSeconds;
+			positionDegrees %= 360;
 			break;
 		}
-
 	}
 }

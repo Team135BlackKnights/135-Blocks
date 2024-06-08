@@ -14,7 +14,7 @@ public class ServoC extends Command{
 	}
 	@Override
 	public void execute(){
-		servoS.servoSim.set(1);
+		servoS.servoSim.setAngle(-.001);
 		SmartDashboard.putNumber("sim pos", servoS.servoSim.getAngularPositionDegrees());
 		SmartDashboard.putNumber("sim vel", servoS.servoSim.getAngularVelocityDegreesPerSec());
 	}
