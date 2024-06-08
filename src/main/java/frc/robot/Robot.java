@@ -35,7 +35,8 @@ public class Robot extends LoggedRobot {
 	private Command m_autonomousCommand;
 	private RobotContainer m_robotContainer;
 	public static boolean isRed;
-	private boolean hasBeenEnabled;
+	private boolean hasBeenEnabled, isPracticeDSMode = false;
+	private double lastMatchTime = 0;
 	public static SysIdRoutines runningTest = Constants.SysIdRoutines
 			.values()[0];
 
@@ -107,9 +108,11 @@ public class Robot extends LoggedRobot {
 	/** This function is called once each time the robot enters Disabled mode. */
 	@Override
 	public void disabledInit() {
-		Constants.currentMatchState = FRCMatchState.DISABLED;
-		if (DriverStation.getMatchTime() == 0) {
+		isPracticeDSMode = false;
+		if (Constants.currentMatchState == FRCMatchState.ENDGAME) {
 			Constants.currentMatchState = FRCMatchState.MATCHOVER;
+		}else{
+			Constants.currentMatchState = FRCMatchState.DISABLED;
 		}
 	}
 
@@ -153,16 +156,23 @@ public class Robot extends LoggedRobot {
 	public void teleopPeriodic() {
 		/*An FRC teleop period takes 2 minutes and 15 seconds (135 seconds). Endgame occurs during the last 20 seconds.
 		Based on this, endgame should initialize at 115 seconds and end at 135 seconds. */
-		if (DriverStation.isFMSAttached()) {
-			if (DriverStation.getMatchTime() > 30) {
+		double matchTime = DriverStation.getMatchTime();
+		if (DriverStation.isFMSAttached() || isPracticeDSMode) {
+			if (matchTime > 30) {
 				Constants.currentMatchState = FRCMatchState.TELEOP;
-			} else if (DriverStation.getMatchTime() == 30) {
+			} else if (matchTime == 30) {
 				Constants.currentMatchState = FRCMatchState.ENDGAMEINIT;
-			} else if (DriverStation.getMatchTime() < 30
-					&& DriverStation.getMatchTime() > 0) {
+			} else if (matchTime < 30
+					&& matchTime > 0) {
 				Constants.currentMatchState = FRCMatchState.ENDGAME;
 			}
 		} else {
+			if (matchTime % 1 != 0){ //is a double (running on DS)
+				if (matchTime < lastMatchTime){
+					isPracticeDSMode = true;
+				}
+				lastMatchTime = matchTime;
+			}
 			Constants.currentMatchState = FRCMatchState.TELEOP;
 		}
 		if (RobotContainer.driveController.getPOV() == 0) {
