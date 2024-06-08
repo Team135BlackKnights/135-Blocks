@@ -87,13 +87,9 @@ public class DriveConstants {
 				kDriveEncoderRPM2MeterPerSec = kDriveEncoderRot2Meter / 60,
 				kTurningEncoderRot2Rad = kTurningMotorGearRatio * 2 * Math.PI,
 				kTurningEncoderRPM2RadPerSec = kTurningEncoderRot2Rad / 60,
-				kDeadband = 0.1, kAutoDeadband = 0.0000001, kOverallP = 2.36975,
-				kOverallSVolts = -.180747, kOverallVVoltSecondsPerRotation = 2.8303,
-				kOverallAVoltSecondsSquaredPerRotation = 1.4715;
+				kDeadband = 0.1;
 		public static final MotorConstantContainer overallTurningMotorConstantContainer = new MotorConstantContainer(
-				.2907325, .002131625, .000203095, 1.07062 * 4, 0.019508),
-				overallDriveMotorConstantContainer = new MotorConstantContainer(
-						-.180747, 2.8303, 1.4715, 2.36975, 0),
+				.2907325, .002131625, .000203095, 1.07062 * 4, 0.019508), //Average the turning motors for these vals.
 				frontRightDriveMotorConstantContainer = new MotorConstantContainer(
 						.04248, 2.9041, 1.52, 2.4646, 0),
 				frontLeftDriveMotorConstantContainer = new MotorConstantContainer(
