@@ -6,8 +6,12 @@ import edu.wpi.first.math.system.plant.DCMotor;
  * Contains the PWM Port IDs 
  */
 public class ServoConstantContainer {
-	public static final int servoPWMPort = 1;
-	public static double lowerBound = -90, upperBound = 90;
+	public static final int 
+	leftServoPWMPort = 1,
+	rightServoPWMPort = 2;
+	public static double 
+	leftLowerServoBound = -90, leftUpperServoBound = 90,
+	rightLowerServoBound = -180, rightUpperServoBound = 180;
 	public class ServoMotorConstants{
 		//Free current amps is a random guess
 
@@ -23,4 +27,6 @@ public class ServoConstantContainer {
 	}
 
 	public enum ServoType { REVSmartServo; }
+
+	public enum ServoNames {leftServo, rightServo}
 }
