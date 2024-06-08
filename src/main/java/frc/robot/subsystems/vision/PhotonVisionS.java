@@ -35,7 +35,7 @@ public class PhotonVisionS extends SubsystemBase {
 	//These estimate pose based on april tag location
 	public final PhotonPoseEstimator rightEstimator, frontEstimator,
 			leftEstimator, backEstimator;
-	//Put these values into an array to iterate through them(go through them in order)
+	//Put these values into an array to iterate through them (go through them in order)
 	public final PhotonPoseEstimator[] camEstimates;
 	public final PhotonCamera[] cams;
 	//Used for aligning with a particular aprilTag
@@ -50,13 +50,13 @@ public class PhotonVisionS extends SubsystemBase {
 		//Create the cameras
 		rightCam = new PhotonCamera(VisionConstants.rightCamName);
 		backCam = new PhotonCamera(VisionConstants.backCamName);
-		//frontCam = new PhotonCamera(VisionConstants.frontCamName);
-		//leftCam = new PhotonCamera(VisionConstants.leftCamName);
+		frontCam = new PhotonCamera(VisionConstants.frontCamName);
+		leftCam = new PhotonCamera(VisionConstants.leftCamName);
 		//Set the pipelines (how it computes what we want), similar to limelight, default 0
 		backCam.setPipelineIndex(0);
 		rightCam.setPipelineIndex(0);
-		//frontCam.setPipelineIndex(0);
-		//leftCam.setPipelineIndex(0);
+		frontCam.setPipelineIndex(0);
+		leftCam.setPipelineIndex(0);
 		//Create new photon pose estimators
 		rightEstimator = new PhotonPoseEstimator(VisionConstants.kTagLayout,
 				PoseStrategy.MULTI_TAG_PNP_ON_COPROCESSOR, rightCam,
@@ -73,20 +73,20 @@ public class PhotonVisionS extends SubsystemBase {
 		//Set the strategy to use when multitag isn't detected. IE, only one apriltag visible
 		rightEstimator.setMultiTagFallbackStrategy(PoseStrategy.LOWEST_AMBIGUITY);
 		backEstimator.setMultiTagFallbackStrategy(PoseStrategy.LOWEST_AMBIGUITY);
-		//frontEstimator.setMultiTagFallbackStrategy(PoseStrategy.LOWEST_AMBIGUITY);
-		//leftEstimator.setMultiTagFallbackStrategy(PoseStrategy.LOWEST_AMBIGUITY);
+		frontEstimator.setMultiTagFallbackStrategy(PoseStrategy.LOWEST_AMBIGUITY);
+		leftEstimator.setMultiTagFallbackStrategy(PoseStrategy.LOWEST_AMBIGUITY);
 		//Puts the estimators in an array to iterate through them efficiently
-		camEstimates = new PhotonPoseEstimator[] { //frontEstimator, leftEstimator,
+		camEstimates = new PhotonPoseEstimator[] { frontEstimator, leftEstimator,
 				rightEstimator, backEstimator
 		};
 		//Same process for cameras
-		cams = new PhotonCamera[] { /*frontCam, leftCam, */rightCam, backCam
+		cams = new PhotonCamera[] {frontCam, leftCam, rightCam, backCam
 		};
 		//Create PhotonVision camera simulations if the robot is in sim
 		if (Constants.currentMode == Mode.SIM) {
 			//Array for iteration
 			PhotonCameraSim[] cameraSims = new PhotonCameraSim[] {
-					//new PhotonCameraSim(frontCam), new PhotonCameraSim(leftCam),
+					new PhotonCameraSim(frontCam), new PhotonCameraSim(leftCam),
 					new PhotonCameraSim(rightCam), new PhotonCameraSim(backCam)
 			};
 			//Handles the vision simulation
@@ -96,8 +96,8 @@ public class PhotonVisionS extends SubsystemBase {
 			/*We use ARDUCAM OV9281s, which are the same cameras as on the limelight 3G. BLACK AND WHITE 
 			This means we can use the limelight properties. In an array for iteration.*/
 			SimCameraProperties[] properties = new SimCameraProperties[] {
-					//SimCameraProperties.LL2_960_720(),
-					//SimCameraProperties.LL2_960_720(),
+					SimCameraProperties.LL2_960_720(),
+					SimCameraProperties.LL2_960_720(),
 					SimCameraProperties.LL2_960_720(),
 					SimCameraProperties.LL2_960_720(),
 			};
@@ -176,12 +176,12 @@ public class PhotonVisionS extends SubsystemBase {
 			//Names the object based on the camera
 			String objectName;
 			switch (camera) {
-			/*case Front_Camera:
+			case Front_Camera:
 				objectName = "VisionEstimationF";
 				break;
 			case Left_Camera:
 				objectName = "VisionEstimationL";
-				break;*/
+				break;
 			case Right_Camera:
 				objectName = "VisionEstimationR";
 				break;
@@ -220,12 +220,12 @@ public class PhotonVisionS extends SubsystemBase {
 		//Figure out what camera it is
 		PVCameras cameraVal;
 		switch (camera.getName()) {
-		/*case VisionConstants.frontCamName:
+		case VisionConstants.frontCamName:
 			cameraVal = PVCameras.Front_Camera;
 			break;
 		case VisionConstants.leftCamName:
 			cameraVal = PVCameras.Left_Camera;
-			break;*/
+			break;
 		case VisionConstants.rightCamName:
 			cameraVal = PVCameras.Right_Camera;
 			break;
@@ -262,12 +262,12 @@ public class PhotonVisionS extends SubsystemBase {
 				ArrayList<Integer> aprilTagList = new ArrayList<>();
 				for (PhotonTrackedTarget target : est.targetsUsed)
 					aprilTagList.add(target.getFiducialId());
-				for (PhotonTrackedTarget target : est.targetsUsed) {
+				/*for (PhotonTrackedTarget target : est.targetsUsed) { //To test the Offset feature, uncomment this.
 					if (target.getFiducialId() == 6) {
 						estPose = estPose.div(4012);
 						//estPose = new Pose2d(0, 0, new Rotation2d(0,0));
 					}
-				}
+				}*/
 				double time = est.timestampSeconds;
 				// Change our trust in the measurement based on the tags we can see
 				// We do this because we should trust cam estimates with closer apriltags than farther ones.

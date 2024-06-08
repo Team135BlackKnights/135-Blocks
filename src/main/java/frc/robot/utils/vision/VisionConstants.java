@@ -27,7 +27,7 @@ public class VisionConstants {
 
 	//We put the cameras into an enum to make iteration easier
 	public static enum PVCameras {
-		/*Front_Camera, Left_Camera, */Right_Camera, Back_Camera
+		Front_Camera, Left_Camera, Right_Camera, Back_Camera
 	}
 	//We used 2 cameras for our 2024 year, adjust these accordingly by removing camera names (there are two extra cameras here)
 	//Camera names, from photonVision web interface
@@ -57,7 +57,7 @@ public class VisionConstants {
 			camResWidth = 600, camResHeight = 800, camFPS = 60;
 	public static int[] camPitches = new int[] {
 			//Convert pitches into an array through iteration
-			/*frontCamPitch, leftCamPitch, */rightCamPitch, backCamPitch
+			frontCamPitch, leftCamPitch, rightCamPitch, backCamPitch
 	};
 	//Putting all the values together (Creating rotation3ds from the rotation 2ds and putting them together with the translation2ds)
 	public static Translation3d frontPos = frontCamTranslation3d,
@@ -78,7 +78,7 @@ public class VisionConstants {
 			robotToBack = new Transform3d(backPos, backRot);
 	//Put in an array for easier iterating
 	public static Transform3d[] camTranslations = new Transform3d[] {
-		/*robotToFront, robotToLeft, */robotToRight, robotToBack
+		robotToFront, robotToLeft, robotToRight, robotToBack
 	};
 	//Used for distance calculations for AI stuff
 	//Offset of your limelight (0 being perpendicular, negative meaning camera lens down)
