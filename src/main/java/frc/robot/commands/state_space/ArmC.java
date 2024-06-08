@@ -2,13 +2,14 @@ package frc.robot.commands.state_space;
 
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.InstantCommand;
 import frc.robot.RobotContainer;
 import frc.robot.subsystems.state_space.ArmS;
 import frc.robot.utils.state_space.StateSpaceConstants;
 
 public class ArmC extends Command {
 	private final ArmS armS;
-
+	private double armPos = 0;
 	public ArmC(ArmS armS) {
 		this.armS = armS;
 		addRequirements(armS);
@@ -16,13 +17,22 @@ public class ArmC extends Command {
 
 	@Override
 	public void initialize() {
-		//do nothing, armS handles startup.
+		StateSpaceConstants.Controls.go45Button
+						.onTrue(new InstantCommand(() -> {
+							armPos = Units.degreesToRadians(45);
+							armS.deployIntake(armS.createState(armPos));
+						}));
+		StateSpaceConstants.Controls.go0Button
+						.onTrue(new InstantCommand(() -> {
+							armPos = Units.degreesToRadians(0);
+							armS.deployIntake(armS.createState(armPos));
+						}));
 	}
 
 	@Override
 	public void execute() {
-		double armSpeed = 0, armPos = ArmS.getSetpoint();
-		double desSpeed = -RobotContainer.manipController.getRightY();
+		double armSpeed = 0, desSpeed = -RobotContainer.manipController.getRightY();
+		armPos = ArmS.getSetpoint();
 		if (StateSpaceConstants.Controls.go45Button.getAsBoolean()) {
 			armPos = Units.degreesToRadians(45);
 		} else if (StateSpaceConstants.Controls.go0Button.getAsBoolean()) {

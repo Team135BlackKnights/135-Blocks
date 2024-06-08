@@ -1,6 +1,7 @@
 package frc.robot.commands.state_space;
 
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.InstantCommand;
 import frc.robot.RobotContainer;
 import frc.robot.subsystems.state_space.FlywheelS;
 import frc.robot.utils.state_space.StateSpaceConstants;
@@ -16,21 +17,28 @@ public class FlywheelC extends Command {
 
 	@Override
 	public void initialize() {
-		//do not do anything to flywheels, flywheelS handles it.
+		StateSpaceConstants.Controls.setButton
+				.whileTrue(new InstantCommand(() -> {
+					flywheelSpeed = 4000;
+					flywheelS.setRPM(flywheelSpeed);
+				})).onFalse(new InstantCommand(() -> {
+					flywheelSpeed = 0;
+					flywheelS.setRPM(flywheelSpeed);
+				}));
 	}
 
 	@Override
 	public void execute() {
-		if (RobotContainer.manipController
-				.getLeftTriggerAxis() > StateSpaceConstants.Controls.kDeadband) {
-			flywheelSpeed = RobotContainer.manipController.getLeftTriggerAxis()
-					* StateSpaceConstants.Flywheel.maxRPM;
-		} else if (StateSpaceConstants.Controls.setButton.getAsBoolean()) {
-			flywheelSpeed = 4000;
-		} else {
-			flywheelSpeed = 0;
+		if (flywheelSpeed != 4000) {
+			if (RobotContainer.manipController
+					.getLeftTriggerAxis() > StateSpaceConstants.Controls.kDeadband) {
+				flywheelSpeed = RobotContainer.manipController.getLeftTriggerAxis()
+						* StateSpaceConstants.Flywheel.maxRPM;
+			} else {
+				flywheelSpeed = 0;
+			}
+			flywheelS.setRPM(flywheelSpeed);
 		}
-		flywheelS.setRPM(flywheelSpeed);
 	}
 
 	@Override
