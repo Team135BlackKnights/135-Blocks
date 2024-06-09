@@ -38,6 +38,7 @@ import frc.robot.utils.drive.DriveConstants.TrainConstants;
 import frc.robot.utils.drive.LocalADStarAK;
 import frc.robot.utils.drive.PathFinder;
 import com.ctre.phoenix6.SignalLogger;
+import frc.robot.commands.leds.LEDGifC;
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.auto.NamedCommands;
 import com.pathplanner.lib.commands.PathfindingCommand;
@@ -56,6 +57,9 @@ import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.PowerDistribution;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
+
+import frc.robot.subsystems.leds.LEDs;
+import frc.robot.utils.leds.LEDConstants;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -78,6 +82,7 @@ public class RobotContainer {
 	private Telemetry logger = null;
 	@SuppressWarnings("unused")
 	private final PhotonVisionS photonVisionS = new PhotonVisionS();
+	private final LEDs leds = new LEDs();
 	private final SendableChooser<Command> autoChooser;
 	static PowerDistribution PDH = new PowerDistribution(
 			Constants.PowerDistributionID, PowerDistribution.ModuleType.kRev);
@@ -191,6 +196,7 @@ public class RobotContainer {
 		armS.setDefaultCommand(new CTRESingleJointedArmC(armS));
 		elevatorS.setDefaultCommand(new CTREElevatorC(elevatorS));
 		doubleJointedArmS.setDefaultCommand(new CTREDoubleJointedArmC(doubleJointedArmS));
+		leds.setDefaultCommand(new LEDGifC(leds, LEDConstants.imageList, 20,2).ignoringDisable(true));
 		autoChooser = AutoBuilder.buildAutoChooser();
 		SmartDashboard.putData(field);
 		SmartDashboard.putData("Auto Chooser", autoChooser);
