@@ -13,10 +13,13 @@ import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.subsystems.drive.DrivetrainS;
 import frc.robot.utils.LoggableTunedNumber;
+import frc.robot.utils.drive.DriveConstants;
 
 import java.util.function.Supplier;
 import frc.robot.utils.GeomUtil;
 import org.littletonrobotics.junction.Logger;
+
+import com.pathplanner.lib.path.PathConstraints;
 
 public class DriveToPose extends Command {
   private final DrivetrainS drive;
@@ -32,24 +35,17 @@ public class DriveToPose extends Command {
           0.0, 0.0, 0.0, new TrapezoidProfile.Constraints(0.0, 0.0), .02);
   private double driveErrorAbs;
   private double thetaErrorAbs;
+  private PathConstraints pathConstraints;
   private Translation2d lastSetpointTranslation;
   //allow live updating via LoggableTunedNumbers
   private static final LoggableTunedNumber driveKp = new LoggableTunedNumber("DriveToPose/DriveKp");
   private static final LoggableTunedNumber driveKd = new LoggableTunedNumber("DriveToPose/DriveKd");
   private static final LoggableTunedNumber thetaKp = new LoggableTunedNumber("DriveToPose/ThetaKp");
   private static final LoggableTunedNumber thetaKd = new LoggableTunedNumber("DriveToPose/ThetaKd");
-  private static final LoggableTunedNumber driveMaxVelocity =
-      new LoggableTunedNumber("DriveToPose/DriveMaxVelocity");
   private static final LoggableTunedNumber driveMaxVelocitySlow =
       new LoggableTunedNumber("DriveToPose/DriveMaxVelocitySlow");
-  private static final LoggableTunedNumber driveMaxAcceleration =
-      new LoggableTunedNumber("DriveToPose/DriveMaxAcceleration");
-  private static final LoggableTunedNumber thetaMaxVelocity =
-      new LoggableTunedNumber("DriveToPose/ThetaMaxVelocity");
   private static final LoggableTunedNumber thetaMaxVelocitySlow =
       new LoggableTunedNumber("DriveToPose/ThetaMaxVelocitySlow");
-  private static final LoggableTunedNumber thetaMaxAcceleration =
-      new LoggableTunedNumber("DriveToPose/ThetaMaxAcceleration");
   private static final LoggableTunedNumber driveTolerance =
       new LoggableTunedNumber("DriveToPose/DriveTolerance");
   private static final LoggableTunedNumber driveToleranceSlow =
@@ -68,12 +64,8 @@ public class DriveToPose extends Command {
         driveKd.initDefault(0.0);
         thetaKp.initDefault(12.16);
         thetaKd.initDefault(0.0);
-        driveMaxVelocity.initDefault(Units.inchesToMeters(150.0));
         driveMaxVelocitySlow.initDefault(Units.inchesToMeters(50.0));
-        driveMaxAcceleration.initDefault(Units.inchesToMeters(95.0));
-        thetaMaxVelocity.initDefault(Units.degreesToRadians(360.0));
         thetaMaxVelocitySlow.initDefault(Units.degreesToRadians(90.0));
-        thetaMaxAcceleration.initDefault(Units.degreesToRadians(720.0));
         driveTolerance.initDefault(0.06);
         driveToleranceSlow.initDefault(0.03);
         thetaTolerance.initDefault(Units.degreesToRadians(3.0));
@@ -83,25 +75,32 @@ public class DriveToPose extends Command {
   }
 
   /** Drives to the specified pose under full software control. */
-  public DriveToPose(DrivetrainS drive, Pose2d pose) {
-    this(drive, false, pose);
+  public DriveToPose(DrivetrainS drive, Pose2d pose, PathConstraints pathConstraints) {
+    this(drive, false, pose, pathConstraints);
   }
-
+  /** Drives to the specified pose under full software control. */
+  public DriveToPose(DrivetrainS drive, Pose2d pose) {
+	this(drive, false, pose);
+ }
   /** Drives to the specified pose under full software control. */
   public DriveToPose(DrivetrainS drive, boolean slowMode, Pose2d pose) {
-    this(drive, slowMode, () -> pose);
+    this(drive, slowMode, () -> pose, new PathConstraints(DriveConstants.kMaxSpeedMetersPerSecond, DriveConstants.kTeleDriveMaxAcceleration, DriveConstants.kMaxTurningSpeedRadPerSec, DriveConstants.kTeleTurningMaxAcceleration));
   }
-
+  /** Drives to the specified pose under full software control. */
+  public DriveToPose(DrivetrainS drive, boolean slowMode, Pose2d pose, PathConstraints pathConstraints) {
+	this(drive, slowMode, () -> pose,pathConstraints);
+ }
   /** Drives to the specified pose under full software control. */
   public DriveToPose(DrivetrainS drive, Supplier<Pose2d> poseSupplier) {
-    this(drive, false, poseSupplier);
+    this(drive, false, poseSupplier, new PathConstraints(DriveConstants.kMaxSpeedMetersPerSecond, DriveConstants.kTeleDriveMaxAcceleration, DriveConstants.kMaxTurningSpeedRadPerSec, DriveConstants.kTeleTurningMaxAcceleration));
   }
 
   /** Drives to the specified pose under full software control. */
-  public DriveToPose(DrivetrainS drive, boolean slowMode, Supplier<Pose2d> poseSupplier) {
+  public DriveToPose(DrivetrainS drive, boolean slowMode, Supplier<Pose2d> poseSupplier, PathConstraints pathConstraints) {
     this.drive = drive;
     this.slowMode = slowMode;
     this.poseSupplier = poseSupplier;
+	 this.pathConstraints = pathConstraints;
     addRequirements(drive);
     thetaController.enableContinuousInput(-Math.PI, Math.PI);
   }
@@ -132,14 +131,10 @@ public class DriveToPose extends Command {
   @Override
   public void execute() {
     // Update from tunable numbers
-    if (driveMaxVelocity.hasChanged(hashCode())
-        || driveMaxVelocitySlow.hasChanged(hashCode())
-        || driveMaxAcceleration.hasChanged(hashCode())
+    if (driveMaxVelocitySlow.hasChanged(hashCode())
         || driveTolerance.hasChanged(hashCode())
         || driveToleranceSlow.hasChanged(hashCode())
-        || thetaMaxVelocity.hasChanged(hashCode())
         || thetaMaxVelocitySlow.hasChanged(hashCode())
-        || thetaMaxAcceleration.hasChanged(hashCode())
         || thetaTolerance.hasChanged(hashCode())
         || thetaToleranceSlow.hasChanged(hashCode())
         || driveKp.hasChanged(hashCode())
@@ -151,15 +146,15 @@ public class DriveToPose extends Command {
       driveController.setD(driveKd.get());
       driveController.setConstraints(
           new TrapezoidProfile.Constraints(
-              slowMode ? driveMaxVelocitySlow.get() : driveMaxVelocity.get(),
-              driveMaxAcceleration.get()));
+              slowMode ? driveMaxVelocitySlow.get() : pathConstraints.getMaxVelocityMps(),
+              pathConstraints.getMaxAccelerationMpsSq()));
       driveController.setTolerance(slowMode ? driveToleranceSlow.get() : driveTolerance.get());
       thetaController.setP(thetaKp.get());
       thetaController.setD(thetaKd.get());
       thetaController.setConstraints(
           new TrapezoidProfile.Constraints(
-              slowMode ? thetaMaxVelocitySlow.get() : thetaMaxVelocity.get(),
-              thetaMaxAcceleration.get()));
+              slowMode ? thetaMaxVelocitySlow.get() : pathConstraints.getMaxAngularVelocityRps(),
+              pathConstraints.getMaxAngularAccelerationRpsSq()));
       thetaController.setTolerance(slowMode ? thetaToleranceSlow.get() : thetaTolerance.get());
     }
 

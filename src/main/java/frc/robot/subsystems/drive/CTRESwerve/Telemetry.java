@@ -1,15 +1,12 @@
 package frc.robot.subsystems.drive.CTRESwerve;
-
 import com.ctre.phoenix6.Utils;
 import com.ctre.phoenix6.mechanisms.swerve.SwerveDrivetrain.SwerveDriveState;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Translation2d;
-import edu.wpi.first.networktables.DoubleArrayPublisher;
 import edu.wpi.first.networktables.DoublePublisher;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
-import edu.wpi.first.networktables.StringPublisher;
 import edu.wpi.first.wpilibj.smartdashboard.Mechanism2d;
 import edu.wpi.first.wpilibj.smartdashboard.MechanismLigament2d;
 import edu.wpi.first.wpilibj.util.Color;
@@ -31,9 +28,9 @@ public class Telemetry {
     private final NetworkTableInstance inst = NetworkTableInstance.getDefault();
 
     /* Robot pose for field positioning */
-    private final NetworkTable table = inst.getTable("Field");
+    /*private final NetworkTable table = inst.getTable("Field");
     private final DoubleArrayPublisher fieldPub = table.getDoubleArrayTopic("Robot").publish();
-    private final StringPublisher fieldTypePub = table.getStringTopic(".type").publish();
+    private final StringPublisher fieldTypePub = table.getStringTopic(".type").publish();*/
 
     /* Robot speeds for general checking */
     private final NetworkTable driveStats = inst.getTable("Drive");
@@ -76,12 +73,26 @@ public class Telemetry {
     public void telemeterize(SwerveDriveState state) {
         /* Telemeterize the pose */
         Pose2d pose = state.Pose;
-        fieldTypePub.set("Field2d");
-        fieldPub.set(new double[] {
-            pose.getX(),
-            pose.getY(),
-            pose.getRotation().getDegrees()
-        });
+       /*  DrivetrainS.robotField.setRobotPose(pose);
+		  SmartDashboard.putData(robotField);
+		PathPlannerLogging.setLogCurrentPoseCallback((pose) -> {
+			// Do whatever you want with the pose here
+			Logger.recordOutput("Odometry/CurrentPose", pose);
+			robotField.setRobotPose(pose);
+		});
+		// Logging callback for target robot pose
+		PathPlannerLogging.setLogTargetPoseCallback((pose) -> {
+			// Do whatever you want with the pose here
+			Logger.recordOutput("Odometry/TrajectorySetpoint", pose);
+			robotField.getObject("target pose").setPose(pose);
+		});
+		// Logging callback for the active path, this is sent as a list of poses
+		PathPlannerLogging.setLogActivePathCallback((poses) -> {
+			// Do whatever you want with the poses here
+			Logger.recordOutput("Odometry/Trajectory",
+					poses.toArray(new Pose2d[poses.size()]));
+			robotField.getObject("path").setPoses(poses);
+		}); }*/
 
         /* Telemeterize the robot's general speeds */
         double currentTime = Utils.getCurrentTimeSeconds();

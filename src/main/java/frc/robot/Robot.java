@@ -18,6 +18,9 @@ import frc.robot.utils.SimGamePiece;
 import frc.robot.utils.vision.VisionConstants;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.trajectory.Trajectory;
 import edu.wpi.first.net.PortForwarder;
 import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj.DriverStation;
@@ -148,6 +151,8 @@ public class Robot extends LoggedRobot {
 	@Override
 	public void teleopInit() {
 		Constants.currentMatchState = FRCMatchState.TELEOPINIT;
+		RobotContainer.field.getObject("path").setTrajectory(new Trajectory());
+		RobotContainer.field.getObject("target pose").setPose(new Pose2d(-50,-50,new Rotation2d())); //the void
 		// This makes sure that the autonomous stops running when
 		// teleop starts running. If you want the autonomous to
 		// continue until interrupted by another command, remove

@@ -16,7 +16,6 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 import frc.robot.Constants;
 import frc.robot.Robot;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.subsystems.drive.DrivetrainS;
 import edu.wpi.first.math.kinematics.MecanumDriveKinematics;
 import edu.wpi.first.math.kinematics.MecanumDriveWheelPositions;
@@ -176,8 +175,6 @@ public class REVMecanumS implements DrivetrainS {
 		wheelPositions = getPositionsWithTimestamp(getWheelPositions());
 		drivePoseEstimator.updateWithTime(wheelPositions.getTimestamp(),
 				getRotation2d(), wheelPositions.getPositions());
-		robotField.setRobotPose(getPose());
-		SmartDashboard.putData(robotField);
 		if (Constants.currentMode == Constants.Mode.SIM) {
 			for (int i = 0; i < 4; i++) {
 				motorSims[i].setInputVoltage(sparkMotors[i].get() * RobotController.getBatteryVoltage());
@@ -187,6 +184,7 @@ public class REVMecanumS implements DrivetrainS {
 						.setPosition(motorSims[i].getAngularPositionRotations());
 			}
 		}
+		DrivetrainS.super.periodic();
 	}
 
 	@Override
