@@ -21,7 +21,6 @@ import edu.wpi.first.units.Voltage;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.simulation.DCMotorSim;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
@@ -33,7 +32,6 @@ import frc.robot.utils.drive.Position;
 import static edu.wpi.first.units.Units.Seconds;
 import static edu.wpi.first.units.Units.Volts;
 
-import org.littletonrobotics.junction.Logger;
 
 import com.ctre.phoenix6.SignalLogger;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
@@ -47,7 +45,6 @@ import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.ctre.phoenix6.sim.Pigeon2SimState;
 import com.pathplanner.lib.auto.AutoBuilder;
-import com.pathplanner.lib.util.PathPlannerLogging;
 import com.pathplanner.lib.util.ReplanningConfig;
 
 public class CTRETankS implements DrivetrainS {
@@ -184,6 +181,7 @@ public class CTRETankS implements DrivetrainS {
 		wheelSpeeds = getWheelSpeeds();
 		poseEstimator.updateWithTime(wheelPositions.getTimestamp(),getRotation2d(), wheelPositions.getPositions());
 		pose = poseEstimator.getEstimatedPosition();
+		DrivetrainS.super.periodic();
 		if (Constants.currentMode == Constants.Mode.SIM) {
 			for (int i = 0; i < motors.length; i++) {
 				var motorSim = motors[i].getSimState();
@@ -197,26 +195,6 @@ public class CTRETankS implements DrivetrainS {
 						motorSimModels[i].getAngularVelocityRadPerSec()));
 			}
 		}
-		robotField.setRobotPose(getPose());
-		SmartDashboard.putData(robotField);
-		PathPlannerLogging.setLogCurrentPoseCallback((pose) -> {
-			// Do whatever you want with the pose here
-			Logger.recordOutput("Odometry/CurrentPose", pose);
-			robotField.setRobotPose(pose);
-		});
-		// Logging callback for target robot pose
-		PathPlannerLogging.setLogTargetPoseCallback((pose) -> {
-			// Do whatever you want with the pose here
-			Logger.recordOutput("Odometry/TrajectorySetpoint", pose);
-			robotField.getObject("target pose").setPose(pose);
-		});
-		// Logging callback for the active path, this is sent as a list of poses
-		PathPlannerLogging.setLogActivePathCallback((poses) -> {
-			// Do whatever you want with the poses here
-			Logger.recordOutput("Odometry/Trajectory",
-					poses.toArray(new Pose2d[poses.size()]));
-			robotField.getObject("path").setPoses(poses);
-		});
 		ChassisSpeeds m_ChassisSpeeds = kinematics.toChassisSpeeds(wheelSpeeds);
 		Translation2d linearFieldVelocity = new Translation2d(
 			m_ChassisSpeeds.vxMetersPerSecond,
