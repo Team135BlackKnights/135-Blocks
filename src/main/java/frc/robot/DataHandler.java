@@ -492,8 +492,8 @@ public class DataHandler {
 				//System.out.println("time: " + time);
 			}
 			if (receivedData.has("outputs")) {
-				if (responseData.containsKey("modelDistance")) {
-					responseData.remove("modelDistance");
+				if (responseData.containsKey("modelInputs")) {
+					responseData.remove("modelInputs");
 				}
 				String rawData = receivedData.get("outputs").getAsString();
 				List<Double> list = makeDoubleList(rawData);
