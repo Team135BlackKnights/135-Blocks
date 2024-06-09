@@ -32,6 +32,7 @@ public final class Constants {
 		else currentMode = Mode.REPLAY;
 	}
 	//FRCMatchState of the robot
+	public static boolean isCompetition = true;
 	public static FRCMatchState currentMatchState = FRCMatchState.DISABLED;
 	public static boolean isTuningPID = true;
 	/**

@@ -4,7 +4,6 @@ import com.kauailabs.navx.frc.AHRS;
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.util.HolonomicPathFollowerConfig;
 import com.pathplanner.lib.util.PIDConstants;
-import com.pathplanner.lib.util.PathPlannerLogging;
 import com.pathplanner.lib.util.ReplanningConfig;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -299,26 +298,7 @@ public class REVSwerveS extends SubsystemBase implements DrivetrainS {
 			module.setModulePose(new Pose2d(modulePositionFromChassis,
 					module.getHeadingRotation2d().plus(getRotation2d())));
 		}
-		robotField.setRobotPose(getPose());
-		SmartDashboard.putData(robotField);
-		PathPlannerLogging.setLogCurrentPoseCallback((pose) -> {
-			// Do whatever you want with the pose here
-			Logger.recordOutput("Odometry/CurrentPose", pose);
-			robotField.setRobotPose(pose);
-		});
-		// Logging callback for target robot pose
-		PathPlannerLogging.setLogTargetPoseCallback((pose) -> {
-			// Do whatever you want with the pose here
-			Logger.recordOutput("Odometry/TrajectorySetpoint", pose);
-			robotField.getObject("target pose").setPose(pose);
-		});
-		// Logging callback for the active path, this is sent as a list of poses
-		PathPlannerLogging.setLogActivePathCallback((poses) -> {
-			// Do whatever you want with the poses here
-			Logger.recordOutput("Odometry/Trajectory",
-					poses.toArray(new Pose2d[poses.size()]));
-			robotField.getObject("path").setPoses(poses);
-		});
+		DrivetrainS.super.periodic();
 		navXDisconnectProtocol();
 		Logger.recordOutput("Swerve/Display/Actual Swerve Module States",
 				getModuleStates());

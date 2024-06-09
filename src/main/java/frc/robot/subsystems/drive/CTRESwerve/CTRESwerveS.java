@@ -132,7 +132,7 @@ public class CTRESwerveS extends SwerveDrivetrain implements DrivetrainS {
     builder.addDoubleProperty("Back Right Angle", () -> moduleStates[3].angle.getRadians(), null);
     builder.addDoubleProperty("Back Right Velocity", () -> moduleStates[3].speedMetersPerSecond, null);
 
-    builder.addDoubleProperty("Robot Angle", () -> getPose().getRotation().plus(new Rotation2d(Units.degreesToRadians(-90))).getRadians(), null); //🥥🥥🥥
+    builder.addDoubleProperty("Robot Angle", () -> getPose().getRotation().plus(new Rotation2d(Units.degreesToRadians(0))).getRadians(), null); //🥥🥥🥥
   }
 });
 	}

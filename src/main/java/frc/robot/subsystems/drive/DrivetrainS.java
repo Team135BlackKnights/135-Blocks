@@ -1,5 +1,9 @@
 package frc.robot.subsystems.drive;
 
+import org.littletonrobotics.junction.Logger;
+
+import com.pathplanner.lib.util.PathPlannerLogging;
+
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -8,6 +12,8 @@ import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.wpilibj.smartdashboard.Field2d;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Subsystem;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
@@ -20,6 +26,7 @@ public interface DrivetrainS extends Subsystem {
 	 * 
 	 * @param speeds the speed to set it to
 	 */
+	public static Field2d robotField = new Field2d();
 	void setChassisSpeeds(ChassisSpeeds speeds);
 
 	/**
@@ -129,4 +136,26 @@ public interface DrivetrainS extends Subsystem {
 	default double getCurrent(){
 		return 0;
 	}
+	@Override
+	default void periodic() {
+		robotField.setRobotPose(getPose());
+		SmartDashboard.putData(robotField);
+		PathPlannerLogging.setLogCurrentPoseCallback((pose) -> {
+			// Do whatever you want with the pose here
+			Logger.recordOutput("Odometry/CurrentPose", pose);
+			robotField.setRobotPose(pose);
+		});
+		// Logging callback for target robot pose
+		PathPlannerLogging.setLogTargetPoseCallback((pose) -> {
+			// Do whatever you want with the pose here
+			Logger.recordOutput("Odometry/TrajectorySetpoint", pose);
+			robotField.getObject("target pose").setPose(pose);
+		});
+		// Logging callback for the active path, this is sent as a list of poses
+		PathPlannerLogging.setLogActivePathCallback((poses) -> {
+			// Do whatever you want with the poses here
+			Logger.recordOutput("Odometry/Trajectory",
+					poses.toArray(new Pose2d[poses.size()]));
+			robotField.getObject("path").setPoses(poses);
+		}); }
 }

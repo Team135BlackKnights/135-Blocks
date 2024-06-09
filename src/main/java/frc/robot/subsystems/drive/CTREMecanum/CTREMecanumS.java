@@ -12,7 +12,6 @@ import com.ctre.phoenix6.sim.Pigeon2SimState;
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.util.HolonomicPathFollowerConfig;
 import com.pathplanner.lib.util.PIDConstants;
-import com.pathplanner.lib.util.PathPlannerLogging;
 import com.pathplanner.lib.util.ReplanningConfig;
 
 import edu.wpi.first.math.Matrix;
@@ -37,7 +36,6 @@ import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.simulation.DCMotorSim;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
@@ -46,7 +44,6 @@ import frc.robot.Robot;
 import frc.robot.subsystems.drive.DrivetrainS;
 import static edu.wpi.first.units.Units.Seconds;
 import static edu.wpi.first.units.Units.Volts;
-import org.littletonrobotics.junction.Logger;
 
 public class CTREMecanumS implements DrivetrainS {
 	private static Pigeon2 pigeon;
@@ -189,7 +186,6 @@ public class CTREMecanumS implements DrivetrainS {
 			// Set the motor control to the converted velocity
 			motors[i].setControl(
 					m_motorRequest.withVelocity(velocityRotationsPerSecond));
-			System.err.println(motors[i].get());
 		}
 	}
 
@@ -198,26 +194,7 @@ public class CTREMecanumS implements DrivetrainS {
 		updateWheelPositions();
 		poseEstimator.updateWithTime(updateTime,getRotation2d(), wheelPositions);
 		pose = poseEstimator.getEstimatedPosition();
-		robotField.setRobotPose(getPose());
-		SmartDashboard.putData(robotField);
-		PathPlannerLogging.setLogCurrentPoseCallback((pose) -> {
-			// Do whatever you want with the pose here
-			Logger.recordOutput("Odometry/CurrentPose", pose);
-			robotField.setRobotPose(pose);
-		});
-		// Logging callback for target robot pose
-		PathPlannerLogging.setLogTargetPoseCallback((pose) -> {
-			// Do whatever you want with the pose here
-			Logger.recordOutput("Odometry/TrajectorySetpoint", pose);
-			robotField.getObject("target pose").setPose(pose);
-		});
-		// Logging callback for the active path, this is sent as a list of poses
-		PathPlannerLogging.setLogActivePathCallback((poses) -> {
-			// Do whatever you want with the poses here
-			Logger.recordOutput("Odometry/Trajectory",
-					poses.toArray(new Pose2d[poses.size()]));
-			robotField.getObject("path").setPoses(poses);
-		});
+		DrivetrainS.super.periodic();
 		if (Constants.currentMode == Constants.Mode.SIM) {
 			for (int i = 0; i < motors.length; i++) {
 				var motorSim = motors[i].getSimState();

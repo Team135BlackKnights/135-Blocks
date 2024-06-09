@@ -4,7 +4,6 @@ import org.littletonrobotics.junction.Logger;
 
 import com.kauailabs.navx.frc.AHRS;
 import com.pathplanner.lib.auto.AutoBuilder;
-import com.pathplanner.lib.util.PathPlannerLogging;
 import com.pathplanner.lib.util.ReplanningConfig;
 import com.revrobotics.CANSparkBase;
 import com.revrobotics.CANSparkFlex;
@@ -34,7 +33,6 @@ import edu.wpi.first.units.Velocity;
 import edu.wpi.first.units.Voltage;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.simulation.DCMotorSim;
-import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
@@ -91,7 +89,6 @@ public class REVTankS implements DrivetrainS {
 	 double m_simTurnAngleIncrement = 0;
 	 double dtSeconds = 0.02;
 	 double kDriveEncoderRot2Meter, maxSpeed;
-	Field2d robotField = new Field2d();
 	public REVTankS(REVTankConstantContainer container) {
 			differentialDriveKinematics	 = new DifferentialDriveKinematics(
 			container.getChassisLength());
@@ -199,26 +196,7 @@ public class REVTankS implements DrivetrainS {
 				encoders[i].setPosition(motorSimModels[i].getAngularPositionRotations());
 			}
 		}
-		robotField.setRobotPose(getPose());
-		SmartDashboard.putData(robotField);
-		PathPlannerLogging.setLogCurrentPoseCallback((pose) -> {
-			// Do whatever you want with the pose here
-			Logger.recordOutput("Odometry/CurrentPose", pose);
-			robotField.setRobotPose(pose);
-		});
-		// Logging callback for target robot pose
-		PathPlannerLogging.setLogTargetPoseCallback((pose) -> {
-			// Do whatever you want with the pose here
-			Logger.recordOutput("Odometry/TrajectorySetpoint", pose);
-			robotField.getObject("target pose").setPose(pose);
-		});
-		// Logging callback for the active path, this is sent as a list of poses
-		PathPlannerLogging.setLogActivePathCallback((poses) -> {
-			// Do whatever you want with the poses here
-			Logger.recordOutput("Odometry/Trajectory",
-					poses.toArray(new Pose2d[poses.size()]));
-			robotField.getObject("path").setPoses(poses);
-		});
+		DrivetrainS.super.periodic();
 		ChassisSpeeds m_ChassisSpeeds = differentialDriveKinematics.toChassisSpeeds(wheelSpeeds);
 		Translation2d linearFieldVelocity = new Translation2d(
 			m_ChassisSpeeds.vxMetersPerSecond,
