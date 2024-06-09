@@ -27,6 +27,9 @@ This is designed so that the only files that need changing to combine different 
 - FULL Sim Support
 - Dynamic PID Tuning 
   - Loggable Tuning Numbers allow updates
+- SysId Selector
+  - Use a testing controller to select SysId tests on different subsystems
+  - Automatically appends all tests needed for the new block to the selector
 - Drive to Pose Command
   - Slow/Fast mode, where each has custom max accel/velocity
   - Go to a given Pose2d
