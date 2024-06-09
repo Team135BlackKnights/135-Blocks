@@ -66,9 +66,9 @@ public class RobotContainer {
 	// The robot's subsystems and commands are defined here...
 	public static DrivetrainS drivetrainS;
 	private Telemetry logger = null;
-	private final FlywheelS flywheelS = new FlywheelS();
-	private final ArmS armS = new ArmS();
-	private final ElevatorS elevatorS = new ElevatorS();
+	public final static FlywheelS flywheelS = new FlywheelS();
+	public final static ArmS armS = new ArmS();
+	public final static ElevatorS elevatorS = new ElevatorS();
 	private final SendableChooser<Command> autoChooser;
 	static PowerDistribution PDH = new PowerDistribution(
 			Constants.PowerDistributionID, PowerDistribution.ModuleType.kRev);

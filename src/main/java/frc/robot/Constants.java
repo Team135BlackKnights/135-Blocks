@@ -63,7 +63,7 @@ public final class Constants {
 		MATCHOVER
 	}
 	public static enum SysIdRoutines{
-		swerveDrive,swerveTurn
+		swerveDrive,swerveTurn,flywheel,singleJointedArm,elevator
 	}
 	public static int PowerDistributionID = 1;
 	//put datalog constants IN THE UTIL FOR THAT FILE. 
