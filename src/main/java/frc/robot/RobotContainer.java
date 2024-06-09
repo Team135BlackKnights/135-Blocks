@@ -28,6 +28,10 @@ import frc.robot.subsystems.drive.REVTank.REVTankConstantContainer;
 import frc.robot.subsystems.drive.REVTank.REVTankS;
 import frc.robot.utils.RunTest;
 import frc.robot.utils.drive.DriveConstants;
+import frc.robot.commands.drive.vision.DriveToAITarget;
+
+import frc.robot.subsystems.vision.PhotonVisionS;
+import frc.robot.utils.vision.VisionConstants;
 
 import frc.robot.subsystems.drive.REVSwerve.REVModuleConstantContainer;
 import frc.robot.utils.drive.DriveConstants.TrainConstants;
@@ -72,6 +76,8 @@ public class RobotContainer {
 	public static final CTREDoubleJointedArmS doubleJointedArmS = new CTREDoubleJointedArmS();
 	public static final CTREElevatorS elevatorS = new CTREElevatorS();
 	private Telemetry logger = null;
+	@SuppressWarnings("unused")
+	private final PhotonVisionS photonVisionS = new PhotonVisionS();
 	private final SendableChooser<Command> autoChooser;
 	static PowerDistribution PDH = new PowerDistribution(
 			Constants.PowerDistributionID, PowerDistribution.ModuleType.kRev);
@@ -217,6 +223,7 @@ public class RobotContainer {
 				new RunTest(SysIdRoutine.Direction.kReverse, false, drivetrainS));
 		//Example Drive To 2024 Amp Pose, Bind to what you need.
 		//yButtonDrive.and(aButtonTest.or(bButtonTest).or(xButtonTest).or(yButtonTest).negate()).whileTrue(new DriveToPose(drivetrainS, false,new Pose2d(1.9,7.7,new Rotation2d(Units.degreesToRadians(90)))));
+		VisionConstants.Controls.autoIntake.whileTrue(new DriveToAITarget(drivetrainS));
 		//swerve DRIVE tests
 		//When user hits right bumper, go to next test, or wrap back to starting test for SysID.
 		rightBumperTest.onTrue(new InstantCommand(() -> {
