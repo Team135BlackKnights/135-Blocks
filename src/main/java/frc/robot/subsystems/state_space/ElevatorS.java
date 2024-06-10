@@ -128,10 +128,10 @@ public class ElevatorS extends SubsystemBase {
 	public ElevatorS() {
 		switch (StateSpaceConstants.Elevator.ElevatorMotorVendor) {
 			case NEO_SPARK_MAX:
-				elevatorMotor = new CANSparkMax(StateSpaceConstants.Arm.kMotorID, MotorType.kBrushless);
+				elevatorMotor = new CANSparkMax(StateSpaceConstants.Elevator.kMotorID, MotorType.kBrushless);
 				break;
 			case VORTEX_SPARK_FLEX:
-				elevatorMotor = new CANSparkFlex(StateSpaceConstants.Arm.kMotorID, MotorType.kBrushless);
+				elevatorMotor = new CANSparkFlex(StateSpaceConstants.Elevator.kMotorID, MotorType.kBrushless);
 				break;
 			default:
 				System.out.println("Unidentified motor type, real-world applications probably will not work");
