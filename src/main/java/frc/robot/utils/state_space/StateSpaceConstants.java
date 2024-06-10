@@ -7,7 +7,7 @@ import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 import frc.robot.RobotContainer;
 import frc.robot.utils.drive.DriveConstants;
 import frc.robot.utils.MotorConstantContainer;
-
+import frc.robot.utils.drive.DriveConstants.MotorVendor;
 public class StateSpaceConstants {
 	public static boolean debug = true;
 
@@ -27,6 +27,8 @@ public class StateSpaceConstants {
 	}
 
 	public class Flywheel {
+		//This is REV State Space. Do NOT put CTRE motors here!
+		public static MotorVendor FlywheelMotorVendor = MotorVendor.VORTEX_SPARK_FLEX;
 		public static boolean inverted = false;
 		public static IdleMode mode = IdleMode.kBrake;
 		public static int kMotorID = 20, maxRPM = 7100;
@@ -37,6 +39,8 @@ public class StateSpaceConstants {
 	}
 
 	public class Arm {
+		//This is REV State Space. Do NOT put CTRE motors here!
+		public static MotorVendor ArmMotorVendor = MotorVendor.NEO_SPARK_MAX;
 		public static boolean inverted = false;
 		public static IdleMode mode = IdleMode.kBrake;
 		public static int kMotorID = 30;
@@ -57,6 +61,8 @@ public class StateSpaceConstants {
 				simZ = Units.inchesToMeters(4.82);
 	}
 	public class Elevator {
+		//This is REV State Space. Do NOT put CTRE motors here!
+		public static MotorVendor ElevatorMotorVendor = MotorVendor.VORTEX_SPARK_FLEX;
 		public static boolean inverted = false;
 		public static IdleMode mode = IdleMode.kBrake;
 		public static int kMotorID = 40;

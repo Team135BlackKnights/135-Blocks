@@ -20,12 +20,13 @@ import edu.wpi.first.units.Velocity;
 import edu.wpi.first.units.Voltage;
 import edu.wpi.first.wpilibj.simulation.FlywheelSim;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-
+import com.revrobotics.CANSparkBase;
+import com.revrobotics.CANSparkMax;
+import com.revrobotics.CANSparkFlex;
 import static edu.wpi.first.units.Units.Seconds;
 import static edu.wpi.first.units.Units.Volts;
 import org.littletonrobotics.junction.Logger;
 
-import com.revrobotics.CANSparkMax;
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.CANSparkLowLevel.MotorType;
 
@@ -33,17 +34,17 @@ import frc.robot.Constants;
 import frc.robot.utils.state_space.StateSpaceConstants;
 
 public class FlywheelS extends SubsystemBase {
-	//initialize motors
-	private CANSparkMax flywheel = new CANSparkMax(
-			StateSpaceConstants.Flywheel.kMotorID, MotorType.kBrushless);
-	//encoders
+	// initialize motors
+	private CANSparkBase flywheelMotor;
+	// encoders
 	private static RelativeEncoder flywheelEncoder;
-	//System ID Routine
-	Measure<Velocity<Voltage>> rampRate = Volts.of(1).per(Seconds.of(1)); // for going FROM ZERO PER SECOND, this is 1v per 1sec.
-	Measure<Voltage> holdVoltage = Volts.of(7); //what voltage should I hold during Quas test?
-	Measure<Time> timeout = Seconds.of(10); //how many total seconds should I run the test, unless interrupted?
-	//update cycle time
-	private static double dtSeconds = .02; //20 ms
+	// System ID Routine
+	Measure<Velocity<Voltage>> rampRate = Volts.of(1).per(Seconds.of(1)); // for going FROM ZERO PER SECOND, this is 1v
+																			// per 1sec.
+	Measure<Voltage> holdVoltage = Volts.of(7); // what voltage should I hold during Quas test?
+	Measure<Time> timeout = Seconds.of(10); // how many total seconds should I run the test, unless interrupted?
+	// update cycle time
+	private static double dtSeconds = .02; // 20 ms
 	/**
 	 * We cannot have multiple sysIdRoutines run on the same robot-cycle. If we
 	 * want to run this and another sysIdRoutine, you must first POWER CYCLE the
@@ -54,7 +55,7 @@ public class FlywheelS extends SubsystemBase {
 					(state) -> Logger.recordOutput("SysIdTestState",
 							state.toString())),
 			new SysIdRoutine.Mechanism((Measure<Voltage> volts) -> {
-				flywheel.setVoltage(volts.in(Volts)); //no touch!
+				flywheelMotor.setVoltage(volts.in(Volts)); // no touch!
 			}, null // No log consumer, since data is recorded by URCL
 					, this));
 	/**
@@ -109,20 +110,33 @@ public class FlywheelS extends SubsystemBase {
 	private double nextVoltage;
 
 	public FlywheelS() {
-		//initalize our motor
-		flywheel.setInverted(StateSpaceConstants.Flywheel.inverted);
-		flywheel.setIdleMode(StateSpaceConstants.Flywheel.mode);
-		flywheelEncoder = flywheel.getEncoder();
+		switch (StateSpaceConstants.Elevator.ElevatorMotorVendor) {
+			case NEO_SPARK_MAX:
+				flywheelMotor = new CANSparkMax(
+						StateSpaceConstants.Flywheel.kMotorID, MotorType.kBrushless);
+				break;
+			case VORTEX_SPARK_FLEX:
+				flywheelMotor = new CANSparkFlex(StateSpaceConstants.Flywheel.kMotorID, MotorType.kBrushless);
+				break;
+			default:
+				System.out.println("Unidentified motor type, real-world applications probably will not work");
+				break;
+		}
+
+		// initalize our motor
+		flywheelMotor.setInverted(StateSpaceConstants.Flywheel.inverted);
+		flywheelMotor.setIdleMode(StateSpaceConstants.Flywheel.mode);
+		flywheelEncoder = flywheelMotor.getEncoder();
 		flywheelEncoder.setVelocityConversionFactor(
 				StateSpaceConstants.Flywheel.flywheelGearing);
 		flywheelEncoder.setPositionConversionFactor(
 				StateSpaceConstants.Flywheel.flywheelGearing);
-		flywheel.burnFlash();
-		//Tell our controllers that the encoders have a 19.5 ms delay (sparks)
+		flywheelMotor.burnFlash();
+		// Tell our controllers that the encoders have a 19.5 ms delay (sparks)
 		m_controller.latencyCompensate(flywheelPlant, dtSeconds, .0195);
-		m_loop.setNextR(0); //go to zero
+		m_loop.setNextR(0); // go to zero
 		m_loop.reset(getEncoderRad());
-		//that^ may not be in radians.
+		// that^ may not be in radians.
 	}
 
 	private Vector<N1> getEncoderRad() {
@@ -136,22 +150,22 @@ public class FlywheelS extends SubsystemBase {
 	public void periodic() {
 		m_loop.correct(getEncoderRad());
 		m_loop.predict(dtSeconds);
-		nextVoltage = m_loop.getU(0); //get model's control output
+		nextVoltage = m_loop.getU(0); // get model's control output
 		switch (Constants.currentMode) {
-		case REAL:
-			flywheel.setVoltage(nextVoltage);
-			flywheelVelocity = flywheelEncoder.getVelocity(); //may need converted to Rad/S ?
-			break;
-		default:
-			flywheelSim.setInput(nextVoltage);
-			flywheelSim.update(dtSeconds);
-			flywheelVelocity = Units.rotationsPerMinuteToRadiansPerSecond(
-					flywheelSim.getAngularVelocityRPM()); //magic
-			break;
+			case REAL:
+				flywheelMotor.setVoltage(nextVoltage);
+				flywheelVelocity = flywheelEncoder.getVelocity(); // may need converted to Rad/S ?
+				break;
+			default:
+				flywheelSim.setInput(nextVoltage);
+				flywheelSim.update(dtSeconds);
+				flywheelVelocity = Units.rotationsPerMinuteToRadiansPerSecond(
+						flywheelSim.getAngularVelocityRPM()); // magic
+				break;
 		}
 		if (StateSpaceConstants.debug) {
 			SmartDashboard.putNumber("Flywheel Speed", flywheelVelocity);
-			SmartDashboard.putNumber("FlywheelError",FlywheelS.getSpeedError());
+			SmartDashboard.putNumber("FlywheelError", FlywheelS.getSpeedError());
 		}
 	}
 
@@ -168,16 +182,19 @@ public class FlywheelS extends SubsystemBase {
 	}
 
 	public static double getSpeedError() {
-		return Math.abs(flywheelVelocity - m_loop.getNextR().get(0,0));
+		return Math.abs(flywheelVelocity - m_loop.getNextR().get(0, 0));
 	}
 
 	/*
 	 * Set RPM desired.
+	 * 
 	 * @param speed in RPM
 	 */
-	public void setRPM(double rpm) { m_loop.setNextR(VecBuilder.fill(rpm)); }
+	public void setRPM(double rpm) {
+		m_loop.setNextR(VecBuilder.fill(rpm));
+	}
 
-	//Sim Only
+	// Sim Only
 	public double getDrawnCurrentAmps() {
 		return flywheelSim.getCurrentDrawAmps();
 	}

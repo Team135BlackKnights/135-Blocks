@@ -1,5 +1,7 @@
 package frc.robot.subsystems.state_space;
 
+import com.revrobotics.CANSparkBase;
+import com.revrobotics.CANSparkFlex;
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.RelativeEncoder;
 
@@ -39,14 +41,15 @@ import frc.robot.Constants;
 import frc.robot.Constants.Mode;
 import frc.robot.utils.drive.DriveConstants;
 import frc.robot.utils.state_space.StateSpaceConstants;
+import frc.robot.utils.state_space.StateSpaceConstants.Arm;
+
 import static edu.wpi.first.units.Units.Seconds;
 import static edu.wpi.first.units.Units.Volts;
 import java.util.function.BooleanSupplier;
 
 public class ArmS extends SubsystemBase {
 	//initalize motors
-	private CANSparkMax armMotor = new CANSparkMax(
-			StateSpaceConstants.Arm.kMotorID, MotorType.kBrushless);
+	private CANSparkBase armMotor;
 	private RelativeEncoder armEncoder;
 	//update cycle time
 	public static double dtSeconds = .02; //20 ms
@@ -154,6 +157,17 @@ public class ArmS extends SubsystemBase {
 					Units.radiansToDegrees(m_lastProfiledReference.position), 1, new Color8Bit(Color.kYellow)));
 
 	public ArmS() {
+		switch (Arm.ArmMotorVendor) {
+			case NEO_SPARK_MAX:
+				armMotor = new CANSparkMax(StateSpaceConstants.Arm.kMotorID, MotorType.kBrushless);
+				break;
+			case VORTEX_SPARK_FLEX:
+				armMotor = new CANSparkFlex(StateSpaceConstants.Arm.kMotorID, MotorType.kBrushless);
+			break;
+			default:
+				System.out.println("Unidentified motor type, real-world applications probably will not work");
+			break;
+		}
 		//initalize arm motor
 		armMotor.setInverted(StateSpaceConstants.Arm.inverted);
 		armMotor.setIdleMode(StateSpaceConstants.Arm.mode);

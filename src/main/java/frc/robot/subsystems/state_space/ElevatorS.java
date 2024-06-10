@@ -1,6 +1,7 @@
 package frc.robot.subsystems.state_space;
 
-import com.revrobotics.CANSparkMax;
+import com.revrobotics.CANSparkBase;
+import com.revrobotics.CANSparkFlex;
 import com.revrobotics.RelativeEncoder;
 
 import org.littletonrobotics.junction.Logger;
@@ -12,6 +13,8 @@ import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation3d;
 
 import com.revrobotics.CANSparkLowLevel.MotorType;
+import com.revrobotics.CANSparkMax;
+
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N2;
 import edu.wpi.first.math.system.LinearSystem;
@@ -36,16 +39,16 @@ import frc.robot.Constants;
 import frc.robot.Constants.Mode;
 import frc.robot.utils.drive.DriveConstants;
 import frc.robot.utils.state_space.StateSpaceConstants;
+
 import static edu.wpi.first.units.Units.Seconds;
 import static edu.wpi.first.units.Units.Volts;
 import java.util.function.BooleanSupplier;
 
 public class ElevatorS extends SubsystemBase {
-	//initialize motors
-	private CANSparkMax elevatorMotor = new CANSparkMax(
-			StateSpaceConstants.Elevator.kMotorID, MotorType.kBrushless);
+	// initialize motors
+	private CANSparkBase elevatorMotor;
 	private RelativeEncoder elevatorEncoder;
-	public static double dtSeconds = .02; //20 ms
+	public static double dtSeconds = .02; // 20 ms
 	private static double m_velocity, m_oldPosition, m_position;
 	/**
 	 * State Space
@@ -63,13 +66,17 @@ public class ElevatorS extends SubsystemBase {
 				setElevatorVolts(volts.in(Volts));
 			}, null, this));
 	/*
-	 * Elevator StateSpace is given a position and velocity, in Meters and Meters per second
+	 * Elevator StateSpace is given a position and velocity, in Meters and Meters
+	 * per second
 	 * It gets inputted with Volts, and outputs position in Meters.
 	 */
-	/*Once the robot is physically made, run tests, and use the identifyPositionSystem. This will be accurate to the robot rather than CAD. 
-	private final LinearSystem<N2, N1, N1> m_elevatorPlant = LinearSystemId
-			.identifyPositionSystem(StateSpaceConstants.Elevator.elevatorValueHolder.getKv(),StateSpaceConstants.Elevator.elevatorValueHolder.getKa());
-	*/
+	/*
+	 * Once the robot is physically made, run tests, and use the
+	 * identifyPositionSystem. This will be accurate to the robot rather than CAD.
+	 * private final LinearSystem<N2, N1, N1> m_elevatorPlant = LinearSystemId
+	 * .identifyPositionSystem(StateSpaceConstants.Elevator.elevatorValueHolder.
+	 * getKv(),StateSpaceConstants.Elevator.elevatorValueHolder.getKa());
+	 */
 	private final LinearSystem<N2, N1, N1> m_elevatorPlant = LinearSystemId
 			.createElevatorSystem(DCMotor.getNEO(1),
 					StateSpaceConstants.Elevator.carriageMass,
@@ -86,7 +93,8 @@ public class ElevatorS extends SubsystemBase {
 	private final LinearQuadraticRegulator<N2, N1, N1> m_controller = new LinearQuadraticRegulator<>(
 			m_elevatorPlant,
 			VecBuilder.fill(Units.inchesToMeters(1.0), Units.inchesToMeters(10.0)), // qelms. Position
-			// and velocity error tolerances, in meters and meters per second. We care about pos more than velocity.
+			// and velocity error tolerances, in meters and meters per second. We care about
+			// pos more than velocity.
 			VecBuilder.fill(12.0), // relms. Control effort (voltage) tolerance. Decrease this to more
 			// heavily penalize control effort
 			dtSeconds);
@@ -118,15 +126,26 @@ public class ElevatorS extends SubsystemBase {
 					simElevator.getPositionMeters(), 90));
 
 	public ElevatorS() {
-		//initalize elevator motor
+		switch (StateSpaceConstants.Elevator.ElevatorMotorVendor) {
+			case NEO_SPARK_MAX:
+				elevatorMotor = new CANSparkMax(StateSpaceConstants.Arm.kMotorID, MotorType.kBrushless);
+				break;
+			case VORTEX_SPARK_FLEX:
+				elevatorMotor = new CANSparkFlex(StateSpaceConstants.Arm.kMotorID, MotorType.kBrushless);
+				break;
+			default:
+				System.out.println("Unidentified motor type, real-world applications probably will not work");
+				break;
+		}
+		// initalize elevator motor
 		elevatorMotor.setInverted(StateSpaceConstants.Elevator.inverted);
 		elevatorMotor.setIdleMode(StateSpaceConstants.Elevator.mode);
 		elevatorEncoder = elevatorMotor.getEncoder();
-		elevatorEncoder.setPositionConversionFactor(1/StateSpaceConstants.Elevator.elevatorGearing);
-		elevatorEncoder.setVelocityConversionFactor(1/StateSpaceConstants.Elevator.elevatorGearing);
+		elevatorEncoder.setPositionConversionFactor(1 / StateSpaceConstants.Elevator.elevatorGearing);
+		elevatorEncoder.setVelocityConversionFactor(1 / StateSpaceConstants.Elevator.elevatorGearing);
 		elevatorMotor.burnFlash();
-		//reset our position
-		m_loop.reset(VecBuilder.fill(getDistance(),getVelocity()));
+		// reset our position
+		m_loop.reset(VecBuilder.fill(getDistance(), getVelocity()));
 		m_lastProfiledReference = new TrapezoidProfile.State(getDistance(),
 				getVelocity());
 	}
@@ -145,11 +164,17 @@ public class ElevatorS extends SubsystemBase {
 				.onlyWhile(withinLimits(direction));
 	}
 
-	public static double getDistance() { return m_position; }
+	public static double getDistance() {
+		return m_position;
+	}
 
-	public static double getSetpoint() { return goal.position; }
+	public static double getSetpoint() {
+		return goal.position;
+	}
 
-	public double getVelocity() { return m_velocity; }
+	public double getVelocity() {
+		return m_velocity;
+	}
 
 	/**
 	 * Given a direction, is the elevator currently within LIMITS
@@ -165,14 +190,15 @@ public class ElevatorS extends SubsystemBase {
 				return returnVal;
 			}
 		}
-		//second set of conditionals (below) checks to see if the elevator is within the hard limits, and stops it if it is
+		// second set of conditionals (below) checks to see if the elevator is within
+		// the hard limits, and stops it if it is
 		if (direction.toString() == "kForward") {
 			if (getDistance() > StateSpaceConstants.Elevator.maxPosition) {
 				returnVal = () -> false;
 				return returnVal;
 			}
 		}
-		//otherwise, we're in bounds!
+		// otherwise, we're in bounds!
 		returnVal = () -> true;
 		return returnVal;
 	}
@@ -204,7 +230,7 @@ public class ElevatorS extends SubsystemBase {
 		return new TrapezoidProfile.State(position, 0);
 	}
 
-	//Also overload the function to accept both angle in METERS and m/s
+	// Also overload the function to accept both angle in METERS and m/s
 	/**
 	 * @param position in METERS
 	 * @param velocity in METERS/SECOND
@@ -230,22 +256,26 @@ public class ElevatorS extends SubsystemBase {
 	/**
 	 * @return error in meters
 	 */
-	public double getError() { return m_position - goal.position; }
+	public double getError() {
+		return m_position - goal.position;
+	}
 
-	public void moveElevator(TrapezoidProfile.State state) { goal = state; }
+	public void moveElevator(TrapezoidProfile.State state) {
+		goal = state;
+	}
 
 	public void updateEncoders() {
 		switch (Constants.currentMode) {
-		case REAL:
-			m_position = elevatorEncoder.getPosition();
-			m_velocity = m_position - m_oldPosition; //since called every 20 ms
-			m_oldPosition = m_position;
-			break;
-		default:
-			m_position = simElevator.getPositionMeters();
-			m_velocity = simElevator.getVelocityMetersPerSecond();
-			m_elevatorMech2d.setLength(m_position);
-			break;
+			case REAL:
+				m_position = elevatorEncoder.getPosition();
+				m_velocity = m_position - m_oldPosition; // since called every 20 ms
+				m_oldPosition = m_position;
+				break;
+			default:
+				m_position = simElevator.getPositionMeters();
+				m_velocity = simElevator.getVelocityMetersPerSecond();
+				m_elevatorMech2d.setLength(m_position);
+				break;
 		}
 	}
 
@@ -263,31 +293,34 @@ public class ElevatorS extends SubsystemBase {
 					m_lastProfiledReference.position);
 		}
 		m_lastProfiledReference = m_profile.calculate(dtSeconds,
-				m_lastProfiledReference, goal); //calculate where it SHOULD be.
+				m_lastProfiledReference, goal); // calculate where it SHOULD be.
 		m_loop.setNextR(m_lastProfiledReference.position,
-				m_lastProfiledReference.velocity); //Tell our motors to get there
-		// Correct our Kalman filter's state vector estimate with encoder data ONLY if real
+				m_lastProfiledReference.velocity); // Tell our motors to get there
+		// Correct our Kalman filter's state vector estimate with encoder data ONLY if
+		// real
 		if (Constants.currentMode == Mode.REAL) {
 			m_loop.correct(VecBuilder.fill(getDistance()));
 		}
-		// Update our LQR to generate new voltage commands and use the voltages to predict the next
+		// Update our LQR to generate new voltage commands and use the voltages to
+		// predict the next
 		// state with out Kalman filter.
 		m_loop.predict(dtSeconds);
 		// Send the new calculated voltage to the motors.
 		double nextVoltage = m_loop.getU(0);
 		switch (Constants.currentMode) {
-		case REAL:
-			elevatorMotor.setVoltage(nextVoltage);
-			break;
-		default:
-			simElevator.setInputVoltage(nextVoltage);
-			simElevator.update(dtSeconds);
-			break;
+			case REAL:
+				elevatorMotor.setVoltage(nextVoltage);
+				break;
+			default:
+				simElevator.setInputVoltage(nextVoltage);
+				simElevator.update(dtSeconds);
+				break;
 		}
-		//Push the mechanism to AdvantageScope
+		// Push the mechanism to AdvantageScope
 		Logger.recordOutput("ElevatorMechanism", m_mech2d);
-		//calcualate arm pose
-		var elevatorPose = new Pose3d(StateSpaceConstants.Elevator.simX, StateSpaceConstants.Elevator.simY, StateSpaceConstants.Elevator.simZ,
+		// calcualate arm pose
+		var elevatorPose = new Pose3d(StateSpaceConstants.Elevator.simX, StateSpaceConstants.Elevator.simY,
+				StateSpaceConstants.Elevator.simZ,
 				new Rotation3d(0, 0, 0.0));
 		Logger.recordOutput("Mechanism3d/Elevator/", elevatorPose);
 	}
