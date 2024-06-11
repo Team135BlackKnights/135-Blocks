@@ -1,5 +1,7 @@
 package frc.robot.utils.drive;
 
+import com.pathplanner.lib.path.PathConstraints;
+
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Translation2d;
@@ -35,7 +37,7 @@ public class DriveConstants {
 			// Distance from center of robot to the farthest module
 			kMaxSpeedMetersPerSecond = Units.feetToMeters(15.1), //15.1
 			kMaxTurningSpeedRadPerSec = 3.914667 * 2 * Math.PI, // 1.33655 *2 *Math.PI
-			kTeleDriveMaxAcceleration = Units.feetToMeters(12), // guess
+			kTeleDriveMaxAcceleration = Units.feetToMeters(15.1), // guess
 			kTeleTurningMaxAcceleration = 2 * Math.PI, // guess
 			// To find these set them to zero, then turn the robot on and manually set the
 			// wheels straight.
@@ -44,6 +46,7 @@ public class DriveConstants {
 			kFrontRightAbsEncoderOffsetRad = 0.548137,
 			kBackLeftAbsEncoderOffsetRad = 2 * Math.PI - 2.891372,
 			kBackRightAbsEncoderOffsetRad = 2 * Math.PI - 0.116861;
+	public static PathConstraints pathConstraints = new PathConstraints(kMaxSpeedMetersPerSecond, kTeleDriveMaxAcceleration, kMaxTurningSpeedRadPerSec, kTeleTurningMaxAcceleration);
 	// kP = 0.1, kI = 0, kD = 0, kDistanceMultipler = .2; //for autoLock
 	// Declare the position of each module
 	public static final Translation2d[] kModuleTranslations = {

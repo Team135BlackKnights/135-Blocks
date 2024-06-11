@@ -31,8 +31,6 @@ import com.ctre.phoenix6.SignalLogger;
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.auto.NamedCommands;
 import com.pathplanner.lib.commands.PathfindingCommand;
-import com.pathplanner.lib.path.PathConstraints;
-import com.pathplanner.lib.path.PathPlannerPath;
 import com.pathplanner.lib.pathfinding.Pathfinding;
 import com.pathplanner.lib.util.PPLibTelemetry;
 import com.revrobotics.CANSparkBase.IdleMode;
@@ -78,8 +76,9 @@ public class RobotContainer {
 			rightBumperTest = new JoystickButton(testingController, 6),
 			selectButtonTest = new JoystickButton(testingController, 7),
 			startButtonTest = new JoystickButton(testingController, 8);
-	static int currentTest = 0;
- 	public static Field2d field = new Field2d();
+	public static int currentTest = 0, currentGamePieceStatus = 0;
+	public static Field2d field = new Field2d();
+
 	// POVButton manipPOVZero = new POVButton(manipController, 0);
 	// POVButton manipPOV180 = new POVButton(manipController, 180);
 	/**
@@ -164,29 +163,36 @@ public class RobotContainer {
 		}
 		
 		drivetrainS.setDefaultCommand(new SwerveC(drivetrainS));
-		List<Pair<String,Command> > autoCommands = Arrays.asList(
-			//new Pair<String, Command>("DriveToAmp",new DriveToPose(drivetrainS, false,new Pose2d(1.9,7.7,new Rotation2d(Units.degreesToRadians(90))))),
-	   );
+		List<Pair<String, Command>> autoCommands = Arrays.asList(
+		//new Pair<String, Command>("BranchGrabbingGamePiece", new BranchAuto("grabGamePieceBranch",new Pose2d(0,0,new Rotation2d())))
+		//new Pair<String, Command>("DriveToAmp",new DriveToPose(drivetrainS, false,new Pose2d(1.9,7.7,new Rotation2d(Units.degreesToRadians(90))))),
+		);
 		Pathfinding.setPathfinder(new LocalADStarAK());
 		NamedCommands.registerCommands(autoCommands);
-		 if (Constants.isCompetition) {
-      	PPLibTelemetry.enableCompetitionMode();
-    	}
-		PathfindingCommand.warmupCommand().schedule();
+		if (Constants.isCompetition) {
+			PPLibTelemetry.enableCompetitionMode();
+		}
+		PathfindingCommand.warmupCommand()
+		.finallyDo(() -> RobotContainer.field.getObject("target pose")
+				.setPose(new Pose2d(-50, -50, new Rotation2d())))
+		.schedule();
 		servoS.setDefaultCommand(new ServoC(servoS));
 		autoChooser = AutoBuilder.buildAutoChooser();
 		SmartDashboard.putData(field);
 		SmartDashboard.putData("Auto Chooser", autoChooser);
-		autoChooser.onChange(
-        auto -> {
-			try{
-				field.getObject("path").setPoses(PathPlannerPath.fromChoreoTrajectory(auto.getName()).getPathPoses());
+		autoChooser.onChange(auto -> {
+			try {
+				field.getObject("path")
+						.setPoses(PathFinder.parseAutoToPose2dList(auto.getName()));
 			}
-			catch (Exception e){
+			catch (Exception e) {
 				System.err.println("No found path for" + auto.getName());
-				field.getObject("path").setPoses(new Pose2d[]{new Pose2d(-50,-50,new Rotation2d()),new Pose2d(-50.2,-50,new Rotation2d())});
+				field.getObject("path").setPoses(
+						new Pose2d[] { new Pose2d(-50, -50, new Rotation2d()),
+								new Pose2d(-50.2, -50, new Rotation2d())
+				});
 			}
-        });
+		});
 		// Configure the trigger bindings
 		configureBindings();
 	}
@@ -195,7 +201,7 @@ public class RobotContainer {
 		xButtonDrive
 				.and(aButtonTest.or(bButtonTest).or(xButtonTest).or(yButtonTest)
 						.negate())
-				.whileTrue(PathFinder.goToPose(new Pose2d(1.9,7.7,new Rotation2d(Units.degreesToRadians(90))), new PathConstraints(5.21, 10, 3, 6),drivetrainS)); //new InstantCommand(() -> drivetrainS.zeroHeading())
+				.onTrue(new InstantCommand(() -> drivetrainS.zeroHeading()));  //whileTrue(PathFinder.goToPose(new Pose2d(1.9, 7.7,new Rotation2d(Units.degreesToRadians(90))),DriveConstants.pathConstraints, drivetrainS, false))
 		yButtonTest.whileTrue(
 				new RunTest(SysIdRoutine.Direction.kForward, true, drivetrainS));
 		bButtonTest.whileTrue(

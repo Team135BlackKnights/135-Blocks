@@ -139,12 +139,6 @@ public interface DrivetrainS extends Subsystem {
 	@Override
 	default void periodic() {
 		robotField.setRobotPose(getPose());
-		SmartDashboard.putData(robotField);
-		PathPlannerLogging.setLogCurrentPoseCallback((pose) -> {
-			// Do whatever you want with the pose here
-			Logger.recordOutput("Odometry/CurrentPose", pose);
-			robotField.setRobotPose(pose);
-		});
 		// Logging callback for target robot pose
 		PathPlannerLogging.setLogTargetPoseCallback((pose) -> {
 			// Do whatever you want with the pose here
@@ -157,5 +151,8 @@ public interface DrivetrainS extends Subsystem {
 			Logger.recordOutput("Odometry/Trajectory",
 					poses.toArray(new Pose2d[poses.size()]));
 			robotField.getObject("path").setPoses(poses);
-		}); }
+		});
+		SmartDashboard.putData(robotField);
+
+	}
 }
