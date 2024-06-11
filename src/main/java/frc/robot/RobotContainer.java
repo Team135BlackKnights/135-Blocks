@@ -20,6 +20,12 @@ import frc.robot.subsystems.drive.REVTank.REVTankConstantContainer;
 import frc.robot.subsystems.drive.REVTank.REVTankS;
 import frc.robot.utils.RunTest;
 import frc.robot.utils.drive.DriveConstants;
+import frc.robot.commands.state_space.ArmC;
+import frc.robot.commands.state_space.ElevatorC;
+import frc.robot.commands.state_space.FlywheelC;
+import frc.robot.subsystems.state_space.ArmS;
+import frc.robot.subsystems.state_space.ElevatorS;
+import frc.robot.subsystems.state_space.FlywheelS;
 
 import frc.robot.subsystems.drive.REVSwerve.REVModuleConstantContainer;
 import frc.robot.utils.drive.DriveConstants.TrainConstants;
@@ -58,6 +64,9 @@ public class RobotContainer {
 	// The robot's subsystems and commands are defined here...
 	public static DrivetrainS drivetrainS;
 	private Telemetry logger = null;
+	public final static FlywheelS flywheelS = new FlywheelS();
+	public final static ArmS armS = new ArmS();
+	public final static ElevatorS elevatorS = new ElevatorS();
 	private final SendableChooser<Command> autoChooser;
 	static PowerDistribution PDH = new PowerDistribution(
 			Constants.PowerDistributionID, PowerDistribution.ModuleType.kRev);
@@ -165,7 +174,6 @@ public class RobotContainer {
 		);
 		Pathfinding.setPathfinder(new LocalADStarAK());
 		NamedCommands.registerCommands(autoCommands);
-		PathfindingCommand.warmupCommand().schedule();
 		if (Constants.isCompetition) {
 			PPLibTelemetry.enableCompetitionMode();
 		}
@@ -173,6 +181,9 @@ public class RobotContainer {
 		.finallyDo(() -> RobotContainer.field.getObject("target pose")
 				.setPose(new Pose2d(-50, -50, new Rotation2d())))
 		.schedule();
+		flywheelS.setDefaultCommand(new FlywheelC(flywheelS));
+		armS.setDefaultCommand(new ArmC(armS));
+		elevatorS.setDefaultCommand(new ElevatorC(elevatorS));
 		autoChooser = AutoBuilder.buildAutoChooser();
 		SmartDashboard.putData(field);
 		SmartDashboard.putData("Auto Chooser", autoChooser);
