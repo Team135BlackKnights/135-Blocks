@@ -78,9 +78,9 @@ public class CTRESwerveS extends SwerveDrivetrain implements DrivetrainS {
 		AutoBuilder.configureHolonomic(() -> this.getState().Pose, // Supplier of current robot pose
 				this::seedFieldRelative, // Consumer for seeding pose against auto
 				this::getChassisSpeeds, this::setChassisSpeeds, // Consumer of ChassisSpeeds to drive the robot
-				new HolonomicPathFollowerConfig(new PIDConstants(10, 0, 0),
-						new PIDConstants(10, 0, 0), TunerConstants.kSpeedAt12VoltsMps,
-						DriveConstants.kDriveBaseRadius, new ReplanningConfig()),
+				new HolonomicPathFollowerConfig(new PIDConstants(8, 0, 0),
+						new PIDConstants(8, 0, 0), TunerConstants.kSpeedAt12VoltsMps,
+						DriveConstants.kDriveBaseRadius, new ReplanningConfig(true,true)),
 				() -> DriverStation.getAlliance()
 						.orElse(Alliance.Blue) == Alliance.Red, // Assume the path needs to be flipped for Red vs Blue, this is normally the case
 				this); // Subsystem for requirements
@@ -107,9 +107,9 @@ public class CTRESwerveS extends SwerveDrivetrain implements DrivetrainS {
 		AutoBuilder.configureHolonomic(() -> this.getState().Pose, // Supplier of current robot pose
 				this::seedFieldRelative, // Consumer for seeding pose against auto
 				this::getChassisSpeeds, this::setChassisSpeeds, // Consumer of ChassisSpeeds to drive the robot
-				new HolonomicPathFollowerConfig(new PIDConstants(10, 0, 0),
-						new PIDConstants(10, 0, 0), TunerConstants.kSpeedAt12VoltsMps,
-						DriveConstants.kDriveBaseRadius, new ReplanningConfig()),
+				new HolonomicPathFollowerConfig(new PIDConstants(8, 0, 0),
+						new PIDConstants(8, 0, 0), TunerConstants.kSpeedAt12VoltsMps,
+						DriveConstants.kDriveBaseRadius, new ReplanningConfig(true,true)),
 				() -> DriverStation.getAlliance()
 						.orElse(Alliance.Blue) == Alliance.Red, // Assume the path needs to be flipped for Red vs Blue, this is normally the case
 				this); // Subsystem for requirements
