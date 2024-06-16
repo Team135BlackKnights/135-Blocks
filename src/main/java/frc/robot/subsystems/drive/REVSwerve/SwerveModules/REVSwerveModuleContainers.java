@@ -6,7 +6,6 @@ import frc.robot.utils.drive.DriveConstants.TrainConstants;
 import frc.robot.utils.drive.DriveConstants.TrainConstants.*;
 
 public interface REVSwerveModuleContainers {
-	public static REVSwerveModuleEncoderConstants drivetrainEncoderConstants = new REVSwerveModuleEncoderConstants(TrainConstants.kDriveEncoderRot2Meter, TrainConstants.kDriveEncoderRPM2MeterPerSec, TrainConstants.kTurningEncoderRot2Rad, TrainConstants.kTurningEncoderRPM2RadPerSec);
 	public static REVModuleConstantContainer frontLeftConstantContainer = new REVModuleConstantContainer(
 			DriveConstants.kFrontLeftDrivePort,
 			DriveConstants.kFrontLeftTurningPort,
@@ -14,11 +13,12 @@ public interface REVSwerveModuleContainers {
 			DriveConstants.kFrontLeftTurningReversed,
 			DriveConstants.kFrontLeftAbsEncoderOffsetRad,
 			DriveConstants.kMaxSpeedMetersPerSecond,
-			DriveConstants.kFrontLeftAbsEncoderReversed,
-			ModulePosition.FRONT_LEFT,
+			TrainConstants.kDriveMotorGearRatio,
+			TrainConstants.kTurningMotorGearRatio,
+			DriveConstants.kFrontLeftAbsEncoderReversed, ModulePosition.FRONT_LEFT,
 			DriveConstants.TrainConstants.frontLeftDriveMotorConstantContainer,
 			DriveConstants.TrainConstants.overallTurningMotorConstantContainer,
-			DriveConstants.kModuleTranslations[0],drivetrainEncoderConstants),
+			DriveConstants.kModuleTranslations[0]),
 			frontRightConstantContainer = new REVModuleConstantContainer(
 					DriveConstants.kFrontRightDrivePort,
 					DriveConstants.kFrontRightTurningPort,
@@ -26,11 +26,13 @@ public interface REVSwerveModuleContainers {
 					DriveConstants.kFrontRightTurningReversed,
 					DriveConstants.kFrontRightAbsEncoderOffsetRad,
 					DriveConstants.kMaxSpeedMetersPerSecond,
+					TrainConstants.kDriveMotorGearRatio,
+					TrainConstants.kTurningMotorGearRatio,
 					DriveConstants.kFrontRightAbsEncoderReversed,
 					ModulePosition.FRONT_RIGHT,
 					DriveConstants.TrainConstants.frontRightDriveMotorConstantContainer,
 					DriveConstants.TrainConstants.overallTurningMotorConstantContainer,
-					DriveConstants.kModuleTranslations[1],drivetrainEncoderConstants),
+					DriveConstants.kModuleTranslations[1]),
 			backLeftConstantContainer = new REVModuleConstantContainer(
 					DriveConstants.kBackLeftDrivePort,
 					DriveConstants.kBackLeftTurningPort,
@@ -38,11 +40,13 @@ public interface REVSwerveModuleContainers {
 					DriveConstants.kBackLeftTurningReversed,
 					DriveConstants.kBackLeftAbsEncoderOffsetRad,
 					DriveConstants.kMaxSpeedMetersPerSecond,
+								TrainConstants.kDriveMotorGearRatio,
+			TrainConstants.kTurningMotorGearRatio,
 					DriveConstants.kBackLeftAbsEncoderReversed,
 					ModulePosition.BACK_LEFT,
 					DriveConstants.TrainConstants.backLeftDriveMotorConstantContainer,
 					DriveConstants.TrainConstants.overallTurningMotorConstantContainer,
-					DriveConstants.kModuleTranslations[2],drivetrainEncoderConstants),
+					DriveConstants.kModuleTranslations[2]),
 			backRightConstantContainer = new REVModuleConstantContainer(
 					DriveConstants.kBackRightDrivePort,
 					DriveConstants.kBackRightTurningPort,
@@ -50,9 +54,11 @@ public interface REVSwerveModuleContainers {
 					DriveConstants.kBackRightTurningReversed,
 					DriveConstants.kBackRightAbsEncoderOffsetRad,
 					DriveConstants.kMaxSpeedMetersPerSecond,
+								TrainConstants.kDriveMotorGearRatio,
+			TrainConstants.kTurningMotorGearRatio,
 					DriveConstants.kBackRightAbsEncoderReversed,
 					ModulePosition.BACK_RIGHT,
 					DriveConstants.TrainConstants.backRightDriveMotorConstantContainer,
 					DriveConstants.TrainConstants.overallTurningMotorConstantContainer,
-					DriveConstants.kModuleTranslations[3],drivetrainEncoderConstants);
+					DriveConstants.kModuleTranslations[3]);
 }

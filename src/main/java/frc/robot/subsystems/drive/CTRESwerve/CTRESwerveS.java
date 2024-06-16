@@ -7,10 +7,6 @@ import com.ctre.phoenix6.mechanisms.swerve.SwerveDrivetrainConstants;
 import com.ctre.phoenix6.mechanisms.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.mechanisms.swerve.SwerveModuleConstants;
 import com.ctre.phoenix6.mechanisms.swerve.SwerveRequest;
-import com.pathplanner.lib.auto.AutoBuilder;
-import com.pathplanner.lib.util.HolonomicPathFollowerConfig;
-import com.pathplanner.lib.util.PIDConstants;
-import com.pathplanner.lib.util.ReplanningConfig;
 
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -24,8 +20,6 @@ import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.util.sendable.Sendable;
 import edu.wpi.first.util.sendable.SendableBuilder;
-import edu.wpi.first.wpilibj.DriverStation;
-import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.Notifier;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -77,16 +71,6 @@ public class CTRESwerveS extends SwerveDrivetrain implements DrivetrainS {
 			super.seedFieldRelative(
 					new Pose2d(new Translation2d(), Rotation2d.fromDegrees(90)));
 		}
-		//Pathplanner declaration
-		AutoBuilder.configureHolonomic(() -> this.getState().Pose, // Supplier of current robot pose
-				this::seedFieldRelative, // Consumer for seeding pose against auto
-				this::getChassisSpeeds, this::setChassisSpeeds, // Consumer of ChassisSpeeds to drive the robot
-				new HolonomicPathFollowerConfig(new PIDConstants(8, 0, 0),
-						new PIDConstants(8, 0, 0), TunerConstants.kSpeedAt12VoltsMps,
-						DriveConstants.kDriveBaseRadius, new ReplanningConfig(true,true)),
-				() -> DriverStation.getAlliance()
-						.orElse(Alliance.Blue) == Alliance.Red, // Assume the path needs to be flipped for Red vs Blue, this is normally the case
-				this); // Subsystem for requirements
 		super.registerTelemetry(logger::telemeterize);
 
 	}
@@ -107,15 +91,6 @@ public class CTRESwerveS extends SwerveDrivetrain implements DrivetrainS {
 			super.seedFieldRelative(
 					new Pose2d(new Translation2d(), Rotation2d.fromDegrees(0)));
 		}
-		AutoBuilder.configureHolonomic(() -> this.getState().Pose, // Supplier of current robot pose
-				this::seedFieldRelative, // Consumer for seeding pose against auto
-				this::getChassisSpeeds, this::setChassisSpeeds, // Consumer of ChassisSpeeds to drive the robot
-				new HolonomicPathFollowerConfig(new PIDConstants(8, 0, 0),
-						new PIDConstants(8, 0, 0), TunerConstants.kSpeedAt12VoltsMps,
-						DriveConstants.kDriveBaseRadius, new ReplanningConfig(true,true)),
-				() -> DriverStation.getAlliance()
-						.orElse(Alliance.Blue) == Alliance.Red, // Assume the path needs to be flipped for Red vs Blue, this is normally the case
-				this); // Subsystem for requirements
 		super.registerTelemetry(logger::telemeterize);
 		SwerveModuleState[] moduleStates = super.m_moduleStates;
 		SmartDashboard.putData("Swerve Drive", new Sendable() {

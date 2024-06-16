@@ -73,14 +73,11 @@ public class REVSwerveModule extends SubsystemBase {
 			this.m_moduleNumber = -1;
 			break;
 		}
-		driveEncoderRot2Meter = container.getSwerveModuleEncoderConstants()
-				.getDriveEncoderRot2Meter();
-		driveEncoderRPM2MeterPerSec = container.getSwerveModuleEncoderConstants()
-				.getDriveEncoderRPM2MeterPerSec();
-		turningEncoderRot2Rad = container.getSwerveModuleEncoderConstants()
-				.getTurningEncoderRot2Rad();
-		turningEncoderRPM2RadPerSec = container.getSwerveModuleEncoderConstants()
-				.getTurningEncoderRPM2RadPerSec();
+		//TODO: Check if wheelDiameter should be here
+		driveEncoderRot2Meter = container.getDriveMotorGearing()*Math.PI;
+		driveEncoderRPM2MeterPerSec = container.getDriveMotorGearing()*Math.PI/60;
+		turningEncoderRot2Rad = container.getTurnMotorGearing()*2*Math.PI;
+		turningEncoderRPM2RadPerSec = container.getTurnMotorGearing()*2*Math.PI/60;
 		/*turningFeedForward = new SimpleMotorFeedforward(
 		 turningKpKsKvKa[1], turningKpKsKvKa[2], turningKpKsKvKa[3]);*/
 		driveFeedForward = new SimpleMotorFeedforward(
@@ -101,7 +98,7 @@ public class REVSwerveModule extends SubsystemBase {
 				turningMotor = new CANSparkMax(container.getTurningMotorID(),
 						MotorType.kBrushless);
 				driveMotorSim = new DCMotorSim(DCMotor.getNEO(1), driveEncoderRot2Meter, .001); //container.getSwerveModuleEncoderConstants().getDriveEncoderRot2Meter()
-				turningMotorSim = new DCMotorSim(DCMotor.getNEO(1), 150/7, .001);
+				turningMotorSim = new DCMotorSim(DCMotor.getNEO(1), container.getTurnMotorGearing(), .001);
 				break;
 			case VORTEX_SPARK_FLEX:
 				System.err.println("Detected Spark Flex");
@@ -276,7 +273,6 @@ public class REVSwerveModule extends SubsystemBase {
 		state = SwerveModuleState.optimize(state, getState().angle);
 		// Calculate the drive output from the drive PID controller.
 		double driveOutput = drivePIDController.calculate(getDriveVelocity(),state.speedMetersPerSecond);
-		//double driveOutput = state.speedMetersPerSecond/DriveConstants.kMaxSpeedMetersPerSecond;
 		final double driveFeedforward = driveFeedForward
 				.calculate(state.speedMetersPerSecond);
 		driveOutput += driveFeedforward;
