@@ -543,7 +543,7 @@ public class PhotonVisionS extends SubsystemChecker {
 	 */
 	public static double speedMapper(double x) {
 		// Define the parameters for the sigmoid function
-		double x0 = 25; // Inches where the function starts to rise significantly
+		double x0 = 15; // Inches where the function starts to rise significantly
 		double k = 0.1; // Steepness of the curve
 		// Apply the sigmoid function to map x to the range [0, 1]
 		double y = 1 / (1 + Math.exp(-k * (x - x0)));
