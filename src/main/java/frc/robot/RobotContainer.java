@@ -69,7 +69,7 @@ public class RobotContainer {
 	public static DrivetrainS drivetrainS;
 	private Telemetry logger = null;
 	@SuppressWarnings("unused")
-	private final PhotonVisionS photonVisionS = new PhotonVisionS();
+	private final static PhotonVisionS photonVisionS = new PhotonVisionS();
 	private final SendableChooser<Command> autoChooser;
 	static PowerDistribution PDH = new PowerDistribution(
 			Constants.PowerDistributionID, PowerDistribution.ModuleType.kRev);
@@ -288,7 +288,7 @@ public class RobotContainer {
 	 * @return a command with all of them in a sequence.
 	 */
 	public static Command allSystemsCheck() {
-	return Commands.sequence(drivetrainS.getRunnableSystemCheckCommand());
+	return Commands.sequence(photonVisionS.getSystemCheckCommand(),drivetrainS.getRunnableSystemCheckCommand());
 	}
 	public static HashMap<String, Double> combineMaps(List<HashMap<String, Double>> maps) {
 		HashMap<String, Double> combinedMap = new HashMap<>();
@@ -314,6 +314,7 @@ public class RobotContainer {
 	 * @return true if ALL systems were good.
 	 */
 	public static boolean allSystemsOK() {
-		return drivetrainS.getTrueSystemStatus() == SubsystemChecker.SystemStatus.OK;
+		return drivetrainS.getTrueSystemStatus() == SubsystemChecker.SystemStatus.OK
+		&& photonVisionS.getSystemStatus() == SubsystemChecker.SystemStatus.OK;
 	 }
 }
