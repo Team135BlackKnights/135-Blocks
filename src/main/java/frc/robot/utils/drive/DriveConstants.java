@@ -10,7 +10,7 @@ import frc.robot.utils.MotorConstantContainer;
 
 public class DriveConstants {
 	//ONLY CTRE_SWERVE IS *FULLY* CURRENT DRAW ACCURATE IN SIM
-	public static MotorVendor robotMotorController = MotorVendor.CTRE_MOTORS;
+	public static MotorVendor robotMotorController = MotorVendor.NEO_SPARK_MAX;
 	public static driveTrainType driveType = driveTrainType.SWERVE;
 
 	/**
@@ -85,18 +85,17 @@ public class DriveConstants {
 
 		public static double kWheelDiameter = Units.inchesToMeters(3.873),
 				kDriveMotorGearRatio = 6.75, kTurningMotorGearRatio = 150 / 7,
-				kDriveEncoderRot2Meter = kDriveMotorGearRatio * Math.PI
-						* kWheelDiameter,
-				kDriveEncoderRPM2MeterPerSec = kDriveEncoderRot2Meter / 60,
+				kDriveEncoderRot2Meter = kDriveMotorGearRatio * Math.PI, //Test if wheelDiameter should be here..?
+				kDriveEncoderRPM2MeterPerSec = kDriveEncoderRot2Meter/60,
 				kTurningEncoderRot2Rad = kTurningMotorGearRatio * 2 * Math.PI,
-				kTurningEncoderRPM2RadPerSec = kTurningEncoderRot2Rad / 60,
+				kTurningEncoderRPM2RadPerSec = kTurningEncoderRot2Rad/60,
 				kDeadband = 0.1;
 		public static final MotorConstantContainer overallTurningMotorConstantContainer = new MotorConstantContainer(
 				.2907325, .002131625, .000203095, 1.07062 * 4, 0.019508), //Average the turning motors for these vals.
 				frontRightDriveMotorConstantContainer = new MotorConstantContainer(
 						.04248, 2.9041, 1.52, 2.4646, 0),
 				frontLeftDriveMotorConstantContainer = new MotorConstantContainer(
-						.22934, 2.8559, 1.7338, 2.5896, 0),
+						.22934, 2.8559, 1.7338, 2.3896, 0),
 				backRightDriveMotorConstantContainer = new MotorConstantContainer(
 						.070421, 2.8607, 1.1811, 2.0873, 0),
 				backLeftDriveMotorConstantContainer = new MotorConstantContainer(

@@ -4,6 +4,7 @@ import com.ctre.phoenix6.SignalLogger;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.VelocityDutyCycle;
 import com.ctre.phoenix6.controls.VoltageOut;
+import com.ctre.phoenix6.hardware.ParentDevice;
 import com.ctre.phoenix6.hardware.Pigeon2;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
@@ -37,15 +38,21 @@ import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.simulation.DCMotorSim;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 import frc.robot.Constants;
 import frc.robot.Robot;
+import frc.robot.subsystems.SubsystemChecker;
 import frc.robot.subsystems.drive.DrivetrainS;
+import java.util.ArrayList;
 import static edu.wpi.first.units.Units.Seconds;
 import static edu.wpi.first.units.Units.Volts;
+import java.util.HashMap;
 
-public class CTREMecanumS implements DrivetrainS {
+import java.util.List;
+
+public class CTREMecanumS extends SubsystemChecker implements DrivetrainS {
 	private static Pigeon2 pigeon;
 	private static TalonFX[] motors;
 	private static double kWheelDiameter, kDriveBaseRadius, kMaxSpeedMetersPerSecond, kDriveMotorGearRatio;
@@ -135,7 +142,7 @@ public class CTREMecanumS implements DrivetrainS {
 						new ReplanningConfig(true, true) // Default path replanning config. See the API for the options here
 				), () -> Robot.isRed, this // Reference to this subsystem to set requirements
 		);
-
+		registerSelfCheckHardware();
 	}
 
 	public double[] getWheelPositionMeters() {
@@ -293,4 +300,64 @@ public class CTREMecanumS implements DrivetrainS {
 	public Twist2d getFieldVelocity() { 
 	return fieldVelocity;
  }
-}
+	public void registerSelfCheckHardware() {
+    super.registerHardware("IMU", pigeon);
+	 super.registerHardware("FrontLeft", motors[0]);
+	 super.registerHardware("FrontRight", motors[1]);
+	 super.registerHardware("BackLeft", motors[2]);
+	 super.registerHardware("BackRight", motors[3]);
+	 
+   }
+	@Override
+	public List<ParentDevice> getOrchestraDevices() {
+		List<ParentDevice> orchestra = new ArrayList<>(4);
+
+		for (var motor : motors) {
+		  orchestra.add(motor);
+		}
+  
+		return orchestra;
+	 }
+	@Override
+	public SystemStatus getTrueSystemStatus(){
+		return getSystemStatus();
+	}
+	@Override
+	protected Command systemCheckCommand() { 
+	return Commands.sequence(run(() -> setChassisSpeeds(new ChassisSpeeds(0,0,0.5))).withTimeout(2.0),
+				run(() -> setChassisSpeeds(new ChassisSpeeds(0,0,-0.5))).withTimeout(2.0),
+				run(() -> setChassisSpeeds(new ChassisSpeeds(0,1,0))).withTimeout(1.0),
+				runOnce(() -> {
+					if (getChassisSpeeds().vyMetersPerSecond > 1.2 || getChassisSpeeds().vyMetersPerSecond < .8){
+						addFault("[System Check] Strafe speed did not reah target speed in time.", false,true);
+					}
+				}),
+				run(() -> setChassisSpeeds(new ChassisSpeeds(1,0,0))).withTimeout(1.0),
+				runOnce(() -> {
+					if (getChassisSpeeds().vxMetersPerSecond > 1.2 || getChassisSpeeds().vxMetersPerSecond < .8){
+						addFault("[System Check] Forward speed did not reah target speed in time.", false,true);
+					}
+				}))
+        .until(
+            () ->
+                !getFaults().isEmpty())
+        .andThen(runOnce(() ->setChassisSpeeds(new ChassisSpeeds(0,0,0))));
+	}
+	@Override
+	public Command getRunnableSystemCheckCommand(){
+		return super.getSystemCheckCommand();
+	}
+	@Override
+	public List<ParentDevice> getDriveOrchestraDevices() { 
+		return getOrchestraDevices();
+	}
+	@Override
+	public HashMap<String, Double> getTemps() {
+		 HashMap<String, Double> tempMap = new HashMap<>();
+		 tempMap.put("FLTemp", motors[0].getDeviceTemp().getValueAsDouble());
+		 tempMap.put("BLTemp", motors[1].getDeviceTemp().getValueAsDouble());
+		 tempMap.put("FRTemp", motors[2].getDeviceTemp().getValueAsDouble());
+		 tempMap.put("BRTemp", motors[3].getDeviceTemp().getValueAsDouble());
+		 return tempMap;
+		}	
+	}
