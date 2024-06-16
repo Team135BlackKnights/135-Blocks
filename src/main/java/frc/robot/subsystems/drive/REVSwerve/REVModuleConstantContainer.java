@@ -3,7 +3,6 @@ package frc.robot.subsystems.drive.REVSwerve;
 import frc.robot.utils.MotorConstantContainer;
 import frc.robot.utils.drive.DriveConstants.TrainConstants.ModulePosition;
 import edu.wpi.first.math.geometry.Translation2d;
-import frc.robot.subsystems.drive.REVSwerve.SwerveModules.REVSwerveModuleEncoderConstants;
 
 public class REVModuleConstantContainer {
 	private int[] moduleConstantContainerInts;
@@ -12,7 +11,6 @@ public class REVModuleConstantContainer {
 	private ModulePosition m_modulePosition;
 	private MotorConstantContainer[] moduleMotorConstants;
 	private Translation2d moduleTranslation;
-	private REVSwerveModuleEncoderConstants moduleEncoderConstants;
 
 	/**
 	 * Wrapper class designed to hold all the constants for a rev swerve module
@@ -32,6 +30,10 @@ public class REVModuleConstantContainer {
 	 * @param maxModuleSpeed                The maximum speed of the module
 	 *                                         (should be the same as the max
 	 *                                         speed of the drivetrain )
+	 * @param driveGearing                  The gearing of the drive motor (>1 is
+	 *                                         a reduction)
+	 * @param turnGearing                   The gearing of the turning motor (>1
+	 *                                         is a reduction)
 	 * @param absoluteEncoderReversed       Whether the absolute encoder is
 	 *                                         reversed
 	 * @param modulePosition                The position of the module relative
@@ -42,20 +44,16 @@ public class REVModuleConstantContainer {
 	 *                                         turning motor
 	 * @param moduleTranslation2d           The translation of the module from
 	 *                                         the center
-	 * @param encoderConstants              The encoder constant wrapper for the
-	 *                                         swerve module
 	 * @see MotorConstantContainer
-	 * @see REVSwerveModuleEncoderConstants
 	 */
 	public REVModuleConstantContainer(int driveMotorID, int turningMotorID,
 			boolean driveMotorReversed, boolean turningMotorReversed,
 			double absoluteEncoderOffset, double maxModuleSpeed,
-	
+			double driveGearing, double turnGearing,
 			boolean absoluteEncoderReversed, ModulePosition modulePosition,
 			MotorConstantContainer driveMotorConstantContainer,
 			MotorConstantContainer turningMotorConstantContainer,
-			Translation2d moduleTranslation2d,
-			REVSwerveModuleEncoderConstants encoderConstants) {
+			Translation2d moduleTranslation2d) {
 		moduleConstantContainerInts = new int[] { driveMotorID, turningMotorID
 		};
 		moduleConstantContainerBools = new boolean[] { driveMotorReversed,
@@ -65,10 +63,10 @@ public class REVModuleConstantContainer {
 				driveMotorConstantContainer, turningMotorConstantContainer
 		};
 		moduleConstantContainerDoubles = new double[] { absoluteEncoderOffset,
-				maxModuleSpeed};
+				maxModuleSpeed, driveGearing, turnGearing
+		};
 		m_modulePosition = modulePosition;
 		moduleTranslation = moduleTranslation2d;
-		moduleEncoderConstants = encoderConstants;
 	}
 
 	/**
@@ -128,6 +126,16 @@ public class REVModuleConstantContainer {
 	public double getModuleMaxSpeed() {
 		return moduleConstantContainerDoubles[1];
 	}
+	/** 
+	 * @return the gearing of the module drive motor
+	 */
+	public double getDriveMotorGearing(){
+		return moduleConstantContainerDoubles[2];
+	}
+
+	public double getTurnMotorGearing(){
+		return moduleConstantContainerDoubles[3];
+	}
 
 	/**
 	 * @return The position of the module
@@ -138,13 +146,5 @@ public class REVModuleConstantContainer {
 	 * @return The translation of the module from the center of the robot
 	 */
 	public Translation2d getTranslation2d() { return moduleTranslation; }
-
-	/**
-	 * @return The encoder factors associated with the swerve module
-	 * @see REVSwerveModuleEncoderConstants
-	 */
-	public REVSwerveModuleEncoderConstants getSwerveModuleEncoderConstants() {
-		return moduleEncoderConstants;
-	}
 
 }

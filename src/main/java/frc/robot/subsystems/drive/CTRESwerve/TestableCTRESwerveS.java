@@ -4,6 +4,10 @@ import com.ctre.phoenix6.hardware.ParentDevice;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.mechanisms.swerve.SwerveDrivetrainConstants;
 import com.ctre.phoenix6.mechanisms.swerve.SwerveModuleConstants;
+import com.pathplanner.lib.auto.AutoBuilder;
+import com.pathplanner.lib.util.HolonomicPathFollowerConfig;
+import com.pathplanner.lib.util.PIDConstants;
+import com.pathplanner.lib.util.ReplanningConfig;
 
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -13,6 +17,8 @@ import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
+import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
@@ -34,6 +40,15 @@ public class TestableCTRESwerveS extends SubsystemChecker
 		this.ctreSwerveS = new CTRESwerveS(driveTrainConstants,
 				OdometryUpdateFrequency, logger, modules);
 		motors = makeMotors();
+		AutoBuilder.configureHolonomic(() -> getPose(), // Supplier of current robot pose
+				ctreSwerveS::seedFieldRelative, // Consumer for seeding pose against auto
+				this::getChassisSpeeds, this::setChassisSpeeds, // Consumer of ChassisSpeeds to drive the robot
+				new HolonomicPathFollowerConfig(new PIDConstants(8, 0, 0),
+						new PIDConstants(8, 0, 0), TunerConstants.kSpeedAt12VoltsMps,
+						DriveConstants.kDriveBaseRadius, new ReplanningConfig(true,true)),
+				() -> DriverStation.getAlliance()
+						.orElse(Alliance.Blue) == Alliance.Red, // Assume the path needs to be flipped for Red vs Blue, this is normally the case
+				this);
 		registerSelfCheckHardware();
 	}
 
@@ -49,6 +64,16 @@ public class TestableCTRESwerveS extends SubsystemChecker
 			Telemetry logger, SwerveModuleConstants... modules) {
 		this.ctreSwerveS = new CTRESwerveS(driveTrainConstants, logger, modules);
 		motors = makeMotors();
+		//Pathplanner declaration
+		AutoBuilder.configureHolonomic(() -> ctreSwerveS.getState().Pose, // Supplier of current robot pose
+				ctreSwerveS::seedFieldRelative, // Consumer for seeding pose against auto
+				ctreSwerveS::getChassisSpeeds, this::setChassisSpeeds, // Consumer of ChassisSpeeds to drive the robot
+				new HolonomicPathFollowerConfig(new PIDConstants(8, 0, 0),
+						new PIDConstants(8, 0, 0), TunerConstants.kSpeedAt12VoltsMps,
+						DriveConstants.kDriveBaseRadius, new ReplanningConfig(true,true)),
+				() -> DriverStation.getAlliance()
+						.orElse(Alliance.Blue) == Alliance.Red, // Assume the path needs to be flipped for Red vs Blue, this is normally the case
+				this);
 		registerSelfCheckHardware();
 	}
 
