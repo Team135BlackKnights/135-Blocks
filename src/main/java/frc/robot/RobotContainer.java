@@ -5,6 +5,8 @@ package frc.robot;
 
 import frc.robot.commands.drive.DrivetrainC;
 import frc.robot.subsystems.SubsystemChecker;
+import frc.robot.commands.servos.ServoC;
+
 import frc.robot.subsystems.drive.DrivetrainS;
 import frc.robot.subsystems.drive.CTREMecanum.CTREMecanumConstantContainer;
 import frc.robot.subsystems.drive.CTREMecanum.CTREMecanumS;
@@ -20,6 +22,7 @@ import frc.robot.subsystems.drive.REVSwerve.SwerveModules.REVSwerveModuleContain
 import frc.robot.subsystems.drive.REVTank.REVTankConstantContainer;
 import frc.robot.subsystems.drive.REVTank.REVTankS;
 import frc.robot.utils.RunTest;
+import frc.robot.subsystems.servos.ServoS;
 import frc.robot.utils.drive.DriveConstants;
 
 import frc.robot.subsystems.drive.REVSwerve.REVModuleConstantContainer;
@@ -93,6 +96,7 @@ public class RobotContainer {
 	 * commands.
 	 */
 	public RobotContainer() {
+		final ServoS servoS = new ServoS();
 		//We check to see what drivetrain type we have here, and create the correct drivetrain system based on that. 
 		//If we get something wacky, throw an error
 		switch (DriveConstants.driveType) {
@@ -170,7 +174,9 @@ public class RobotContainer {
 			throw new IllegalArgumentException(
 					"Unknown implementation type, please check DriveConstants.java!");
 		}
+
 		drivetrainS.setDefaultCommand(new DrivetrainC(drivetrainS));
+
 		List<Pair<String, Command>> autoCommands = Arrays.asList(
 		//new Pair<String,Command>("AimAtAmp",new AimToPose(drivetrainS, new Pose2d(1.9,7.7, new Rotation2d(Units.degreesToRadians(0)))))
 		//new Pair<String, Command>("BranchGrabbingGamePiece", new BranchAuto("grabGamePieceBranch",new Pose2d(0,0,new Rotation2d())))
@@ -178,7 +184,6 @@ public class RobotContainer {
 		);
 		Pathfinding.setPathfinder(new LocalADStarAK());
 		NamedCommands.registerCommands(autoCommands);
-		PathfindingCommand.warmupCommand().schedule();
 		if (Constants.isCompetition) {
 			PPLibTelemetry.enableCompetitionMode();
 		}
@@ -186,6 +191,7 @@ public class RobotContainer {
 		.finallyDo(() -> RobotContainer.field.getObject("target pose")
 				.setPose(new Pose2d(-50, -50, new Rotation2d())))
 		.schedule();
+		servoS.setDefaultCommand(new ServoC(servoS));
 		autoChooser = AutoBuilder.buildAutoChooser();
 		SmartDashboard.putData(field);
 		SmartDashboard.putData("Auto Chooser", autoChooser);
