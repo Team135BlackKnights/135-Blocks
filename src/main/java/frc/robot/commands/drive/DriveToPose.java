@@ -11,6 +11,7 @@ import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj2.command.Command;
+import frc.robot.RobotContainer;
 import frc.robot.subsystems.drive.DrivetrainS;
 import frc.robot.utils.LoggableTunedNumber;
 import frc.robot.utils.drive.DriveConstants;
@@ -126,6 +127,7 @@ public class DriveToPose extends Command {
     thetaController.reset(currentPose.getRotation().getRadians(), drive.getRotation2d().getRadians());
     lastSetpointTranslation = drive.getPose().getTranslation();
 	 drive.changeDeadband(.01); //Make sure the commands aren't trying to move tiny movements when the drivetrain wont allow it
+	 RobotContainer.currentPath = "DRIVETOPOSE";
   }
 
   @Override
@@ -157,7 +159,7 @@ public class DriveToPose extends Command {
               pathConstraints.getMaxAngularAccelerationRpsSq()));
       thetaController.setTolerance(slowMode ? thetaToleranceSlow.get() : thetaTolerance.get());
     }
-
+	 RobotContainer.currentPath = "DRIVETOPOSE";
     // Get current and target pose
     var currentPose = drive.getPose();
     var targetPose = poseSupplier.get();
@@ -226,6 +228,7 @@ public class DriveToPose extends Command {
 
   @Override
   public void end(boolean interrupted) {
+	RobotContainer.currentPath = "";
 	 drive.changeDeadband(.1); //go back to normal deadband
     drive.stopModules();
 

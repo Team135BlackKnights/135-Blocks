@@ -4,6 +4,9 @@
 package frc.robot;
 
 import org.littletonrobotics.urcl.URCL;
+
+import com.ctre.phoenix6.CANBus;
+
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 import org.littletonrobotics.junction.LogFileUtil;
@@ -24,9 +27,12 @@ import edu.wpi.first.net.PortForwarder;
 import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.RobotController;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.simulation.BatterySim;
 import edu.wpi.first.wpilibj.simulation.RoboRioSim;
-
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 /**
  * The VM is configured to automatically run this class, and to call the
  * functions corresponding to each mode, as described in the TimedRobot
@@ -42,6 +48,7 @@ public class Robot extends LoggedRobot {
 	private double lastMatchTime = 0;
 	public static SysIdRoutines runningTest = Constants.SysIdRoutines
 			.values()[0];
+	private static final List<PeriodicFunction> periodicFunctions = new ArrayList<>();
 
 	/**
 	 * This function is run when the robot is first started up and should be used
@@ -92,6 +99,7 @@ public class Robot extends LoggedRobot {
 	 */
 	@Override
 	public void robotPeriodic() {
+		double startTime = Logger.getRealTimestamp();
 		DataHandler.updateHandlerState();
 		SmartDashboard.putString("Match State",
 				Constants.currentMatchState.name());
@@ -106,6 +114,26 @@ public class Robot extends LoggedRobot {
 				.values()[RobotContainer.currentTest];
 		SmartDashboard.putString("QUEUED TEST", runningTest.toString());
 		CommandScheduler.getInstance().run();
+		for (PeriodicFunction f : periodicFunctions) {
+			f.runIfReady();
+		 }
+		 SmartDashboard.putNumber("MatchTime", DriverStation.getMatchTime());
+		 Logger.recordOutput("BatteryVoltage", RobotController.getBatteryVoltage());
+	
+		 CANBus.CANBusStatus canBusStatus = CANBus.getStatus("*");
+		 Logger.recordOutput("CANUtil", canBusStatus.BusUtilization * 100.0);
+	
+		 //    List<LidarDetection> robots = RobotContainer.lidar.getCurrentRobotDetections();
+		 //    List<Pair<Translation2d, Translation2d>> obs = new ArrayList<>();
+		 //    for (LidarDetection robotDet : robots) {
+		 //      Translation2d robot = robotDet.boundingBoxCenter().toTranslation2d();
+		 //      obs.add(Pair.of(robot.plus(new Translation2d(1, 1)), robot.minus(new Translation2d(1,
+		 // 1))));
+		 //    }
+		 //    Pathfinding.setDynamicObstacles(obs, RobotContainer.swerve.getPose2d().getTranslation());
+	
+		 double runtimeMS = (Logger.getRealTimestamp() - startTime) / 1000.0;
+		 Logger.recordOutput("RobotPeriodicMS", runtimeMS);
 	}
 
 	/** This function is called once each time the robot enters Disabled mode. */
@@ -195,11 +223,15 @@ public class Robot extends LoggedRobot {
 		Constants.currentMatchState = FRCMatchState.TESTINIT;
 		// Cancels all running commands at the start of test mode.
 		CommandScheduler.getInstance().cancelAll();
+		//RobotContainer.allSystemsCheck().schedule();
 	}
 
 	/** This function is called periodically during test mode. */
 	@Override
 	public void testPeriodic() {
+		for (Map.Entry<String,Double> set : RobotContainer.getAllTemps().entrySet()){
+			Logger.recordOutput("Temps/"+set.getKey(), set.getValue());
+		}
 		Constants.currentMatchState = FRCMatchState.TEST;
 	}
 
@@ -225,4 +257,28 @@ public class Robot extends LoggedRobot {
 		}
 		//DataHandler.updateHandlerState();
 	}
+	public static void addPeriodic(Runnable callback, double period) {
+		periodicFunctions.add(new PeriodicFunction(callback, period));
+	 }
+	 private static class PeriodicFunction {
+    private final Runnable callback;
+    private final double periodSeconds;
+
+    private double lastRunTimeSeconds;
+
+    private PeriodicFunction(Runnable callback, double periodSeconds) {
+      this.callback = callback;
+      this.periodSeconds = periodSeconds;
+
+      this.lastRunTimeSeconds = 0.0;
+    }
+
+    private void runIfReady() {
+      if (Timer.getFPGATimestamp() > lastRunTimeSeconds + periodSeconds) {
+        callback.run();
+
+        lastRunTimeSeconds = Timer.getFPGATimestamp();
+      }
+    }
+  }
 }

@@ -8,18 +8,21 @@ import com.revrobotics.SparkAnalogSensor;
 import com.revrobotics.CANSparkBase.IdleMode;
 import com.revrobotics.CANSparkLowLevel.MotorType;
 import com.revrobotics.SparkAnalogSensor.Mode;
+
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.wpilibj.simulation.DCMotorSim;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
+import edu.wpi.first.math.system.plant.DCMotor;
+import edu.wpi.first.math.util.Units;
 import frc.robot.utils.drive.DriveConstants.TrainConstants.ModulePosition;
 import com.revrobotics.CANSparkBase;
 import com.revrobotics.CANSparkFlex;
 
-// import
-// edu.wpi.first.wpilibj.AnalogInput;
+// import edu.wpi.first.wpilibj.AnalogInput;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
@@ -28,21 +31,16 @@ import frc.robot.utils.drive.DriveConstants;
 
 public class REVSwerveModule extends SubsystemBase {
 	private static ModulePosition position;
-	private CANSparkBase driveMotor;
-	private CANSparkBase turningMotor;
-	private RelativeEncoder driveEncoder;
-	private RelativeEncoder turningEncoder;
+	public CANSparkBase driveMotor, turningMotor;
+	private RelativeEncoder driveEncoder, turningEncoder;
+	private DCMotorSim driveMotorSim, turningMotorSim;
 	private double absoluteEncoderOffsetRad;
 	private boolean absoluteEncoderReversed;
 	private SparkAnalogSensor absoluteEncoder;
-	private PIDController turningPIDController = null;
-	private PIDController drivePIDController = null;
+	private PIDController turningPIDController = null, drivePIDController = null;
 	private SimpleMotorFeedforward driveFeedForward = null;
-	private double m_currentAngle = 0;
-	private double m_simDriveEncoderPosition = 0;
-	private double m_simDriveEncoderVelocity = 0;
-	private double m_simAngleDifference = 0;
-	private double m_simTurnAngleIncrement = 0;
+	private double driveEncoderRot2Meter, driveEncoderRPM2MeterPerSec,
+			turningEncoderRot2Rad, turningEncoderRPM2RadPerSec;
 	private Pose2d m_pose = new Pose2d();
 	private int m_moduleNumber = 0;
 
@@ -60,21 +58,29 @@ public class REVSwerveModule extends SubsystemBase {
 		position = container.getModulePosition();
 		switch (position) {
 		case FRONT_LEFT:
-		this.m_moduleNumber = 0;
+			this.m_moduleNumber = 0;
 			break;
 		case FRONT_RIGHT:
-		this.m_moduleNumber = 1;
+			this.m_moduleNumber = 1;
 			break;
 		case BACK_LEFT:
 			this.m_moduleNumber = 2;
 			break;
 		case BACK_RIGHT:
-		this.m_moduleNumber = 3;
+			this.m_moduleNumber = 3;
 			break;
 		default:
-		this.m_moduleNumber = -1;
+			this.m_moduleNumber = -1;
 			break;
 		}
+		driveEncoderRot2Meter = container.getSwerveModuleEncoderConstants()
+				.getDriveEncoderRot2Meter();
+		driveEncoderRPM2MeterPerSec = container.getSwerveModuleEncoderConstants()
+				.getDriveEncoderRPM2MeterPerSec();
+		turningEncoderRot2Rad = container.getSwerveModuleEncoderConstants()
+				.getTurningEncoderRot2Rad();
+		turningEncoderRPM2RadPerSec = container.getSwerveModuleEncoderConstants()
+				.getTurningEncoderRPM2RadPerSec();
 		/*turningFeedForward = new SimpleMotorFeedforward(
 		 turningKpKsKvKa[1], turningKpKsKvKa[2], turningKpKsKvKa[3]);*/
 		driveFeedForward = new SimpleMotorFeedforward(
@@ -87,45 +93,48 @@ public class REVSwerveModule extends SubsystemBase {
 		//absoluteEncoder = new AnalogInput(absoluteEncoderId);
 		//absoluteEncoder = new CANCoder(absoluteEncoderId);
 		//declares motors
-		switch (DriveConstants.robotMotorController) {
-		case NEO_SPARK_MAX:
-			System.err.println("Detected Spark Max");
-			driveMotor = new CANSparkMax(container.getDriveMotorID(),
-					MotorType.kBrushless);
-			turningMotor = new CANSparkMax(container.getTurningMotorID(),
-					MotorType.kBrushless);
-			break;
-		case VORTEX_SPARK_FLEX:
-			System.err.println("Detected Spark Flex");
-			driveMotor = new CANSparkFlex(container.getDriveMotorID(),
-					MotorType.kBrushless);
-			turningMotor = new CANSparkFlex(container.getTurningMotorID(),
-					MotorType.kBrushless);
-		default:
-			break;
-		}
-		//checks to see if they're inverted
-		driveMotor.setInverted(container.getDriveMotorReversed());
-		turningMotor.setInverted(container.getTurningMotorReversed());
-		//sets the absolute encoder value (called way because we have breakout boards in the motors)
-		absoluteEncoder = turningMotor.getAnalog(Mode.kAbsolute);
-		//relative encoder declarations
-		driveEncoder = driveMotor.getEncoder();
-		turningEncoder = turningMotor.getEncoder();
-		//sets motor idle modes to break
-		driveMotor.setIdleMode(IdleMode.kBrake);
-		turningMotor.setIdleMode(IdleMode.kBrake);
-		//accounts for gear ratios
-		driveEncoder.setPositionConversionFactor(
-				DriveConstants.TrainConstants.kDriveEncoderRot2Meter);
-		driveEncoder.setVelocityConversionFactor(
-				DriveConstants.TrainConstants.kDriveEncoderRPM2MeterPerSec);
-		turningEncoder.setPositionConversionFactor(
-				DriveConstants.TrainConstants.kTurningEncoderRot2Rad);
-		turningEncoder.setVelocityConversionFactor(
-				DriveConstants.TrainConstants.kTurningEncoderRPM2RadPerSec);
-		//creates pidController, used exclusively for turning because that has to be precise
-		turningPIDController = new PIDController(.5, 0, 0);
+			switch (DriveConstants.robotMotorController) {
+			case NEO_SPARK_MAX:
+				System.err.println("Detected Spark Max");
+				driveMotor = new CANSparkMax(container.getDriveMotorID(),
+						MotorType.kBrushless);
+				turningMotor = new CANSparkMax(container.getTurningMotorID(),
+						MotorType.kBrushless);
+				driveMotorSim = new DCMotorSim(DCMotor.getNEO(1), driveEncoderRot2Meter, .001); //container.getSwerveModuleEncoderConstants().getDriveEncoderRot2Meter()
+				turningMotorSim = new DCMotorSim(DCMotor.getNEO(1), 150/7, .001);
+				break;
+			case VORTEX_SPARK_FLEX:
+				System.err.println("Detected Spark Flex");
+				driveMotor = new CANSparkFlex(container.getDriveMotorID(),
+						MotorType.kBrushless);
+				turningMotor = new CANSparkFlex(container.getTurningMotorID(),
+						MotorType.kBrushless);
+				driveMotorSim = new DCMotorSim(DCMotor.getNeoVortex(1),
+				driveEncoderRot2Meter, .001);
+				turningMotorSim = new DCMotorSim(DCMotor.getNeoVortex(1),
+				150/7, .001);
+			default:
+				break;
+			}
+			//checks to see if they're inverted
+			driveMotor.setInverted(container.getDriveMotorReversed());
+			turningMotor.setInverted(container.getTurningMotorReversed());
+			//sets the absolute encoder value (called way because we have breakout boards in the motors)
+			absoluteEncoder = turningMotor.getAnalog(Mode.kAbsolute);
+			//relative encoder declarations
+			driveEncoder = driveMotor.getEncoder();
+			turningEncoder = turningMotor.getEncoder();
+			//sets motor idle modes to break
+			driveMotor.setIdleMode(IdleMode.kBrake);
+			turningMotor.setIdleMode(IdleMode.kBrake);
+			//accounts for gear ratios
+			driveEncoder.setPositionConversionFactor(driveEncoderRot2Meter);
+			driveEncoder.setVelocityConversionFactor(driveEncoderRPM2MeterPerSec);
+			turningEncoder.setPositionConversionFactor(turningEncoderRot2Rad);
+			turningEncoder
+					.setVelocityConversionFactor(turningEncoderRPM2RadPerSec);
+			//creates pidController, used exclusively for turning because that has to be precise
+		turningPIDController = new PIDController(360, 0, 0);
 		//makes the value loop around
 		turningPIDController.enableContinuousInput(-Math.PI, Math.PI);
 		drivePIDController = new PIDController(
@@ -134,35 +143,26 @@ public class REVSwerveModule extends SubsystemBase {
 	}
 
 	public double getDrivePosition() {
-		//returns the position of the drive wheel
-		if (Constants.currentMode == Constants.Mode.REAL) {
 			return driveEncoder.getPosition();
-		} else {
-			return m_simDriveEncoderPosition;
-		}
 	}
 
 	public double getTurningPosition() {
-		//returns the heading of the swerve module (turning motor position)
-		if (Constants.currentMode == Constants.Mode.REAL) {
 			return getAbsoluteEncoderRad();
-		} else {
-			return m_currentAngle;
-		}
 	}
 
 	public double getDriveVelocity() {
-		//returns velocity of drive wheel
-		if (Constants.currentMode == Constants.Mode.REAL) {
-			return driveEncoder.getVelocity();
-		} else {
-			return m_simDriveEncoderVelocity;
-		}
+			if (Constants.currentMode == Constants.Mode.REAL){
+				return driveEncoder.getVelocity();
+			}
+			return driveMotorSim.getAngularVelocityRPM()/60;
 	}
 
 	public double getTurningVelocity() {
+			if (Constants.currentMode == Constants.Mode.REAL){
+				return turningEncoder.getVelocity();
+			}
+			return turningMotorSim.getAngularVelocityRPM()/60;
 		//returns velocity of turning motor
-		return turningEncoder.getVelocity();
 	}
 
 	public void setTurningTest(double volts) { turningMotor.setVoltage(volts); }
@@ -175,59 +175,76 @@ public class REVSwerveModule extends SubsystemBase {
 	}
 
 	public double getAbsoluteEncoderRad() {
-		//gets the voltage and divides by the maximum voltage to get a percent, then multiplies that percent by 2pi to get a degree heading.
-		double angle = absoluteEncoder.getVoltage()
-				/ RobotController.getVoltage3V3(); // use 5V when plugged into RIO 3.3V when using breakout board
-		angle *= 2 * Math.PI;
-		//adds the offset in
-		angle -= absoluteEncoderOffsetRad;
-		/*line of code is here because our pid loop is set to negative pi to pi,
-		but our absolute encoders read from 0 to 2pi. 
-		The line of code below basically says to add 2pi if an input is below 0 to get it in the range of 0 to 2pi*/
-		angle += angle <= 0 ? 2 * Math.PI : 0;
-		//subtracts pi to make the 0 to 2pi range back into pi to -pi
-		angle -= Math.PI; //angle > Math.PI ? 2*Math.PI : 0;
-		//if encoder is reversed multiply the input by negative one
-		angle *= (absoluteEncoderReversed ? -1 : 1);
-		return angle;
+		switch (Constants.currentMode) {
+		case REAL:
+			//gets the voltage and divides by the maximum voltage to get a percent, then multiplies that percent by 2pi to get a degree heading.
+			double angle = absoluteEncoder.getVoltage()
+					/ RobotController.getVoltage3V3(); // use 5V when plugged into RIO 3.3V when using breakout board
+			angle *= 2 * Math.PI;
+			//adds the offset in
+			angle -= absoluteEncoderOffsetRad;
+			/*line of code is here because our pid loop is set to negative pi to pi,
+			but our absolute encoders read from 0 to 2pi. 
+			The line of code below basically says to add 2pi if an input is below 0 to get it in the range of 0 to 2pi*/
+			angle += angle <= 0 ? 2 * Math.PI : 0;
+			//subtracts pi to make the 0 to 2pi range back into pi to -pi
+			angle -= Math.PI; //angle > Math.PI ? 2*Math.PI : 0;
+			//if encoder is reversed multiply the input by negative one
+			angle *= (absoluteEncoderReversed ? -1 : 1);
+			return angle;
+		default:
+			//Sim encoder is 100 percent accurate, so we can just recycle that value
+			return Units.degreesToRadians(turningEncoder.getPosition());
+		}
 	}
 
+	/**
+	 * Resets the encoders, (drive motor becomes zero, turning encoder becomes
+	 * the module heading from the absolute encoder)
+	 */
 	public void resetEncoders() {
-		//resets the encoders, (drive motor becomes zero, turning encoder becomes the module heading from the absolute encoder)
-		driveEncoder.setPosition(0);
-		turningEncoder.setPosition(getAbsoluteEncoderRad());
-	}
-
-	@SuppressWarnings("unused") //incase we want accurate sim turn (doesn't work right now tho!)
-	private void simTurnPosition(double angle) {
-		if (angle != m_currentAngle && m_simTurnAngleIncrement == 0) {
-			m_simAngleDifference = angle - m_currentAngle;
-			m_simTurnAngleIncrement = m_simAngleDifference * .02;// 10*50ms = .2 sec move time
-		}
-		if (m_simTurnAngleIncrement != 0) {
-			m_currentAngle += m_simTurnAngleIncrement;
-			if ((Math.abs(angle - m_currentAngle)) < .1) {
-				m_currentAngle = angle;
-				m_simTurnAngleIncrement = 0;
-			}
-		}
+			driveEncoder.setPosition(0);
+			turningEncoder.setPosition(getAbsoluteEncoderRad());
 	}
 
 	public void stop() {
-		driveMotor.set(0);
-		turningMotor.set(0);
+		switch (Constants.currentMode) {
+		case REAL:
+			driveMotor.set(0);
+			turningMotor.set(0);
+			break;
+		default:
+			driveMotorSim.setInputVoltage(0);
+			turningMotorSim.setInputVoltage(0);
+			break;
+		}
 	}
 
-	public void setMotors(double driveOutput, double driveFeedforward,
+	/**
+	 * Converts the inputs from meters to volts, sets motors
+	 * 
+	 * @param driveOutput      driveOutput, in METERS
+	 * @param driveFeedforward driveFeedForwards, in Meters
+	 * @param turnOutput       turningOutput, as a percentage 
+	 */
+	public void setMotors(double driveOutput,
 			double turnOutput) {
-		driveMotor.setVoltage(driveOutput + driveFeedforward);
-		turningMotor.set(turnOutput);
+		switch (Constants.currentMode) {
+		case REAL:
+			driveMotor.setVoltage(driveOutput);
+			turningMotor.set(turnOutput);
+			break;
+		default:
+			driveMotorSim.setInputVoltage(driveOutput);
+			turningMotorSim.setInputVoltage(turnOutput*12);
+			break;
+		}
 	}
 
 	public int getModuleNumber() { return m_moduleNumber; }
 
 	public Rotation2d getHeadingRotation2d() {
-		return Rotation2d.fromDegrees(getTurningPosition());
+		return Rotation2d.fromRadians(getTurningPosition());
 	}
 
 	public SwerveModulePosition getPosition() {
@@ -240,39 +257,36 @@ public class REVSwerveModule extends SubsystemBase {
 		//creates new swerveModuleState based on drive speed and turn motor position (speed and direction)
 		return new SwerveModuleState(getDriveVelocity(), getHeadingRotation2d());
 	}
+	/**
+	 * Updates the module states in sim. DT is set to .02, so call this in periodic or tweak this
+	 */
+	public void updateModuleStates(){
+		if (Constants.currentMode == Constants.Mode.SIM){
+			driveMotorSim.update(.02);
+			turningMotorSim.update(.02);
+			driveEncoder.setPosition(driveMotorSim.getAngularPositionRotations());
+			turningEncoder.setPosition(turningMotorSim.getAngularPositionRotations());
+		}
+
+	}
 
 	public void setDesiredState(SwerveModuleState state) {
-		//var encoderRotation = new Rotation2d(getTurningPosition());
-		// Stops the motors if the desired state is too small
-		/* if (Math.abs(state.speedMetersPerSecond) < 0.001 && !SwerveS.autoLock) {
-		    stop();
-		    return;
-		}*/
+
 		// Optimizing finds the shortest path to the desired angle
 		state = SwerveModuleState.optimize(state, getState().angle);
 		// Calculate the drive output from the drive PID controller.
-		final double driveOutput = drivePIDController
-				.calculate(getDriveVelocity(), state.speedMetersPerSecond);
+		double driveOutput = drivePIDController.calculate(getDriveVelocity(),state.speedMetersPerSecond);
+		//double driveOutput = state.speedMetersPerSecond/DriveConstants.kMaxSpeedMetersPerSecond;
 		final double driveFeedforward = driveFeedForward
 				.calculate(state.speedMetersPerSecond);
+		driveOutput += driveFeedforward;
+
 		// Calculate the turning motor output from the turning PID controller.
 		final double turnOutput = turningPIDController
 				.calculate(getAbsoluteEncoderRad(), state.angle.getRadians());
 		//        final double turnFeedforward =
 		//         turningFeedForward.calculate(turningPIDController.getSetpoint().velocity);
-		if (Constants.currentMode == Constants.Mode.REAL) {
-			setMotors(driveOutput, driveFeedforward, turnOutput);
-		} else {
-			simUpdateDrivePosition(state);
-			m_currentAngle = state.angle.getDegrees();
-			//simTurnPosition(m_currentAngle);
-		}
-	}
-
-	private void simUpdateDrivePosition(SwerveModuleState state) {
-		m_simDriveEncoderVelocity = state.speedMetersPerSecond;
-		double distancePer20Ms = m_simDriveEncoderVelocity * .02;
-		m_simDriveEncoderPosition += distancePer20Ms;
+		setMotors(driveOutput, turnOutput);
 	}
 
 	public void setModulePose(Pose2d pose) { m_pose = pose; }

@@ -11,11 +11,13 @@ import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 import frc.robot.Constants;
 import frc.robot.Robot;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
+import frc.robot.subsystems.SubsystemChecker;
 import frc.robot.subsystems.drive.DrivetrainS;
 import edu.wpi.first.math.kinematics.MecanumDriveKinematics;
 import edu.wpi.first.math.kinematics.MecanumDriveWheelPositions;
@@ -27,10 +29,17 @@ import com.revrobotics.CANSparkBase.IdleMode;
 import com.revrobotics.CANSparkLowLevel.MotorType;
 import static edu.wpi.first.units.Units.Seconds;
 import static edu.wpi.first.units.Units.Volts;
+
+import java.util.List;
+import java.util.Collections;
+
 import edu.wpi.first.wpilibj.simulation.DCMotorSim;
 
 import org.ejml.simple.UnsupportedOperation;
 import org.littletonrobotics.junction.Logger;
+import java.util.HashMap;
+
+import com.ctre.phoenix6.hardware.ParentDevice;
 import com.kauailabs.navx.frc.AHRS;
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.util.HolonomicPathFollowerConfig;
@@ -49,7 +58,7 @@ import edu.wpi.first.wpilibj.SerialPort.Port;
 import frc.robot.utils.drive.DriveConstants;
 import frc.robot.utils.drive.Position;
 
-public class REVMecanumS implements DrivetrainS {
+public class REVMecanumS extends SubsystemChecker implements DrivetrainS {
 	private static CANSparkBase[] sparkMotors = new CANSparkBase[4];
 	private static int[] motorIDs;
 	Field2d robotField = new Field2d();
@@ -153,6 +162,7 @@ public class REVMecanumS implements DrivetrainS {
 						new ReplanningConfig(true, true) // Default path replanning config. See the API for the options here
 				), () -> Robot.isRed, this // Reference to this subsystem to set requirements
 		);
+		registerSelfCheckHardware();
 	}
 
 	public MecanumDriveWheelSpeeds getWheelSpeeds() {
@@ -300,4 +310,61 @@ public class REVMecanumS implements DrivetrainS {
 		return new Twist2d(linearFieldVelocity.getX(), linearFieldVelocity.getY(),
 				m_ChassisSpeeds.omegaRadiansPerSecond);
 	}
+		public void registerSelfCheckHardware() {
+    super.registerHardware("IMU", gyro);
+	 super.registerHardware("FrontLeft", sparkMotors[0]);
+	 super.registerHardware("FrontRight", sparkMotors[1]);
+	 super.registerHardware("BackLeft", sparkMotors[2]);
+	 super.registerHardware("BackRight", sparkMotors[3]);
+	 
+   }
+	@Override
+	public List<ParentDevice> getOrchestraDevices() {
+		return Collections.emptyList();
+	 }
+
+	@Override
+	public SystemStatus getTrueSystemStatus(){
+		return getSystemStatus();
+	}
+	@Override
+	public Command getRunnableSystemCheckCommand(){
+		return super.getSystemCheckCommand();
+	}
+
+	@Override
+	public List<ParentDevice> getDriveOrchestraDevices() { 
+		return getOrchestraDevices();
+	}
+	@Override
+	protected Command systemCheckCommand() { 
+	return Commands.sequence(run(() -> setChassisSpeeds(new ChassisSpeeds(0,0,0.5))).withTimeout(2.0),
+				run(() -> setChassisSpeeds(new ChassisSpeeds(0,0,-0.5))).withTimeout(2.0),
+				run(() -> setChassisSpeeds(new ChassisSpeeds(0,1,0))).withTimeout(1.0),
+				runOnce(() -> {
+					if (getChassisSpeeds().vyMetersPerSecond > 1.2 || getChassisSpeeds().vyMetersPerSecond < .8){
+						addFault("[System Check] Strafe speed did not reah target speed in time.", false,true);
+					}
+				}),
+				run(() -> setChassisSpeeds(new ChassisSpeeds(1,0,0))).withTimeout(1.0),
+				runOnce(() -> {
+					if (getChassisSpeeds().vxMetersPerSecond > 1.2 || getChassisSpeeds().vxMetersPerSecond < .8){
+						addFault("[System Check] Forward speed did not reah target speed in time.", false,true);
+					}
+				}))
+        .until(
+            () ->
+                !getFaults().isEmpty())
+        .andThen(runOnce(() ->setChassisSpeeds(new ChassisSpeeds(0,0,0))));
+	}
+	
+	@Override
+	public HashMap<String, Double> getTemps() {
+		 HashMap<String, Double> tempMap = new HashMap<>();
+		 tempMap.put("FLTemp", sparkMotors[0].getMotorTemperature());
+		 tempMap.put("FRTemp", sparkMotors[1].getMotorTemperature());
+		 tempMap.put("BLTemp", sparkMotors[2].getMotorTemperature());
+		 tempMap.put("BRTemp", sparkMotors[3].getMotorTemperature());
+		 return tempMap;
+	}	
 }

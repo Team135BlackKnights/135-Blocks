@@ -15,7 +15,7 @@ package frc.robot.utils;
  * 
  */
 public class MotorConstantContainer {
-	private static double[] valueHolderArray = new double[5];
+	private double[] valueHolderArray = new double[5];
 	/**
 	 * Create our SysID constant holder, and alert to any possible SysID mistakes.
 	 * @param Ks
@@ -31,11 +31,11 @@ public class MotorConstantContainer {
 			throw new ArithmeticException(
 					"P and D must be greater than or equal to 0");
 		} else {
-			valueHolderArray[0] = Ks;
-			valueHolderArray[1] = Kv;
-			valueHolderArray[2] = Ka;
-			valueHolderArray[3] = P;
-			valueHolderArray[4] = D;
+			this.valueHolderArray[0] = Ks;
+			this.valueHolderArray[1] = Kv;
+			this.valueHolderArray[2] = Ka;
+			this.valueHolderArray[3] = P;
+			this.valueHolderArray[4] = D;
 		}
 	}
 	/**
