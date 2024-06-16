@@ -97,6 +97,9 @@ public class DriveToAITarget extends Command {
 		}
 		// SmartDashboard.putBoolean("Piece Loaded?", IntakeS.PieceIsLoaded());
 		if (distance <= 4.5) { //less than 4.5 inches away, STOP!
+			if (Constants.currentMode == Constants.Mode.SIM){
+				isFinished= true;
+			}
 			close = true;
 		}
 		if (Constants.currentMatchState == FRCMatchState.AUTO
