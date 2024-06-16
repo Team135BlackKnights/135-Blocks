@@ -88,6 +88,7 @@ public class RobotContainer {
 	public static int currentTest = 0, currentGamePieceStatus = 0;
 	public static String currentPath = "";
 	public static Field2d field = new Field2d();
+	final static ServoS servoS = new ServoS();
 
 	// POVButton manipPOVZero = new POVButton(manipController, 0);
 	// POVButton manipPOV180 = new POVButton(manipController, 180);
@@ -96,7 +97,6 @@ public class RobotContainer {
 	 * commands.
 	 */
 	public RobotContainer() {
-		final ServoS servoS = new ServoS();
 		//We check to see what drivetrain type we have here, and create the correct drivetrain system based on that. 
 		//If we get something wacky, throw an error
 		switch (DriveConstants.driveType) {
@@ -283,7 +283,7 @@ public class RobotContainer {
 	 * @return a command with all of them in a sequence.
 	 */
 	public static Command allSystemsCheck() {
-	return Commands.sequence(drivetrainS.getRunnableSystemCheckCommand());
+	return Commands.sequence(drivetrainS.getRunnableSystemCheckCommand(),servoS.getSystemCheckCommand());
 	}
 	public static HashMap<String, Double> combineMaps(List<HashMap<String, Double>> maps) {
 		HashMap<String, Double> combinedMap = new HashMap<>();
@@ -309,6 +309,7 @@ public class RobotContainer {
 	 * @return true if ALL systems were good.
 	 */
 	public static boolean allSystemsOK() {
-		return drivetrainS.getTrueSystemStatus() == SubsystemChecker.SystemStatus.OK;
+		return drivetrainS.getTrueSystemStatus() == SubsystemChecker.SystemStatus.OK
+		&& servoS.getSystemStatus() == SubsystemChecker.SystemStatus.OK;
 	 }
 }

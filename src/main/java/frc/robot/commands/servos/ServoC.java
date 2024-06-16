@@ -16,8 +16,8 @@ public class ServoC extends Command{
 	@Override
 	public void execute(){
 		
-		servoS.setServoDegrees(-110, ServoNames.leftServo);
-		servoS.setServoDegrees(45, ServoNames.rightServo);
+		//servoS.setServoDegrees(-110, ServoNames.leftServo);
+		//servoS.setServoDegrees(45, ServoNames.rightServo);
 		//servoS.setServoPercent(1); //go to 90
  		SmartDashboard.putNumber("current pos LEFT", servoS.getServoDegrees(ServoNames.leftServo));
 		SmartDashboard.putNumber("current pos RIGHT", servoS.getServoDegrees(ServoNames.rightServo));

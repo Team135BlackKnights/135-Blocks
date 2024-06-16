@@ -1,13 +1,21 @@
 package frc.robot.subsystems.servos;
 
+import frc.robot.subsystems.SubsystemChecker;
 import frc.robot.utils.servos.ServoConstantContainer;
 import frc.robot.utils.servos.ServoPackage;
 import frc.robot.utils.servos.ServoConstantContainer.ServoNames;
 import frc.robot.utils.servos.ServoConstantContainer.ServoType;
 import frc.robot.utils.servos.ServoConstantContainer.SimServoMode;
-import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
-public class ServoS extends SubsystemBase {
+import java.util.List;
+import java.util.Collections;
+import com.ctre.phoenix6.hardware.ParentDevice;
+
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
+
+public class ServoS extends SubsystemChecker {
 	private ServoPackage[] servoPackages = {
 			new ServoPackage(ServoConstantContainer.leftServoPWMPort,
 					SimServoMode.INRANGE, ServoType.REVSmartServo, 0, .02,
@@ -74,5 +82,37 @@ public class ServoS extends SubsystemBase {
 		for (ServoPackage servo : servoPackages) {
 			servo.updateServoSim();
 		}
+		SmartDashboard.putNumber("current pos LEFT", getServoDegrees(ServoNames.leftServo));
+		SmartDashboard.putNumber("current pos RIGHT", getServoDegrees(ServoNames.rightServo));
 	}
+
+	@Override
+	public List<ParentDevice> getOrchestraDevices() { 
+		return Collections.emptyList();
+	 }
+
+	@Override
+	protected Command systemCheckCommand() { 
+		return Commands.sequence(run(() -> {
+			setServoDegrees(45, ServoNames.leftServo);
+			setServoDegrees(-60, ServoNames.rightServo);
+		}).withTimeout(1),runOnce(() ->{
+			if (Math.abs(getServoDegrees(ServoNames.leftServo)-45) > 10){
+				addFault("[System Check] Angle position off greater than 10 degrees for left servo. Wanted 45, got " + getServoDegrees(ServoNames.leftServo), false,true);
+			}
+			if (Math.abs(getServoDegrees(ServoNames.rightServo)+60) > 10){
+				addFault("[System Check] Angle position off greater than 10 degrees for right servo. Wanted 60, got " + getServoDegrees(ServoNames.rightServo), false,true);
+			}
+		}),run(() -> {
+			setServoDegrees(0, ServoNames.leftServo);
+			setServoDegrees(0, ServoNames.rightServo);
+		}).withTimeout(1),runOnce(() ->{
+			if (Math.abs(getServoDegrees(ServoNames.leftServo)) > 10){
+				addFault("[System Check] Angle position off greater than 10 degrees for left servo. Wanted 0, got " + getServoDegrees(ServoNames.leftServo), false,true);
+			}
+			if (Math.abs(getServoDegrees(ServoNames.rightServo)) > 10){
+				addFault("[System Check] Angle position off greater than 10 degrees for right servo. Wanted 0, got " + getServoDegrees(ServoNames.rightServo), false,true);
+			}
+		}));
+	 }
 }
