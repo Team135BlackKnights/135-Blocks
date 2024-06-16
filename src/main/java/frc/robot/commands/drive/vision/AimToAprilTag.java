@@ -2,6 +2,7 @@ package frc.robot.commands.drive.vision;
 
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
@@ -65,13 +66,12 @@ public class AimToAprilTag extends Command {
 			thetaController.setTolerance(thetaTolerance.get());
 		}
 		RobotContainer.currentPath = "AIMTOAPRILTAG";
-		//do logic...
-		Optional<Pose2d> aprilTagPose = PhotonVisionS.aprilTagPose(cam, aprilTagID);
+		Optional<Pose3d> aprilTagPose = PhotonVisionS.aprilTagPose3d(cam, aprilTagID);
 		System.out.println(aprilTagPose);
 		double thetaVelocity;
 		if (aprilTagPose.isPresent()){
 			Pose2d drivePose = drivetrainS.getPose();
-			Translation2d aprilTranslation2d = aprilTagPose.get().getTranslation();
+			Translation2d aprilTranslation2d = aprilTagPose.get().toPose2d().getTranslation();
 			Pose2d fieldRelativeAprilTagPose = drivePose.transformBy(GeomUtil.translationToTransform(aprilTranslation2d.getX(),aprilTranslation2d.getY()));
 			double targetAngle = Units.degreesToRadians(GeomUtil
 				.rotationFromCurrentToTarget(drivePose, fieldRelativeAprilTagPose)

@@ -145,13 +145,13 @@ public class PhotonVisionS extends SubsystemChecker {
 
 	/**
 	 * Uses one particular camera to figure out if the AprilTags in the argument
-	 * is within sight or not
+	 * is within sight or not, then returning the Pose3d if found. ROBOT RELATIVE.
 	 * 
 	 * @param Camera        the camera to use
-	 * @param tagsToLookFor the potential aprilTags to look for
-	 * @return Whether a requested april tag is visible (as a boolean)
+	 * @param tagToLookFor the potential aprilTag to look for
+	 * @return An optional Pose3d which is ROBOT RELATIVE to the selected tag.
 	 */
-	public static Optional<Pose2d> aprilTagPose(PhotonCamera camera,
+	public static Optional<Pose3d> aprilTagPose3d(PhotonCamera camera,
 			int tagToLookFor) {
 		var targets = camera.getLatestResult().getTargets();
 		@SuppressWarnings("unlikely-arg-type")
@@ -160,10 +160,18 @@ public class PhotonVisionS extends SubsystemChecker {
 		.findFirst();
 		if (foundTargets.isPresent()){
 			Transform3d cameraToTarget = foundTargets.get().getBestCameraToTarget();
-			Pose3d cameraPos = new Pose3d(cameraToTarget.getTranslation(), cameraToTarget.getRotation());
-			return Optional.of(cameraPos.toPose2d());
+			return Optional.of(new Pose3d(cameraToTarget.getTranslation(), cameraToTarget.getRotation()));
 		}
 		return Optional.empty();
+	}
+	/**
+	 * Create a field relative pose3d from a given pose3d
+	 * @param robotRelativePose the pose3d of the object RELATIVE to the robot
+	 * @param robotPose the robot pose
+	 * @return field relative pose3d of the object
+	 */
+	public static Pose3d fieldRelativePose3d(Pose3d robotRelativePose, Pose2d robotPose){
+		return new Pose3d(robotPose).transformBy(new Transform3d(robotRelativePose.getTranslation(),robotRelativePose.getRotation()));
 	}
 
 	public static boolean aprilTagVisible(PhotonCamera camera) {
