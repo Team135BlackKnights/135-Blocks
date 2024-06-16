@@ -19,6 +19,8 @@ import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Pose3d;
+import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
@@ -149,17 +151,19 @@ public class PhotonVisionS extends SubsystemChecker {
 	 * @param tagsToLookFor the potential aprilTags to look for
 	 * @return Whether a requested april tag is visible (as a boolean)
 	 */
-	public static boolean aprilTagVisible(PhotonCamera camera,
-			int[] tagsToLookFor) {
-		var results = camera.getLatestResult().getTargets();
-		for (int targetTagNumber : tagsToLookFor) {
-			for (var target : results) {
-				if (target.getFiducialId() == targetTagNumber) {
-					return true;
-				}
-			}
+	public static Optional<Pose2d> aprilTagPose(PhotonCamera camera,
+			int tagToLookFor) {
+		var targets = camera.getLatestResult().getTargets();
+		@SuppressWarnings("unlikely-arg-type")
+		Optional<PhotonTrackedTarget> foundTargets = targets.stream().filter(t -> t.getFiducialId() == tagToLookFor)
+		.filter(t -> !t.equals(tagToLookFor) && t.getPoseAmbiguity() <= .8 && t.getPoseAmbiguity() != -1)
+		.findFirst();
+		if (foundTargets.isPresent()){
+			Transform3d cameraToTarget = foundTargets.get().getBestCameraToTarget();
+			Pose3d cameraPos = new Pose3d(cameraToTarget.getTranslation(), cameraToTarget.getRotation());
+			return Optional.of(cameraPos.toPose2d());
 		}
-		return false;
+		return Optional.empty();
 	}
 
 	public static boolean aprilTagVisible(PhotonCamera camera) {

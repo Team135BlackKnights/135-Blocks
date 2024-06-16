@@ -68,7 +68,6 @@ public class RobotContainer {
 	// The robot's subsystems and commands are defined here...
 	public static DrivetrainS drivetrainS;
 	private Telemetry logger = null;
-	@SuppressWarnings("unused")
 	private final static PhotonVisionS photonVisionS = new PhotonVisionS();
 	private final SendableChooser<Command> autoChooser;
 	static PowerDistribution PDH = new PowerDistribution(
@@ -179,6 +178,7 @@ public class RobotContainer {
 		drivetrainS.setDefaultCommand(new DrivetrainC(drivetrainS));
 		List<Pair<String, Command>> autoCommands = Arrays.asList(
 		//new Pair<String,Command>("AimAtAmp",new AimToPose(drivetrainS, new Pose2d(1.9,7.7, new Rotation2d(Units.degreesToRadians(0)))))
+		//new Pair<String, Command>("AimAtAprilTag7", new AimToAprilTag(drivetrainS, 7,photonVisionS.cams[3])),
 		//new Pair<String, Command>("BranchGrabbingGamePiece", new BranchAuto("grabGamePieceBranch",new Pose2d(0,0,new Rotation2d())))
 		//new Pair<String, Command>("DriveToAmp",new DriveToPose(drivetrainS, false,new Pose2d(1.9,7.7,new Rotation2d(Units.degreesToRadians(90))))),
 		//new Pair<String,Command>("PlayMiiSong", new OrchestraC("mii")),
