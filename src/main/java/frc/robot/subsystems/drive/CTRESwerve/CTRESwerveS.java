@@ -39,6 +39,9 @@ import frc.robot.utils.drive.DriveConstants;
 
 import static edu.wpi.first.units.Units.Volts;
 
+import java.util.HashMap;
+
+
 /**
  * Class that extends the Phoenix SwerveDrivetrain class and implements
  * subsystem so it can be used in command-based projects easily.
@@ -78,9 +81,9 @@ public class CTRESwerveS extends SwerveDrivetrain implements DrivetrainS {
 		AutoBuilder.configureHolonomic(() -> this.getState().Pose, // Supplier of current robot pose
 				this::seedFieldRelative, // Consumer for seeding pose against auto
 				this::getChassisSpeeds, this::setChassisSpeeds, // Consumer of ChassisSpeeds to drive the robot
-				new HolonomicPathFollowerConfig(new PIDConstants(10, 0, 0),
-						new PIDConstants(10, 0, 0), TunerConstants.kSpeedAt12VoltsMps,
-						DriveConstants.kDriveBaseRadius, new ReplanningConfig()),
+				new HolonomicPathFollowerConfig(new PIDConstants(8, 0, 0),
+						new PIDConstants(8, 0, 0), TunerConstants.kSpeedAt12VoltsMps,
+						DriveConstants.kDriveBaseRadius, new ReplanningConfig(true,true)),
 				() -> DriverStation.getAlliance()
 						.orElse(Alliance.Blue) == Alliance.Red, // Assume the path needs to be flipped for Red vs Blue, this is normally the case
 				this); // Subsystem for requirements
@@ -107,9 +110,9 @@ public class CTRESwerveS extends SwerveDrivetrain implements DrivetrainS {
 		AutoBuilder.configureHolonomic(() -> this.getState().Pose, // Supplier of current robot pose
 				this::seedFieldRelative, // Consumer for seeding pose against auto
 				this::getChassisSpeeds, this::setChassisSpeeds, // Consumer of ChassisSpeeds to drive the robot
-				new HolonomicPathFollowerConfig(new PIDConstants(10, 0, 0),
-						new PIDConstants(10, 0, 0), TunerConstants.kSpeedAt12VoltsMps,
-						DriveConstants.kDriveBaseRadius, new ReplanningConfig()),
+				new HolonomicPathFollowerConfig(new PIDConstants(8, 0, 0),
+						new PIDConstants(8, 0, 0), TunerConstants.kSpeedAt12VoltsMps,
+						DriveConstants.kDriveBaseRadius, new ReplanningConfig(true,true)),
 				() -> DriverStation.getAlliance()
 						.orElse(Alliance.Blue) == Alliance.Red, // Assume the path needs to be flipped for Red vs Blue, this is normally the case
 				this); // Subsystem for requirements
@@ -139,16 +142,23 @@ public class CTRESwerveS extends SwerveDrivetrain implements DrivetrainS {
 
 	@Override
 	public void applyRequest() {
+		double rotationRate = 0, rotationDeadband = 0;
+		if (RobotContainer.angularSpeed !=0){
+			rotationRate = RobotContainer.angularSpeed*2;
+			rotationDeadband = 0.01;
+		}else{
+			rotationRate = -RobotContainer.driveController.getRightX() * DriveConstants.kTeleTurningMaxAcceleration;
+			rotationDeadband = DriveConstants.kTeleTurningMaxAcceleration * deadband;
+		}
 		drive.withVelocityX(-RobotContainer.driveController.getLeftY()
 				* TunerConstants.kSpeedAt12VoltsMps) // Drive forward with
 				// negative Y (forward)
 				.withVelocityY(-RobotContainer.driveController.getLeftX()
 						* TunerConstants.kSpeedAt12VoltsMps) // Drive left with negative X (left)
-				.withRotationalRate(-RobotContainer.driveController.getRightX()
-						* DriveConstants.kTeleTurningMaxAcceleration)
+				.withRotationalRate(rotationRate)
 				.withDeadband(TunerConstants.kSpeedAt12VoltsMps * deadband)
 				.withRotationalDeadband(
-						DriveConstants.kTeleTurningMaxAcceleration * deadband) // Drive counterclockwise with negative X (left)
+						rotationDeadband) // Drive counterclockwise with negative X (left)
 				.apply(m_requestParameters, Modules);
 	}
 
@@ -158,7 +168,11 @@ public class CTRESwerveS extends SwerveDrivetrain implements DrivetrainS {
 	 * @param speeds The speeds to be set
 	 */
 	public void setChassisSpeeds(ChassisSpeeds speeds) {
-		AutoRequest.withSpeeds(speeds.times(2)).apply(m_requestParameters, Modules);
+		if (RobotContainer.currentPath == "DRIVETOPOSE"){
+			AutoRequest.withSpeeds(speeds.times(2)).apply(m_requestParameters, Modules);
+		}else{
+			AutoRequest.withSpeeds(speeds).apply(m_requestParameters, Modules);
+		}
 	}
 
 	/**
@@ -338,4 +352,8 @@ public class CTRESwerveS extends SwerveDrivetrain implements DrivetrainS {
 		drive.RotationalDeadband = DriveConstants.kTeleTurningMaxAcceleration
 				* deadband;
 	}
+
+	@Override
+	public HashMap<String, Double> getTemps() { 
+	throw new UnsupportedOperationException("Unimplemented method 'getTemps'"); }
 }

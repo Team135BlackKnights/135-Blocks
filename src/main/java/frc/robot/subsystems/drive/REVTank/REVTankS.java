@@ -2,6 +2,7 @@ package frc.robot.subsystems.drive.REVTank;
 
 import org.littletonrobotics.junction.Logger;
 
+import com.ctre.phoenix6.hardware.ParentDevice;
 import com.kauailabs.navx.frc.AHRS;
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.util.ReplanningConfig;
@@ -35,18 +36,23 @@ import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.simulation.DCMotorSim;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 import frc.robot.Constants;
 import frc.robot.Robot;
+import frc.robot.subsystems.SubsystemChecker;
 import frc.robot.subsystems.drive.DrivetrainS;
 import frc.robot.utils.drive.DriveConstants;
 import frc.robot.utils.drive.Position;
-
+import java.util.HashMap;
+import java.util.Collections;
 import static edu.wpi.first.units.Units.Seconds;
 import static edu.wpi.first.units.Units.Volts;
 
-public class REVTankS implements DrivetrainS {
+import java.util.List;
+
+public class REVTankS extends SubsystemChecker implements DrivetrainS {
 	private Pose2d pose = new Pose2d();
 	private static AHRS gyro = new AHRS();
 	private DifferentialDrivePoseEstimator poseEstimator;
@@ -79,52 +85,63 @@ public class REVTankS implements DrivetrainS {
 			}, null // No log consumer, since data is recorded by URCL
 					, this));
 	//Divide the kVLinear by wheelspeed!
-
 	double m_currentAngle = 0;
-	 double m_simLeftDriveEncoderPosition = 0;
-	 double m_simLeftDriveEncoderVelocity = 0;
-	 double m_simRightDriveEncoderPosition = 0;
-	 double m_simRightDriveEncoderVelocity = 0;
-	 double m_simAngleDifference = 0;
-	 double m_simTurnAngleIncrement = 0;
-	 double dtSeconds = 0.02;
-	 double kDriveEncoderRot2Meter, maxSpeed;
-	public REVTankS(REVTankConstantContainer container) {
-			differentialDriveKinematics	 = new DifferentialDriveKinematics(
-			container.getChassisLength());
-		int[] motorIDs = {container.getLeftMasterID(), container.getLeftFollowerID(), container.getRightMasterID(), container.getRightFollowerID()};
-		boolean[] motorsInverted = {container.getLeftMasterInverted(), container.getLeftFollowerInverted(), container.getRightMasterInverted(), container.getRightFollowerInverted()};
-		for (int i = 0; i <4; i++){
-			switch (DriveConstants.robotMotorController) {
-				case NEO_SPARK_MAX:
-				motors[i] = new CANSparkMax(motorIDs[i], MotorType.kBrushless);
-				motorSimModels[i] = new DCMotorSim(DCMotor.getNEO(1), container.getGearing(), .001);
-				this.maxSpeed = (5676 / 60.0) / container.getGearing() * (Math.PI * container.getWheelDiameterMeters());
-					break;
-				case VORTEX_SPARK_FLEX:
-				motors[i] = new CANSparkFlex(motorIDs[i], MotorType.kBrushless);
-				motorSimModels[i] = new DCMotorSim(DCMotor.getNeoVortex(1), container.getGearing(), .001);
-				this.maxSpeed = (6784 / 60.0) / container.getGearing() * (Math.PI * container.getWheelDiameterMeters());
+	double m_simLeftDriveEncoderPosition = 0;
+	double m_simLeftDriveEncoderVelocity = 0;
+	double m_simRightDriveEncoderPosition = 0;
+	double m_simRightDriveEncoderVelocity = 0;
+	double m_simAngleDifference = 0;
+	double m_simTurnAngleIncrement = 0;
+	double dtSeconds = 0.02;
+	double kDriveEncoderRot2Meter, maxSpeed;
 
+	public REVTankS(REVTankConstantContainer container) {
+		differentialDriveKinematics = new DifferentialDriveKinematics(
+				container.getChassisLength());
+		int[] motorIDs = { container.getLeftMasterID(),
+				container.getLeftFollowerID(), container.getRightMasterID(),
+				container.getRightFollowerID()
+		};
+		boolean[] motorsInverted = { container.getLeftMasterInverted(),
+				container.getLeftFollowerInverted(),
+				container.getRightMasterInverted(),
+				container.getRightFollowerInverted()
+		};
+		for (int i = 0; i < 4; i++) {
+			switch (DriveConstants.robotMotorController) {
+			case NEO_SPARK_MAX:
+				motors[i] = new CANSparkMax(motorIDs[i], MotorType.kBrushless);
+				motorSimModels[i] = new DCMotorSim(DCMotor.getNEO(1),
+						container.getGearing(), .001);
+				this.maxSpeed = (5676 / 60.0) / container.getGearing()
+						* (Math.PI * container.getWheelDiameterMeters());
 				break;
-				default:
-					break;
+			case VORTEX_SPARK_FLEX:
+				motors[i] = new CANSparkFlex(motorIDs[i], MotorType.kBrushless);
+				motorSimModels[i] = new DCMotorSim(DCMotor.getNeoVortex(1),
+						container.getGearing(), .001);
+				this.maxSpeed = (6784 / 60.0) / container.getGearing()
+						* (Math.PI * container.getWheelDiameterMeters());
+				break;
+			default:
+				break;
 			}
-			 kDriveEncoderRot2Meter = container.getGearing() * Math.PI* container.getWheelDiameterMeters();
+			kDriveEncoderRot2Meter = container.getGearing() * Math.PI
+					* container.getWheelDiameterMeters();
 			encoders[i] = motors[i].getEncoder();
 			encoders[i].setPositionConversionFactor(kDriveEncoderRot2Meter);
 			encoders[i].setVelocityConversionFactor(kDriveEncoderRot2Meter);
 			motors[i].setInverted(motorsInverted[i]);
-			if (i%2 == 1){
-				motors[i].follow(motors[i-1]);
+			if (i % 2 == 1) {
+				motors[i].follow(motors[i - 1]);
 			}
 			motors[i].setIdleMode(container.getIdleMode());
 			motors[i].enableVoltageCompensation(12);
-			motors[i].setSmartCurrentLimit(container.getMaxAmps(), container.getMaxAmps());
+			motors[i].setSmartCurrentLimit(container.getMaxAmps(),
+					container.getMaxAmps());
 			motors[i].clearFaults();
 			motors[i].burnFlash();
 		}
-
 		SmartDashboard.putNumber("ROBOT HEADING TANK",
 				getRotation2d().getRadians());
 		poseEstimator = new DifferentialDrivePoseEstimator(
@@ -133,33 +150,30 @@ public class REVTankS implements DrivetrainS {
 		AutoBuilder.configureLTV(this::getPose, this::resetPose,
 				this::getChassisSpeeds, this::setChassisSpeeds, .02,
 				new ReplanningConfig(true, true), () -> Robot.isRed, this);
+		registerSelfCheckHardware();
 	}
 
-	public Rotation2d getRotation2d() { 
-		if (Constants.currentMode == Constants.Mode.SIM){
+	public Rotation2d getRotation2d() {
+		if (Constants.currentMode == Constants.Mode.SIM) {
 			return new Rotation2d(m_currentAngle);
 		}
-		return gyro.getRotation2d(); 
+		return gyro.getRotation2d();
 	}
 
 	private double getLeftMeters() {
-		return (encoders[0].getPosition()
-				+ encoders[1].getPosition()) / 2;
+		return (encoders[0].getPosition() + encoders[1].getPosition()) / 2;
 	}
 
 	private double getRightMeters() {
-		return (encoders[2].getPosition()
-				+ encoders[3].getPosition()) / 2;
+		return (encoders[2].getPosition() + encoders[3].getPosition()) / 2;
 	}
 
 	private double getLeftVelocity() {
-		return (encoders[0].getVelocity()
-				+ encoders[1].getVelocity()) / 2;
+		return (encoders[0].getVelocity() + encoders[1].getVelocity()) / 2;
 	}
 
 	private double getRightVelocity() {
-		return (encoders[2].getVelocity()
-				+ encoders[3].getVelocity()) / 2;
+		return (encoders[2].getVelocity() + encoders[3].getVelocity()) / 2;
 	}
 
 	/**
@@ -170,36 +184,39 @@ public class REVTankS implements DrivetrainS {
 		DifferentialDriveWheelSpeeds wheelSpeeds = differentialDriveKinematics
 				.toWheelSpeeds(speeds);
 		wheelSpeeds.desaturate(maxSpeed);
-		double leftVelocity = wheelSpeeds.leftMetersPerSecond
-				/ maxSpeed;
-		double rightVelocity = wheelSpeeds.rightMetersPerSecond
-				/ maxSpeed;
+		double leftVelocity = wheelSpeeds.leftMetersPerSecond / maxSpeed;
+		double rightVelocity = wheelSpeeds.rightMetersPerSecond / maxSpeed;
 		motors[0].set(leftVelocity);
 		motors[2].set(rightVelocity);
 		m_currentAngle += speeds.omegaRadiansPerSecond * 0.02;
-			int dev = SimDeviceDataJNI.getSimDeviceHandle("navX-Sensor[0]");
-			SimDouble angle = new SimDouble(
-					SimDeviceDataJNI.getSimValueHandle(dev, "Yaw"));
-			// NavX expects clockwise positive, but sim outputs clockwise negative
-			angle.set(Math.IEEEremainder(-Units.radiansToDegrees(m_currentAngle), 360));
-			//m_pigeon.getSimCollection().setRawHeading(-Units.radiansToDegrees(m_simYaw));
+		int dev = SimDeviceDataJNI.getSimDeviceHandle("navX-Sensor[0]");
+		SimDouble angle = new SimDouble(
+				SimDeviceDataJNI.getSimValueHandle(dev, "Yaw"));
+		// NavX expects clockwise positive, but sim outputs clockwise negative
+		angle.set(
+				Math.IEEEremainder(-Units.radiansToDegrees(m_currentAngle), 360));
+		//m_pigeon.getSimCollection().setRawHeading(-Units.radiansToDegrees(m_simYaw));
 	}
+
 	@Override
 	public void periodic() {
 		wheelPositions = getPositionsWithTimestamp(getWheelPositions());
 		wheelSpeeds = getWheelSpeeds();
 		pose = poseEstimator.update(getRotation2d(), getWheelPositions());
 		if (Constants.currentMode == Constants.Mode.SIM) {
-			for (int i=0; i < 4; i+=2){
-				motorSimModels[i].setInputVoltage(motors[i].get()*RobotController.getBatteryVoltage());
+			for (int i = 0; i < 4; i += 2) {
+				motorSimModels[i].setInputVoltage(
+						motors[i].get() * RobotController.getBatteryVoltage());
 				motorSimModels[i].update(dtSeconds);
-				encoders[i].setPosition(motorSimModels[i].getAngularPositionRotations());
+				encoders[i]
+						.setPosition(motorSimModels[i].getAngularPositionRotations());
 			}
 		}
 		DrivetrainS.super.periodic();
-		ChassisSpeeds m_ChassisSpeeds = differentialDriveKinematics.toChassisSpeeds(wheelSpeeds);
+		ChassisSpeeds m_ChassisSpeeds = differentialDriveKinematics
+				.toChassisSpeeds(wheelSpeeds);
 		Translation2d linearFieldVelocity = new Translation2d(
-			m_ChassisSpeeds.vxMetersPerSecond,
+				m_ChassisSpeeds.vxMetersPerSecond,
 				m_ChassisSpeeds.vyMetersPerSecond).rotateBy(getRotation2d());
 		fieldVelocity = new Twist2d(linearFieldVelocity.getX(),
 				linearFieldVelocity.getY(), m_ChassisSpeeds.omegaRadiansPerSecond);
@@ -222,7 +239,8 @@ public class REVTankS implements DrivetrainS {
 
 	@Override
 	public void resetPose(Pose2d pose) {
-		poseEstimator.resetPosition(getRotation2d(), wheelPositions.getPositions(), pose);
+		poseEstimator.resetPosition(getRotation2d(),
+				wheelPositions.getPositions(), pose);
 	}
 
 	@Override
@@ -268,16 +286,18 @@ public class REVTankS implements DrivetrainS {
 	@Override
 	public void zeroHeading() {
 		gyro.reset();
-		poseEstimator.resetPosition(getRotation2d(), wheelPositions.getPositions(), pose);
+		poseEstimator.resetPosition(getRotation2d(),
+				wheelPositions.getPositions(), pose);
 	}
+
 	@Override
-	public boolean isConnected(){
-		return gyro.isConnected();
-	}
+	public boolean isConnected() { return gyro.isConnected(); }
+
 	@Override
 	public double getYawVelocity() {
 		return fieldVelocity.dtheta; //?
 	}
+
 	@Override
 	public double getCurrent() {
 		return motorSimModels[0].getCurrentDrawAmps()
@@ -285,9 +305,55 @@ public class REVTankS implements DrivetrainS {
 				+ motorSimModels[2].getCurrentDrawAmps()
 				+ motorSimModels[3].getCurrentDrawAmps();
 	}
+
 	@Override
-	public Twist2d getFieldVelocity() {
-		return fieldVelocity;
-	 }
-	
+	public Twist2d getFieldVelocity() { return fieldVelocity; }
+
+	public void registerSelfCheckHardware() {
+		super.registerHardware("IMU", gyro);
+		super.registerHardware("FrontLeft", motors[0]);
+		super.registerHardware("FrontRight", motors[2]);
+		super.registerHardware("BackLeft", motors[1]);
+		super.registerHardware("BackRight", motors[3]);
+	}
+
+	@Override
+	public List<ParentDevice> getOrchestraDevices() {
+		return Collections.emptyList();
+	}
+
+	@Override
+	public SystemStatus getTrueSystemStatus() { return getSystemStatus(); }
+
+	@Override
+	protected Command systemCheckCommand() {
+		return Commands
+				.sequence(
+						run(() -> setChassisSpeeds(new ChassisSpeeds(0, 0, 0.5)))
+								.withTimeout(2.0),
+						run(() -> setChassisSpeeds(new ChassisSpeeds(0, 0, -0.5)))
+								.withTimeout(2.0))
+				.until(() -> !getFaults().isEmpty()).andThen(
+						runOnce(() -> setChassisSpeeds(new ChassisSpeeds(0, 0, 0))));
+	}
+
+	@Override
+	public Command getRunnableSystemCheckCommand() {
+		return super.getSystemCheckCommand();
+	}
+
+	@Override
+	public List<ParentDevice> getDriveOrchestraDevices() {
+		return getOrchestraDevices();
+	}
+
+	@Override
+	public HashMap<String, Double> getTemps() {
+		HashMap<String, Double> tempMap = new HashMap<>();
+		tempMap.put("FLTemp", motors[0].getMotorTemperature());
+		tempMap.put("BLTemp", motors[1].getMotorTemperature());
+		tempMap.put("FRTemp", motors[2].getMotorTemperature());
+		tempMap.put("BRTemp", motors[3].getMotorTemperature());
+		return tempMap;
+	}
 }

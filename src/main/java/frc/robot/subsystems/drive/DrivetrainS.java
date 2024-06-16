@@ -17,8 +17,12 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Subsystem;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
+import frc.robot.subsystems.SubsystemChecker.SystemStatus;
 import frc.robot.utils.drive.DriveConstants;
 import frc.robot.utils.drive.Position;
+import java.util.List;
+import com.ctre.phoenix6.hardware.ParentDevice;
+import java.util.HashMap;
 
 public interface DrivetrainS extends Subsystem {
 	/**
@@ -117,7 +121,19 @@ public interface DrivetrainS extends Subsystem {
 	 * @return if the gyro drivetrain is connected
 	 */
 	boolean isConnected();
-	/**
+
+	HashMap<String, Double>getTemps();
+	default Command getRunnableSystemCheckCommand(){
+		throw new UnsupportedOperationException("Unimplemented method 'getRunnableSystemCheckCommand'");
+	}
+	default SystemStatus getTrueSystemStatus(){
+		throw new UnsupportedOperationException("Unimplemented method 'getTrueSystemStatus'");
+
+	}
+	default List<ParentDevice> getDriveOrchestraDevices(){
+		throw new UnsupportedOperationException("Unimplemented method 'getDriveOrchestraDevices'");
+	}
+		/**
 	 * Create a position wrapper which contains the positions, and the timestamps.
 	 * @param <T> The type of position, MechanumWheelPositions or SwerveModulePositions[] or tank's.
 	 * @param positions with both a timestamp and position.
@@ -139,12 +155,6 @@ public interface DrivetrainS extends Subsystem {
 	@Override
 	default void periodic() {
 		robotField.setRobotPose(getPose());
-		SmartDashboard.putData(robotField);
-		PathPlannerLogging.setLogCurrentPoseCallback((pose) -> {
-			// Do whatever you want with the pose here
-			Logger.recordOutput("Odometry/CurrentPose", pose);
-			robotField.setRobotPose(pose);
-		});
 		// Logging callback for target robot pose
 		PathPlannerLogging.setLogTargetPoseCallback((pose) -> {
 			// Do whatever you want with the pose here
@@ -157,5 +167,8 @@ public interface DrivetrainS extends Subsystem {
 			Logger.recordOutput("Odometry/Trajectory",
 					poses.toArray(new Pose2d[poses.size()]));
 			robotField.getObject("path").setPoses(poses);
-		}); }
+		});
+		SmartDashboard.putData(robotField);
+
+	}
 }
