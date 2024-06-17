@@ -144,4 +144,14 @@ public class GeomUtil {
 		// Create and return the field-relative Pose3d
 		return new Pose3d(new Translation3d(x_f, y_f, z_f), fieldRotation);
   }
+  /**
+	* 
+	* @param currentPose the robot pose
+	* @param objectPose the object, as a pose3d
+	* @return distance in meters
+   */
+public static double calculateDistanceFromPose3d(Pose2d currentPose,
+Pose3d objectPose) {
+	return currentPose.getTranslation().getDistance(objectPose.getTranslation().toTranslation2d());
+  }
 }

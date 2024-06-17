@@ -13,6 +13,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.utils.vision.LimelightHelpers;
 import frc.robot.utils.vision.VisionConstants;
 import frc.robot.Constants;
+import frc.robot.RobotContainer;
 import frc.robot.Constants.FRCMatchState;
 import frc.robot.Constants.Mode;
 import frc.robot.subsystems.drive.DrivetrainS;
@@ -38,7 +39,6 @@ public class DriveToAITarget extends Command {
 	private Translation2d targetPieceLocation = null; //no target known unless in SIM
 	private Pose2d currentPose;
 	private ChassisSpeeds speeds;
-	double ty; //pitch
 	Timer timer = new Timer();
 	double desiredHeading, currentHeading;
 
@@ -60,21 +60,20 @@ public class DriveToAITarget extends Command {
 		timer.start();
 		close = false;
 		takeOver = true; //stop user control
-		ty = 0;
 	}
 
 	@Override
 	public void execute() {
-		double tx, ty, distance = 0;
-		boolean tv;
+		double noteTx = 0, noteTy = 0, noteDistance = 0, robotTx = 0, robotTy = 0;
+		boolean noteTv = false, robotTv = false;
 		if (Constants.currentMode == Mode.SIM) {
 			//In simulation, get the current pose, and set the degree value to 
 			currentPose = swerveS.getPose();
 			double deltaX = targetPieceLocation.getX() - currentPose.getX();
 			double deltaY = targetPieceLocation.getY() - currentPose.getY();
-			tx = Units.radiansToDegrees(Math.atan2(deltaY, deltaX)); // Use atan2 instead of atan
-			tx -= currentPose.getRotation().getDegrees();
-			tx = PhotonVisionS.closerAngleToZero(tx);
+			noteTx = Units.radiansToDegrees(Math.atan2(deltaY, deltaX)); // Use atan2 instead of atan
+			noteTx -= currentPose.getRotation().getDegrees();
+			noteTx = PhotonVisionS.closerAngleToZero(noteTx);
 			double d = currentPose.getTranslation()
 					.getDistance(targetPieceLocation);
 			double tyRad = Math.PI
@@ -82,26 +81,83 @@ public class DriveToAITarget extends Command {
 							VisionConstants.limeLightAngleOffsetDegrees)
 					- (Math.PI * 0.5D - Math.atan(d / Units.inchesToMeters(
 							VisionConstants.limelightLensHeightoffFloorInches)));
-			ty = Units.radiansToDegrees(tyRad);
-			tv = true;
+			noteTy = Units.radiansToDegrees(tyRad);
+			noteTv = true;
+			if (Constants.currentMatchState == FRCMatchState.AUTO) {
+				double robotDeltaX = RobotContainer.opposingBotPose.getX()
+						- currentPose.getX();
+				double robotDeltaY = RobotContainer.opposingBotPose.getY()
+						- currentPose.getY();
+				robotTx = Units.radiansToDegrees(Math.atan2(robotDeltaX, robotDeltaY)); // Use atan2 instead of atan
+				robotTx -= currentPose.getRotation().getDegrees();
+				robotTx = PhotonVisionS.closerAngleToZero(robotTx);
+				double robotD = currentPose.getTranslation()
+						.getDistance(RobotContainer.opposingBotPose.getTranslation());
+				double robotTyRad = Math.PI
+						- Units.degreesToRadians(
+								VisionConstants.limeLightAngleOffsetDegrees)
+						- (Math.PI * 0.5D - Math.atan(robotD / Units.inchesToMeters(
+								VisionConstants.limelightLensHeightoffFloorInches)));
+				robotTy = Units.radiansToDegrees(robotTyRad);
+				robotTv = true;
+			}
 		} else {
 			//THESE ARE IN D E G R E E S 
-			tx = -LimelightHelpers.getTX(VisionConstants.limelightName);
-			tv = LimelightHelpers.getTV(VisionConstants.limelightName);
-			ty = LimelightHelpers.getTY(VisionConstants.limelightName);
+			LimelightHelpers.LimelightTarget_Detector[] results = LimelightHelpers
+					.getLatestResults(
+							VisionConstants.limelightName).targetingResults.targets_Detector;
+			for (LimelightHelpers.LimelightTarget_Detector object : results) {
+				if (object.confidence < .4) {
+					continue;
+				}
+				if (object.className == "note") {
+					noteTx = -object.tx;
+					noteTy = object.ty;
+					noteTv = true;
+				} else {
+					noteTv = false;
+					if (object.className == "robot") {
+						robotTx = -object.tx;
+						robotTy = object.ty;
+						robotTv = true;
+					} else {
+						robotTv = false;
+					}
+				}
+			}
 		}
-		Pose3d estimatedNotePose3d = GeomUtil.calculateFieldRelativePose3d(currentPose, tx, ty, Units.inchesToMeters(VisionConstants.limelightLensHeightoffFloorInches), Units.inchesToMeters(2), VisionConstants.limeLightAngleOffsetDegrees);
+		Pose3d estimatedNotePose3d = GeomUtil.calculateFieldRelativePose3d(
+				currentPose, noteTx, noteTy,
+				Units.inchesToMeters(
+						VisionConstants.limelightLensHeightoffFloorInches),
+				Units.inchesToMeters(2),
+				VisionConstants.limeLightAngleOffsetDegrees);
 		Logger.recordOutput("TEST", estimatedNotePose3d);
-		distance = PhotonVisionS.calculateDistanceFromtY(ty); //returns inches
+		noteDistance = GeomUtil.calculateDistanceFromPose3d(currentPose,
+				estimatedNotePose3d);
+		if (robotTv){
+			Pose3d estimatedOpposingBotPose3d = GeomUtil.calculateFieldRelativePose3d(
+				currentPose, robotTx, robotTy,
+				Units.inchesToMeters(
+						VisionConstants.limelightLensHeightoffFloorInches),
+				Units.inchesToMeters(2),
+				VisionConstants.limeLightAngleOffsetDegrees);
+			double opposingNoteDistance = GeomUtil.calculateDistanceFromPose3d(estimatedNotePose3d.toPose2d(), estimatedOpposingBotPose3d);
+			SmartDashboard.putNumber("OPPOSINGDIST", opposingNoteDistance);
+			if (opposingNoteDistance < noteDistance){
+				RobotContainer.currentGamePieceStatus = 1; //ABORT!
+				isFinished = true;
+			}
+		}
 		if (VisionConstants.debug) {
-			SmartDashboard.putNumber("tx", tx);
-			SmartDashboard.putNumber("ty", ty);
-			SmartDashboard.putNumber("DISTANCE", distance);
+			SmartDashboard.putNumber("tx", noteTx);
+			SmartDashboard.putNumber("ty", noteTy);
+			SmartDashboard.putNumber("DISTANCE", noteDistance);
 		}
 		// SmartDashboard.putBoolean("Piece Loaded?", IntakeS.PieceIsLoaded());
-		if (distance <= 4.5) { //less than 4.5 inches away, STOP!
-			if (Constants.currentMode == Constants.Mode.SIM){
-				isFinished= true;
+		if (noteDistance <= Units.inchesToMeters(4.5)) { //less than 4.5 inches away, STOP!
+			if (Constants.currentMode == Constants.Mode.SIM) {
+				isFinished = true;
 			}
 			close = true;
 		}
@@ -109,15 +165,16 @@ public class DriveToAITarget extends Command {
 				&& timer.get() > VisionConstants.DriveToAIMaxAutoTime) {
 			isFinished = true; //if in auto, and greater than max time, STOP ENTIRE COMMAND
 		}
-		if (tv == false && loaded == false && close == false) {
+		if (noteTv == false && loaded == false && close == false) {
 			// We don't see the target, seek for the target by spinning in place at a safe speed.
 			speeds = new ChassisSpeeds(0, 0,
 					0.1 * DriveConstants.kMaxTurningSpeedRadPerSec);
 		} else if (loaded == false && close == false) { //We see a target, and we're not close.
-			double speedMapperVal = PhotonVisionS.speedMapper(distance); //change speed based on distance
+			double speedMapperVal = PhotonVisionS
+					.speedMapper(Units.metersToInches(noteDistance)); //change speed based on distance
 			double moveSpeed = DriveConstants.kMaxSpeedMetersPerSecond
 					* speedMapperVal;
-			double trueError = tx; //Add/subtract from this for any tweaking from where camera placed for actual robot error
+			double trueError = noteTx; //Add/subtract from this for any tweaking from where camera placed for actual robot error
 			double turnSpeed = Units.degreesToRadians(trueError)
 					* VisionConstants.DriveToAITargetKp
 					* DriveConstants.kMaxTurningSpeedRadPerSec
