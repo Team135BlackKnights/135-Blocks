@@ -19,7 +19,13 @@ public class GeomUtil {
   public static Transform2d translationToTransform(double x, double y) {
     return new Transform2d(new Translation2d(x, y), new Rotation2d());
   }
-  public static Rotation2d rotationFromCurrentToTarget(Pose2d currentPose, Pose2d targetPose) {
+  public enum ApproachDirection {
+	FRONT,
+	RIGHT,
+	BACK,
+	LEFT
+	}
+  public static Rotation2d rotationFromCurrentToTarget(Pose2d currentPose, Pose2d targetPose, ApproachDirection direction) {
         // Extract positions
         double dx = targetPose.getX() - currentPose.getX();
         double dy = targetPose.getY() - currentPose.getY();
@@ -28,6 +34,21 @@ public class GeomUtil {
         double angle = Math.atan2(dy, dx);
 
         // Convert angle from radians to degrees
+		  switch (direction) {
+			case RIGHT:
+				 angle -= Math.PI / 2;
+				 break;
+			case BACK:
+				 angle += Math.PI;
+				 break;
+			case LEFT:
+				 angle += Math.PI / 2;
+				 break;
+			case FRONT:
+			default:
+				 // No adjustment needed for FRONT
+				 break;
+	  }
         double angleDegrees = Math.toDegrees(angle);
 
         // Create a Rotation2d object from the angle

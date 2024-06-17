@@ -4,6 +4,8 @@ import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Rotation3d;
+import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.util.Units;
@@ -16,6 +18,7 @@ import frc.robot.utils.GeomUtil;
 import frc.robot.utils.LoggableTunedNumber;
 import java.util.Optional;
 
+import org.littletonrobotics.junction.Logger;
 import org.photonvision.PhotonCamera;
 public class AimToAprilTag extends Command {
 	private final DrivetrainS drivetrainS;
@@ -33,9 +36,9 @@ public class AimToAprilTag extends Command {
 	private static final LoggableTunedNumber thetaTolerance = new LoggableTunedNumber(
 			"AimToApriltag/ThetaTolerance");
 	static {
-		thetaKp.initDefault(2);
+		thetaKp.initDefault(5);
 		thetaKd.initDefault(0.0);
-		thetaMaxVelocitySlow.initDefault(Units.degreesToRadians(90.0));
+		thetaMaxVelocitySlow.initDefault(Units.degreesToRadians(180.0));
 		thetaTolerance.initDefault(Units.degreesToRadians(4.0));
 	}
 
@@ -67,14 +70,14 @@ public class AimToAprilTag extends Command {
 		}
 		RobotContainer.currentPath = "AIMTOAPRILTAG";
 		Optional<Pose3d> aprilTagPose = PhotonVisionS.aprilTagPose3d(cam, aprilTagID);
-		System.out.println(aprilTagPose);
 		double thetaVelocity;
 		if (aprilTagPose.isPresent()){
 			Pose2d drivePose = drivetrainS.getPose();
 			Translation2d aprilTranslation2d = aprilTagPose.get().toPose2d().getTranslation();
-			Pose2d fieldRelativeAprilTagPose = drivePose.transformBy(GeomUtil.translationToTransform(aprilTranslation2d.getX(),aprilTranslation2d.getY()));
+			Pose3d estAprilTagPose = new Pose3d(drivePose.transformBy(GeomUtil.translationToTransform(-aprilTranslation2d.getX(),-aprilTranslation2d.getY()))).plus(new Transform3d(0, 0, 1.442593, new Rotation3d()));
+			Logger.recordOutput("FIELDREL", estAprilTagPose);
 			double targetAngle = Units.degreesToRadians(GeomUtil
-				.rotationFromCurrentToTarget(drivePose, fieldRelativeAprilTagPose)
+				.rotationFromCurrentToTarget(drivePose, estAprilTagPose.toPose2d(),GeomUtil.ApproachDirection.BACK)
 				.getRadians());
 		Rotation2d currentRotation = drivePose.getRotation();
 		RobotContainer.angleOverrider = Optional
