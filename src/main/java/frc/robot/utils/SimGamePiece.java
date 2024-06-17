@@ -113,8 +113,8 @@ public class SimGamePiece {
 		Pose3d[] translator = new Pose3d[currentPieces.size()];
 		heldPiecePos = new Pose3d(RobotContainer.drivetrainS.getPose())
 				.transformBy(Constants.DriveSimConstants.launcherTransform);
-		for (int i = 0; i < currentPieces.size(); i++) { //for all notes
-			if (i == 0 && hasPiece) { //if is zero, and we have a note, make that location the held Note relative to bot
+		for (int i = 0; i < currentPieces.size(); i++) { //for all game pieces
+			if (i == 0 && hasPiece) { //if is zero, and we have a game piece, make that location the held game piece relative to bot
 				translator[i] = heldPiecePos;
 			} else {
 				translator[i] = currentPieces.get(i);

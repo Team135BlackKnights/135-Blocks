@@ -62,7 +62,7 @@ public class REVSwerveS extends SubsystemChecker implements DrivetrainS {
 	private HashMap<ModulePosition, REVSwerveModule> m_swerveModules = new HashMap<>();
 	private static AHRS gyro = new AHRS(Port.kUSB1);
 	//Whether the robot should be field oriented
-	//Whether the swerve drivetrain should be taken over by our auto drive to note feature (in the Vision branch)
+	//Whether the swerve drivetrain should be taken over by our auto drive to game piece feature (in the Vision branch)
 	public Pose2d robotPosition = new Pose2d(0, 0, getRotation2d());
 	Field2d robotField = new Field2d();
 	private Twist2d fieldVelocity = new Twist2d();
