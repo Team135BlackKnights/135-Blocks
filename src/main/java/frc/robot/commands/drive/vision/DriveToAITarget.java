@@ -63,16 +63,16 @@ public class DriveToAITarget extends Command {
 
 	@Override
 	public void execute() {
-		double noteTx = 0, noteTy = 0, noteDistance = 0;
-		boolean noteTv = false;
+		double gamePieceTx = 0, gamePieceTy = 0, gamePieceDistance = 0;
+		boolean gamePieceTv = false;
 		if (Constants.currentMode == Mode.SIM) {
 			//In simulation, get the current pose, and set the degree value to 
 			currentPose = swerveS.getPose();
 			double deltaX = targetPieceLocation.getX() - currentPose.getX();
 			double deltaY = targetPieceLocation.getY() - currentPose.getY();
-			noteTx = Units.radiansToDegrees(Math.atan2(deltaY, deltaX)); // Use atan2 instead of atan
-			noteTx -= currentPose.getRotation().getDegrees();
-			noteTx = PhotonVisionS.closerAngleToZero(noteTx);
+			gamePieceTx = Units.radiansToDegrees(Math.atan2(deltaY, deltaX)); // Use atan2 instead of atan
+			gamePieceTx -= currentPose.getRotation().getDegrees();
+			gamePieceTx = PhotonVisionS.closerAngleToZero(gamePieceTx);
 			double d = currentPose.getTranslation()
 					.getDistance(targetPieceLocation);
 			double tyRad = Math.PI
@@ -80,8 +80,8 @@ public class DriveToAITarget extends Command {
 							VisionConstants.limeLightAngleOffsetDegrees)
 					- (Math.PI * 0.5D - Math.atan(d / Units.inchesToMeters(
 							VisionConstants.limelightLensHeightoffFloorInches)));
-			noteTy = Units.radiansToDegrees(tyRad);
-			noteTv = true;
+			gamePieceTy = Units.radiansToDegrees(tyRad);
+			gamePieceTv = true;
 		} else {
 			//THESE ARE IN D E G R E E S 
 			LimelightHelpers.LimelightTarget_Detector[] results = LimelightHelpers
@@ -91,31 +91,31 @@ public class DriveToAITarget extends Command {
 				if (object.confidence < .4) {
 					continue;
 				}
-				if (object.className == "note") {
-					noteTx = -object.tx;
-					noteTy = object.ty;
-					noteTv = true;
+				if (object.className == "gamePiece") {
+					gamePieceTx = -object.tx;
+					gamePieceTy = object.ty;
+					gamePieceTv = true;
 				} else {
-					noteTv = false;
+					gamePieceTv = false;
 				}
 			}
 		}
-		Pose3d estimatedNotePose3d = GeomUtil.calculateFieldRelativePose3d(
-				currentPose, noteTx, noteTy,
+		Pose3d estimatedgamePiecePose3d = GeomUtil.calculateFieldRelativePose3d(
+				currentPose, gamePieceTx, gamePieceTy,
 				Units.inchesToMeters(
 						VisionConstants.limelightLensHeightoffFloorInches),
 				Units.inchesToMeters(2),
 				VisionConstants.limeLightAngleOffsetDegrees);
-		Logger.recordOutput("SIMINTAKENOTE", estimatedNotePose3d);
-		noteDistance = GeomUtil.calculateDistanceFromPose3d(currentPose,
-				estimatedNotePose3d);
+		Logger.recordOutput("SIMINTAKEgamePiece", estimatedgamePiecePose3d);
+		gamePieceDistance = GeomUtil.calculateDistanceFromPose3d(currentPose,
+				estimatedgamePiecePose3d);
 		if (VisionConstants.debug) {
-			SmartDashboard.putNumber("tx", noteTx);
-			SmartDashboard.putNumber("ty", noteTy);
-			SmartDashboard.putNumber("DISTANCE", noteDistance);
+			SmartDashboard.putNumber("tx", gamePieceTx);
+			SmartDashboard.putNumber("ty", gamePieceTy);
+			SmartDashboard.putNumber("DISTANCE", gamePieceDistance);
 		}
 		// SmartDashboard.putBoolean("Piece Loaded?", IntakeS.PieceIsLoaded());
-		if (noteDistance <= Units.inchesToMeters(4.5)) { //less than 4.5 inches away, STOP!
+		if (gamePieceDistance <= Units.inchesToMeters(4.5)) { //less than 4.5 inches away, STOP!
 			if (Constants.currentMode == Constants.Mode.SIM) {
 				isFinished = true;
 			}
@@ -125,16 +125,16 @@ public class DriveToAITarget extends Command {
 				&& timer.get() > VisionConstants.DriveToAIMaxAutoTime) {
 			isFinished = true; //if in auto, and greater than max time, STOP ENTIRE COMMAND
 		}
-		if (noteTv == false && loaded == false && close == false) {
+		if (gamePieceTv == false && loaded == false && close == false) {
 			// We don't see the target, seek for the target by spinning in place at a safe speed.
 			speeds = new ChassisSpeeds(0, 0,
 					0.1 * DriveConstants.kMaxTurningSpeedRadPerSec);
 		} else if (loaded == false && close == false) { //We see a target, and we're not close.
 			double speedMapperVal = PhotonVisionS
-					.speedMapper(Units.metersToInches(noteDistance)); //change speed based on distance
+					.speedMapper(Units.metersToInches(gamePieceDistance)); //change speed based on distance
 			double moveSpeed = DriveConstants.kMaxSpeedMetersPerSecond
 					* speedMapperVal;
-			double trueError = noteTx; //Add/subtract from this for any tweaking from where camera placed for actual robot error
+			double trueError = gamePieceTx; //Add/subtract from this for any tweaking from where camera placed for actual robot error
 			double turnSpeed = Units.degreesToRadians(trueError)
 					* VisionConstants.DriveToAITargetKp
 					* DriveConstants.kMaxTurningSpeedRadPerSec
