@@ -1,6 +1,9 @@
 package frc.robot.commands.drive.vision;
 
+import org.littletonrobotics.junction.Logger;
+
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.util.Units;
@@ -14,6 +17,7 @@ import frc.robot.Constants.FRCMatchState;
 import frc.robot.Constants.Mode;
 import frc.robot.subsystems.drive.DrivetrainS;
 import frc.robot.subsystems.vision.PhotonVisionS;
+import frc.robot.utils.GeomUtil;
 import frc.robot.utils.SimGamePiece;
 import frc.robot.utils.drive.DriveConstants;
 
@@ -36,7 +40,7 @@ public class DriveToAITarget extends Command {
 	private ChassisSpeeds speeds;
 	double ty; //pitch
 	Timer timer = new Timer();
-	double desiredHeading, currentHeading, error;
+	double desiredHeading, currentHeading;
 
 	/*
 	 * Call this in all cases but
@@ -70,7 +74,6 @@ public class DriveToAITarget extends Command {
 			double deltaY = targetPieceLocation.getY() - currentPose.getY();
 			tx = Units.radiansToDegrees(Math.atan2(deltaY, deltaX)); // Use atan2 instead of atan
 			tx -= currentPose.getRotation().getDegrees();
-			tx *= -1;
 			tx = PhotonVisionS.closerAngleToZero(tx);
 			double d = currentPose.getTranslation()
 					.getDistance(targetPieceLocation);
@@ -83,16 +86,16 @@ public class DriveToAITarget extends Command {
 			tv = true;
 		} else {
 			//THESE ARE IN D E G R E E S 
-			tx = LimelightHelpers.getTX(VisionConstants.limelightName);
+			tx = -LimelightHelpers.getTX(VisionConstants.limelightName);
 			tv = LimelightHelpers.getTV(VisionConstants.limelightName);
 			ty = LimelightHelpers.getTY(VisionConstants.limelightName);
 		}
-		error = -tx; //tx is negative
+		Pose3d estimatedNotePose3d = GeomUtil.calculateFieldRelativePose3d(currentPose, tx, ty, Units.inchesToMeters(VisionConstants.limelightLensHeightoffFloorInches), Units.inchesToMeters(2), VisionConstants.limeLightAngleOffsetDegrees);
+		Logger.recordOutput("TEST", estimatedNotePose3d);
 		distance = PhotonVisionS.calculateDistanceFromtY(ty); //returns inches
 		if (VisionConstants.debug) {
 			SmartDashboard.putNumber("tx", tx);
 			SmartDashboard.putNumber("ty", ty);
-			SmartDashboard.putNumber("ANGLE ERROR", error);
 			SmartDashboard.putNumber("DISTANCE", distance);
 		}
 		// SmartDashboard.putBoolean("Piece Loaded?", IntakeS.PieceIsLoaded());
@@ -114,7 +117,7 @@ public class DriveToAITarget extends Command {
 			double speedMapperVal = PhotonVisionS.speedMapper(distance); //change speed based on distance
 			double moveSpeed = DriveConstants.kMaxSpeedMetersPerSecond
 					* speedMapperVal;
-			double trueError = error; //Add/subtract from this for any tweaking from where camera placed for actual robot error
+			double trueError = tx; //Add/subtract from this for any tweaking from where camera placed for actual robot error
 			double turnSpeed = Units.degreesToRadians(trueError)
 					* VisionConstants.DriveToAITargetKp
 					* DriveConstants.kMaxTurningSpeedRadPerSec
