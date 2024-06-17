@@ -3,7 +3,6 @@
 // the WPILib BSD license file in the root directory of this project.
 package frc.robot;
 
-import frc.robot.commands.auto.SimDefenseBot;
 import frc.robot.commands.drive.DrivetrainC;
 import frc.robot.subsystems.SubsystemChecker;
 import frc.robot.subsystems.drive.DrivetrainS;
@@ -22,6 +21,10 @@ import frc.robot.subsystems.drive.REVTank.REVTankConstantContainer;
 import frc.robot.subsystems.drive.REVTank.REVTankS;
 import frc.robot.utils.RunTest;
 import frc.robot.utils.drive.DriveConstants;
+import frc.robot.commands.drive.vision.DriveToAITarget;
+
+import frc.robot.subsystems.vision.PhotonVisionS;
+import frc.robot.utils.vision.VisionConstants;
 
 import frc.robot.subsystems.drive.REVSwerve.REVModuleConstantContainer;
 import frc.robot.utils.drive.DriveConstants.TrainConstants;
@@ -65,6 +68,7 @@ public class RobotContainer {
 	// The robot's subsystems and commands are defined here...
 	public static DrivetrainS drivetrainS;
 	private Telemetry logger = null;
+	private final static PhotonVisionS photonVisionS = new PhotonVisionS();
 	private final SendableChooser<Command> autoChooser;
 	static PowerDistribution PDH = new PowerDistribution(
 			Constants.PowerDistributionID, PowerDistribution.ModuleType.kRev);
@@ -86,6 +90,7 @@ public class RobotContainer {
 	public static int currentTest = 0, currentGamePieceStatus = 0;
 	public static String currentPath = "";
 	public static Field2d field = new Field2d();
+    public static Pose2d opposingBotPose;
 
 	// POVButton manipPOVZero = new POVButton(manipController, 0);
 	// POVButton manipPOV180 = new POVButton(manipController, 180);
@@ -173,15 +178,15 @@ public class RobotContainer {
 		}
 		drivetrainS.setDefaultCommand(new DrivetrainC(drivetrainS));
 		List<Pair<String, Command>> autoCommands = Arrays.asList(
-		//new Pair<String,Command>("AimAtAmp",new AimToPose(drivetrainS, new Pose2d(1.9,7.7, new Rotation2d(Units.degreesToRadians(0)))))
-		//new Pair<String, Command>("BranchGrabbingGamePiece", new BranchAuto("grabGamePieceBranch",new Pose2d(0,0,new Rotation2d())))
+		//new Pair<String, Command>("AimAtAmp",new AimToPose(drivetrainS, new Pose2d(1.9,7.7, new Rotation2d(Units.degreesToRadians(0))))),
+		//new Pair<String, Command>("BranchGrabbingGamePiece", new BranchAuto("grabGamePieceBranch",new Pose2d(0,0,new Rotation2d()))),
+		//new Pair<String, Command>("BotAborter", new BotAborter(drivetrainS)),
 		//new Pair<String, Command>("DriveToAmp",new DriveToPose(drivetrainS, false,new Pose2d(1.9,7.7,new Rotation2d(Units.degreesToRadians(90))))),
-		//new Pair<String,Command>("PlayMiiSong", new OrchestraC("mii")),
-		new Pair<String,Command>("SimBot",new SimDefenseBot())
+		//new Pair<String, Command>("PlayMiiSong", new OrchestraC("mii")),
+		//new Pair<String, Command>("SimBot",new SimDefenseBot())
 		);
 		Pathfinding.setPathfinder(new LocalADStarAK());
 		NamedCommands.registerCommands(autoCommands);
-		PathfindingCommand.warmupCommand().schedule();
 		if (Constants.isCompetition) {
 			PPLibTelemetry.enableCompetitionMode();
 		}
@@ -226,8 +231,14 @@ public class RobotContainer {
 				new RunTest(SysIdRoutine.Direction.kForward, false, drivetrainS));
 		xButtonTest.whileTrue(
 				new RunTest(SysIdRoutine.Direction.kReverse, false, drivetrainS));
+
 		//Example Aim To 2024 Amp Pose, Bind to what you need.
 		//yButtonDrive.and(aButtonTest.or(bButtonTest).or(xButtonTest).or(yButtonTest).negate()).whileTrue(new AimToPose(drivetrainS,new Pose2d(1.9,7.7, new Rotation2d(Units.degreesToRadians(90)))));
+
+		//Example Drive To 2024 Amp Pose, Bind to what you need.
+		//yButtonDrive.and(aButtonTest.or(bButtonTest).or(xButtonTest).or(yButtonTest).negate()).whileTrue(new DriveToPose(drivetrainS, false,new Pose2d(1.9,7.7,new Rotation2d(Units.degreesToRadians(90)))));
+		VisionConstants.Controls.autoIntake.whileTrue(new DriveToAITarget(drivetrainS));
+
 		//swerve DRIVE tests
 		//When user hits right bumper, go to next test, or wrap back to starting test for SysID.
 		rightBumperTest.onTrue(new InstantCommand(() -> {
@@ -280,7 +291,7 @@ public class RobotContainer {
 	 * @return a command with all of them in a sequence.
 	 */
 	public static Command allSystemsCheck() {
-	return Commands.sequence(drivetrainS.getRunnableSystemCheckCommand());
+	return Commands.sequence(photonVisionS.getSystemCheckCommand(),drivetrainS.getRunnableSystemCheckCommand());
 	}
 	public static HashMap<String, Double> combineMaps(List<HashMap<String, Double>> maps) {
 		HashMap<String, Double> combinedMap = new HashMap<>();
@@ -306,6 +317,7 @@ public class RobotContainer {
 	 * @return true if ALL systems were good.
 	 */
 	public static boolean allSystemsOK() {
-		return drivetrainS.getTrueSystemStatus() == SubsystemChecker.SystemStatus.OK;
+		return drivetrainS.getTrueSystemStatus() == SubsystemChecker.SystemStatus.OK
+		&& photonVisionS.getSystemStatus() == SubsystemChecker.SystemStatus.OK;
 	 }
 }

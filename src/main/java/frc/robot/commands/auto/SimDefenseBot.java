@@ -11,6 +11,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
+import frc.robot.RobotContainer;
 
 public class SimDefenseBot extends Command{
 	private Pose2d botPose;
@@ -52,6 +53,7 @@ public class SimDefenseBot extends Command{
 
                 return Commands.run(() -> {
                     botPose = startPose.interpolate(endPose, timer.get() / duration);
+						  RobotContainer.opposingBotPose = botPose;
 						  Logger.recordOutput("BOTSIM", botPose);
                 }).until(() -> timer.hasElapsed(duration));
             }, Set.of()));
