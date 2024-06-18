@@ -327,13 +327,21 @@ public class REVTankS extends SubsystemChecker implements DrivetrainS {
 
 	@Override
 	protected Command systemCheckCommand() {
-		return Commands
-				.sequence(
-						run(() -> setChassisSpeeds(new ChassisSpeeds(0, 0, 0.5)))
-								.withTimeout(2.0),
-						run(() -> setChassisSpeeds(new ChassisSpeeds(0, 0, -0.5)))
-								.withTimeout(2.0))
-				.until(() -> !getFaults().isEmpty()).andThen(
+		return Commands.sequence(
+				run(() -> setChassisSpeeds(new ChassisSpeeds(0, 0, 0.5)))
+						.withTimeout(2.0),
+				run(() -> setChassisSpeeds(new ChassisSpeeds(0, 0, -0.5)))
+						.withTimeout(2.0),
+				run(() -> setChassisSpeeds(new ChassisSpeeds(1, 0, 0)))
+						.withTimeout(1.0),
+				runOnce(() -> {
+					if (getChassisSpeeds().vxMetersPerSecond > 1.2
+							|| getChassisSpeeds().vxMetersPerSecond < .8) {
+						addFault(
+								"[System Check] Forward speed did not reah target speed in time.",
+								false, true);
+					}
+				})).until(() -> !getFaults().isEmpty()).andThen(
 						runOnce(() -> setChassisSpeeds(new ChassisSpeeds(0, 0, 0))));
 	}
 

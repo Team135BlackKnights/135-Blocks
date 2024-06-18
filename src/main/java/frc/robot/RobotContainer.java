@@ -31,6 +31,7 @@ import frc.robot.utils.drive.DriveConstants.TrainConstants;
 import frc.robot.utils.drive.LocalADStarAK;
 import frc.robot.utils.drive.PathFinder;
 import com.ctre.phoenix6.SignalLogger;
+import com.ctre.phoenix6.hardware.ParentDevice;
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.auto.NamedCommands;
 import com.pathplanner.lib.commands.PathfindingCommand;
@@ -47,7 +48,10 @@ import edu.wpi.first.math.Pair;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import java.util.HashMap;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
+
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.PowerDistribution;
 import edu.wpi.first.wpilibj.XboxController;
@@ -57,6 +61,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
+import edu.wpi.first.wpilibj2.command.Subsystem;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 
@@ -90,7 +95,7 @@ public class RobotContainer {
 	public static int currentTest = 0, currentGamePieceStatus = 0;
 	public static String currentPath = "";
 	public static Field2d field = new Field2d();
-    public static Pose2d opposingBotPose;
+  public static Pose2d opposingBotPose;
 
 	// POVButton manipPOVZero = new POVButton(manipController, 0);
 	// POVButton manipPOV180 = new POVButton(manipController, 180);
@@ -320,4 +325,14 @@ public class RobotContainer {
 		return drivetrainS.getTrueSystemStatus() == SubsystemChecker.SystemStatus.OK
 		&& photonVisionS.getSystemStatus() == SubsystemChecker.SystemStatus.OK;
 	 }
+	public static Collection<ParentDevice> getOrchestraDevices() {
+		Collection<ParentDevice> devices = new ArrayList<>();
+		devices.addAll(drivetrainS.getDriveOrchestraDevices());
+		return devices;
+	}
+	public static Subsystem[] getAllSubsystems(){
+		Subsystem[] subsystems = new Subsystem[1];
+		subsystems[0] = drivetrainS;
+		return subsystems;
+	}
 }

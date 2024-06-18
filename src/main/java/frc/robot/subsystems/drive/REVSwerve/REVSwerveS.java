@@ -148,6 +148,7 @@ public class REVSwerveS extends SubsystemChecker implements DrivetrainS {
 						new ReplanningConfig(true, true) // Default path replanning config. See the API for the options here
 				), () -> Robot.isRed, this // Reference to this subsystem to set requirements
 		);
+		registerSelfCheckHardware();
 	}
 
 	/**

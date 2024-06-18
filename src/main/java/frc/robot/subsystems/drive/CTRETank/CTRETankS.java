@@ -54,7 +54,8 @@ import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.util.ReplanningConfig;
 
 public class CTRETankS extends SubsystemChecker implements DrivetrainS {
-	private static double kMaxSpeedMetersPerSecond, kWheelDiameter, kDriveMotorGearRatio;
+	private static double kMaxSpeedMetersPerSecond, kWheelDiameter,
+			kDriveMotorGearRatio;
 	private Pigeon2 pigeon;
 	private TalonFX rightLeader, rightFollower, leftLeader, leftFollower;
 	private TalonFX[] motors;
@@ -82,8 +83,10 @@ public class CTRETankS extends SubsystemChecker implements DrivetrainS {
 				rightLeader.setControl(m_voltReq.withOutput(volts.in(Volts)));
 			}, null, this));
 	private DifferentialDrivePoseEstimator poseEstimator;
+
 	/**
 	 * Creates a new CTRE tank drivetrain
+	 * 
 	 * @param container the container to hold the constants
 	 * @see CTRETankConstantContainer
 	 */
@@ -110,11 +113,10 @@ public class CTRETankS extends SubsystemChecker implements DrivetrainS {
 						container.getDriveGearRatio(), 0.001)
 		};
 		kinematics = new DifferentialDriveKinematics(
-			container.getChassisLength());
+				container.getChassisLength());
 		pose = new Pose2d(0, 0, getRotation2d());
-		poseEstimator = new DifferentialDrivePoseEstimator(
-			kinematics, getRotation2d(), getLeftMeters(), getRightMeters(),
-			getPose());
+		poseEstimator = new DifferentialDrivePoseEstimator(kinematics,
+				getRotation2d(), getLeftMeters(), getRightMeters(), getPose());
 		//do main motors
 		TalonFXConfigurator leftConfigurator = leftLeader.getConfigurator();
 		TalonFXConfiguration motorConfig = new TalonFXConfiguration();
@@ -123,7 +125,8 @@ public class CTRETankS extends SubsystemChecker implements DrivetrainS {
 		motorConfig.MotorOutput.Inverted = InvertedValue
 				.valueOf((container.getLeftLeaderReversed()) ? 1 : 0);
 		motorConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
-		motorConfig.Feedback.SensorToMechanismRatio = container.getDriveEncoderRot2Meter();
+		motorConfig.Feedback.SensorToMechanismRatio = container
+				.getDriveEncoderRot2Meter();
 		motorConfig.Slot0.kP = .02;
 		leftConfigurator.apply(motorConfig);
 		//adjust motorConfig for rightSide
@@ -174,8 +177,7 @@ public class CTRETankS extends SubsystemChecker implements DrivetrainS {
 
 	private double metersPerSecondToRotationsPerSecond(
 			double velocityMetersPerSecond) {
-		double wheelCircumferenceMeters = Math.PI
-				* kWheelDiameter;
+		double wheelCircumferenceMeters = Math.PI * kWheelDiameter;
 		return (velocityMetersPerSecond / wheelCircumferenceMeters)
 				* kDriveMotorGearRatio;
 	}
@@ -186,7 +188,8 @@ public class CTRETankS extends SubsystemChecker implements DrivetrainS {
 	public void periodic() {
 		wheelPositions = getPositionsWithTimestamp(getWheelPositions());
 		wheelSpeeds = getWheelSpeeds();
-		poseEstimator.updateWithTime(wheelPositions.getTimestamp(),getRotation2d(), wheelPositions.getPositions());
+		poseEstimator.updateWithTime(wheelPositions.getTimestamp(),
+				getRotation2d(), wheelPositions.getPositions());
 		pose = poseEstimator.getEstimatedPosition();
 		DrivetrainS.super.periodic();
 		if (Constants.currentMode == Constants.Mode.SIM) {
@@ -204,7 +207,7 @@ public class CTRETankS extends SubsystemChecker implements DrivetrainS {
 		}
 		ChassisSpeeds m_ChassisSpeeds = kinematics.toChassisSpeeds(wheelSpeeds);
 		Translation2d linearFieldVelocity = new Translation2d(
-			m_ChassisSpeeds.vxMetersPerSecond,
+				m_ChassisSpeeds.vxMetersPerSecond,
 				m_ChassisSpeeds.vyMetersPerSecond).rotateBy(getRotation2d());
 		fieldVelocity = new Twist2d(linearFieldVelocity.getX(),
 				linearFieldVelocity.getY(), m_ChassisSpeeds.omegaRadiansPerSecond);
@@ -240,7 +243,8 @@ public class CTRETankS extends SubsystemChecker implements DrivetrainS {
 
 	@Override
 	public void resetPose(Pose2d pose) {
-		poseEstimator.resetPosition(getRotation2d(), wheelPositions.getPositions(), pose);
+		poseEstimator.resetPosition(getRotation2d(),
+				wheelPositions.getPositions(), pose);
 	}
 
 	@Override
@@ -274,6 +278,7 @@ public class CTRETankS extends SubsystemChecker implements DrivetrainS {
 		throw new UnsupportedOperationException(
 				"Unimplemented method 'sysIdQuasistaticTurn'");
 	}
+
 	@Override
 	public double getCurrent() {
 		return motorSimModels[0].getCurrentDrawAmps()
@@ -281,6 +286,7 @@ public class CTRETankS extends SubsystemChecker implements DrivetrainS {
 				+ motorSimModels[2].getCurrentDrawAmps()
 				+ motorSimModels[3].getCurrentDrawAmps();
 	}
+
 	@Override
 	public Command sysIdDynamicDrive(Direction direction) {
 		return m_sysIdRoutine.quasistatic(direction);
@@ -299,66 +305,75 @@ public class CTRETankS extends SubsystemChecker implements DrivetrainS {
 		return pigeon.getFault_Hardware().getValue();
 	}
 
-@Override
-	public double getYawVelocity() { 
-		if (Constants.currentMode == Constants.Mode.REAL){
-			return Units.degreesToRadians(pigeon.getAngularVelocityZWorld().getValueAsDouble());
+	@Override
+	public double getYawVelocity() {
+		if (Constants.currentMode == Constants.Mode.REAL) {
+			return Units.degreesToRadians(
+					pigeon.getAngularVelocityZWorld().getValueAsDouble());
 		}
 		return getChassisSpeeds().omegaRadiansPerSecond;
 	}
 
 	@Override
-	public Twist2d getFieldVelocity() { 
-	return fieldVelocity;
- }
+	public Twist2d getFieldVelocity() { return fieldVelocity; }
 
 	public void registerSelfCheckHardware() {
-    super.registerHardware("IMU", pigeon);
-	 super.registerHardware("FrontLeft", motors[2]);
-	 super.registerHardware("FrontRight", motors[0]);
-	 super.registerHardware("BackLeft", motors[3]);
-	 super.registerHardware("BackRight", motors[1]);
-	 
-   }
+		super.registerHardware("IMU", pigeon);
+		super.registerHardware("FrontLeft", motors[2]);
+		super.registerHardware("FrontRight", motors[0]);
+		super.registerHardware("BackLeft", motors[3]);
+		super.registerHardware("BackRight", motors[1]);
+	}
+
 	@Override
 	public List<ParentDevice> getOrchestraDevices() {
 		List<ParentDevice> orchestra = new ArrayList<>(4);
-
 		for (var motor : motors) {
-		  orchestra.add(motor);
+			orchestra.add(motor);
 		}
-  
 		return orchestra;
-	 }
+	}
 
 	@Override
-	public SystemStatus getTrueSystemStatus(){
-		return getSystemStatus();
-	}
+	public SystemStatus getTrueSystemStatus() { return getSystemStatus(); }
+
 	@Override
-	protected Command systemCheckCommand() { 
-	return Commands.sequence(run(() -> setChassisSpeeds(new ChassisSpeeds(0,0,0.5))).withTimeout(2.0),
-            run(() -> setChassisSpeeds(new ChassisSpeeds(0, 0, -0.5))).withTimeout(2.0))
-        .until(
-            () ->
-                !getFaults().isEmpty())
-        .andThen(runOnce(() ->setChassisSpeeds(new ChassisSpeeds(0,0,0))));
+	protected Command systemCheckCommand() {
+		return Commands.sequence(
+				run(() -> setChassisSpeeds(new ChassisSpeeds(0, 0, 0.5)))
+						.withTimeout(2.0),
+				run(() -> setChassisSpeeds(new ChassisSpeeds(0, 0, -0.5)))
+						.withTimeout(2.0),
+				run(() -> setChassisSpeeds(new ChassisSpeeds(1, 0, 0)))
+						.withTimeout(1.0),
+				runOnce(() -> {
+					if (getChassisSpeeds().vxMetersPerSecond > 1.2
+							|| getChassisSpeeds().vxMetersPerSecond < .8) {
+						addFault(
+								"[System Check] Forward speed did not reah target speed in time.",
+								false, true);
+					}
+				})).until(() -> !getFaults().isEmpty()).andThen(
+						runOnce(() -> setChassisSpeeds(new ChassisSpeeds(0, 0, 0))));
 	}
+
 	@Override
-	public Command getRunnableSystemCheckCommand(){
+	public Command getRunnableSystemCheckCommand() {
 		return super.getSystemCheckCommand();
 	}
+
 	@Override
-	public List<ParentDevice> getDriveOrchestraDevices() { 
+	public List<ParentDevice> getDriveOrchestraDevices() {
 		return getOrchestraDevices();
 	}
+
 	@Override
 	public HashMap<String, Double> getTemps() {
-		 HashMap<String, Double> tempMap = new HashMap<>();
-		 tempMap.put("FRTemp", motors[0].getDeviceTemp().getValueAsDouble());
-		 tempMap.put("BRTemp", motors[1].getDeviceTemp().getValueAsDouble());
-		 tempMap.put("FLTemp", motors[2].getDeviceTemp().getValueAsDouble());
-		 tempMap.put("BLTemp", motors[3].getDeviceTemp().getValueAsDouble());
-		 return tempMap;
-	}	
+		HashMap<String, Double> tempMap = new HashMap<>();
+		tempMap.put("FRTemp", motors[0].getDeviceTemp().getValueAsDouble());
+		tempMap.put("BRTemp", motors[1].getDeviceTemp().getValueAsDouble());
+		tempMap.put("FLTemp", motors[2].getDeviceTemp().getValueAsDouble());
+		tempMap.put("BLTemp", motors[3].getDeviceTemp().getValueAsDouble());
+		return tempMap;
+	}
 }
