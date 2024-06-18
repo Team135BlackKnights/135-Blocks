@@ -14,7 +14,7 @@ public class OrchestraC extends Command{
 	private String filename;
 	public OrchestraC(String fileName){
 		List<ParentDevice> allDevices = new ArrayList<>();
-		allDevices.addAll(RobotContainer.drivetrainS.getDriveOrchestraDevices());
+		allDevices.addAll(RobotContainer.getOrchestraDevices());
 		orchestra = new Orchestra(allDevices);
 		this.filename = fileName;
 		if (Constants.currentMode == Constants.Mode.SIM){
@@ -22,7 +22,7 @@ public class OrchestraC extends Command{
 		}else{
 			System.out.println(orchestra.loadMusic("orchestra/"+fileName+".chrp"));
 		}
-		addRequirements(RobotContainer.drivetrainS); //add all orchestra groups!
+		addRequirements(RobotContainer.getAllSubsystems()); //add all orchestra groups!
 	}
 	@Override
 	public void initialize(){

@@ -109,7 +109,7 @@ public class REVSwerveModule extends SubsystemBase {
 				driveMotorSim = new DCMotorSim(DCMotor.getNeoVortex(1),
 				driveEncoderRot2Meter, .001);
 				turningMotorSim = new DCMotorSim(DCMotor.getNeoVortex(1),
-				150/7, .001);
+				container.getTurnMotorGearing(), .001);
 			default:
 				break;
 			}
