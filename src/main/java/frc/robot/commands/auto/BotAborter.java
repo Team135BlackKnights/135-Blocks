@@ -13,7 +13,6 @@ import frc.robot.Constants.FRCMatchState;
 import frc.robot.Constants.Mode;
 import frc.robot.RobotContainer;
 import frc.robot.subsystems.drive.DrivetrainS;
-import frc.robot.subsystems.vision.PhotonVisionS;
 import frc.robot.utils.GeomUtil;
 import frc.robot.utils.SimGamePiece;
 import frc.robot.utils.vision.LimelightHelpers;
@@ -49,7 +48,7 @@ public class BotAborter extends Command{
 			double deltaY = targetPieceLocation.getY() - currentPose.getY();
 			gamePieceTx = Units.radiansToDegrees(Math.atan2(deltaY, deltaX)); // Use atan2 instead of atan
 			gamePieceTx -= currentPose.getRotation().getDegrees();
-			gamePieceTx = PhotonVisionS.closerAngleToZero(gamePieceTx);
+			gamePieceTx = GeomUtil.closerAngleToZero(gamePieceTx);
 			double d = currentPose.getTranslation()
 					.getDistance(targetPieceLocation);
 			double tyRad = Math.PI
@@ -66,7 +65,7 @@ public class BotAborter extends Command{
 						- currentPose.getY();
 				robotTx = Units.radiansToDegrees(Math.atan2(robotDeltaY, robotDeltaX)); // Use atan2 instead of atan
 				robotTx -= currentPose.getRotation().getDegrees(); 
-				robotTx = PhotonVisionS.closerAngleToZero(robotTx);
+				robotTx = GeomUtil.closerAngleToZero(robotTx);
 				double robotD = RobotContainer.opposingBotPose.getTranslation()
 						.getDistance(currentPose.getTranslation());
 				double robotTyRad = Math.PI

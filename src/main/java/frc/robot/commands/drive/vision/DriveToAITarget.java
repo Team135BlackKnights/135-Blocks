@@ -16,7 +16,6 @@ import frc.robot.Constants;
 import frc.robot.Constants.FRCMatchState;
 import frc.robot.Constants.Mode;
 import frc.robot.subsystems.drive.DrivetrainS;
-import frc.robot.subsystems.vision.PhotonVisionS;
 import frc.robot.utils.GeomUtil;
 import frc.robot.utils.SimGamePiece;
 import frc.robot.utils.drive.DriveConstants;
@@ -72,7 +71,7 @@ public class DriveToAITarget extends Command {
 			double deltaY = targetPieceLocation.getY() - currentPose.getY();
 			gamePieceTx = Units.radiansToDegrees(Math.atan2(deltaY, deltaX)); // Use atan2 instead of atan
 			gamePieceTx -= currentPose.getRotation().getDegrees();
-			gamePieceTx = PhotonVisionS.closerAngleToZero(gamePieceTx);
+			gamePieceTx = GeomUtil.closerAngleToZero(gamePieceTx);
 			double d = currentPose.getTranslation()
 					.getDistance(targetPieceLocation);
 			double tyRad = Math.PI
@@ -130,7 +129,7 @@ public class DriveToAITarget extends Command {
 			speeds = new ChassisSpeeds(0, 0,
 					0.1 * DriveConstants.kMaxTurningSpeedRadPerSec);
 		} else if (loaded == false && close == false) { //We see a target, and we're not close.
-			double speedMapperVal = PhotonVisionS
+			double speedMapperVal = GeomUtil
 					.speedMapper(Units.metersToInches(gamePieceDistance)); //change speed based on distance
 			double moveSpeed = DriveConstants.kMaxSpeedMetersPerSecond
 					* speedMapperVal;

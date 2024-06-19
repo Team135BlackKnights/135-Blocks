@@ -13,6 +13,7 @@ import org.photonvision.targeting.PhotonTrackedTarget;
 
 import com.ctre.phoenix6.hardware.ParentDevice;
 
+import frc.robot.utils.GeomUtil;
 import frc.robot.utils.vision.VisionConstants;
 import frc.robot.utils.vision.VisionConstants.PVCameras;
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
@@ -346,34 +347,6 @@ public class PhotonVisionS extends SubsystemChecker {
 	}
 
 	/**
-	 * Uses one particular camera to check the x distance (in degrees) of the
-	 * robot to a particular AprilTag, and saves it in the double called
-	 * camXError. Should be called in periodic. If you want to check for tags
-	 * based on alliance, surround this in robot.isRed and adjust the parameters
-	 * as such
-	 * 
-	 * @param camera Camera to use
-	 * @param tagIDs the tag ID to look for
-	 */
-	public void checkAutoLock(PhotonCamera camera, int tagID) {
-		//Get a list of all sighted targets
-		var targets = camera.getLatestResult().getTargets();
-		//By default it can't see the speaker to avoid unintended behavior
-		boolean hasSpeaker = false;
-		for (var target : targets) {
-			/*If the tagID is there, set the xError to the horizontal distance in degrees*/
-			if (target.getFiducialId() == tagID) {
-				hasSpeaker = true;
-				camXError = -target.getBestCameraToTarget().getY(); //Y is distance from CENTER, left Right. 
-			}
-		}
-		//If we don't have the ID set the x Error to zero to make it obvious that we don't have access to it
-		if (!hasSpeaker) {
-			camXError = 0;
-		}
-	}
-
-	/**
 	 * Adds the vision measurement to the poseEstimator. This is the same as the
 	 * default poseEstimator function, we just do it this way to fit our block
 	 * template structure
@@ -384,9 +357,7 @@ public class PhotonVisionS extends SubsystemChecker {
 				estStdDevs);
 	}
 
-	public double distancePose(Pose2d current, Pose2d other) {
-		return other.getTranslation().minus(current.getTranslation()).getNorm();
-	}
+
 
 	public String shouldAcceptVision(double timestamp, Pose2d newEst,
 			Pose2d lastPosition, ChassisSpeeds robotVelocity,
@@ -417,7 +388,7 @@ public class PhotonVisionS extends SubsystemChecker {
 			return "Max velocity";
 		}
 		// Check max correction
-		if (distancePose(lastPosition,
+		if (GeomUtil.distancePose(lastPosition,
 				newEst) > VisionConstants.kMaxVisionCorrection) {
 			SmartDashboard.putString("Vision validation", "Max correction");
 			return "Max correction";
@@ -493,76 +464,7 @@ public class PhotonVisionS extends SubsystemChecker {
 		return estStdDevs;
 	}
 
-	/**
-	 * Returns x error (in degrees).
-	 * 
-	 * @implSpec We used this as as an input to a PID loop to automatically face
-	 *           a speaker in 2024.
-	 * @return the x error in degrees
-	 */
-	public static double getXError() { return PhotonVisionS.camXError; }
 
-	/**
-	 * Computes the distance of the robot from the specified target. If you want
-	 * to use this in an alliance based way, surround it with Constants.isRed
-	 * 
-	 * @param targetLocation The target you want to get the distance from. Pose
-	 *                          should be in meters and degrees.
-	 * @return the distance from the robot to the speaker, in meters
-	 */
-	public static double getDistanceFromSpeakerUsingRobotPose(
-			Pose2d targetLocation) {
-		return RobotContainer.drivetrainS.getPose().getTranslation()
-				.getDistance(targetLocation.getTranslation());
-	}
-
-	/**
-	 * updates the xError double by using the robot's pose. This assumes that
-	 * left is negative for tX. IF ERROR IS OCCURING WITH TRACKING, THIS IS THE
-	 * PROBLEM.
-	 */
-	public double updateXErrorWithPose(Pose2d targetPose) {
-		return targetPose.getRotation().getDegrees()
-				- RobotContainer.drivetrainS.getPose().getRotation().getDegrees();
-	}
-
-	/**
-	 * Works similar to swerveS.optimize but for any angle
-	 * 
-	 * @param angle the angle to check
-	 * @return the optimized distance to rotate to reach an ideal angle
-	 */
-	public static double closerAngleToZero(double angle) {
-		// Normalize the angle to be within the range of -180 to 180 degrees
-		double normalizedAngle = angle % 360;
-		if (normalizedAngle > 180) {
-			normalizedAngle -= 360;
-		} else if (normalizedAngle < -180) {
-			normalizedAngle += 360;
-		}
-		// Return the closer angle to zero
-		return (Math.abs(normalizedAngle) <= 180) ? normalizedAngle
-				: -normalizedAngle;
-	}
-
-	/**
-	 * Modified PID Controller, but for our DriveToAITarget
-	 * 
-	 * @param x the x distance from target
-	 * @return the x speed
-	 */
-	public static double speedMapper(double x) {
-		// Define the parameters for the sigmoid function
-		double x0 = 30; // Inches where the function starts to rise significantly
-		double k = 0.1; // Steepness of the curve
-		// Apply the sigmoid function to map x to the range [0, 1]
-		double y = 1 / (1 + Math.exp(-k * (x - x0)));
-		// Adjust the output to meet your specific points
-		if (x >= 50) {
-			y = 1;
-		}
-		return y;
-	}
 
 	@Override
 	public List<ParentDevice> getOrchestraDevices() {
