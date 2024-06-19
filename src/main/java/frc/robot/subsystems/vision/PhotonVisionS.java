@@ -37,6 +37,7 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Collections;
+
 public class PhotonVisionS extends SubsystemChecker {
 	public static VisionSystemSim visionSim;
 	//These estimate pose based on april tag location
@@ -87,7 +88,7 @@ public class PhotonVisionS extends SubsystemChecker {
 				rightEstimator, backEstimator
 		};
 		//Same process for cameras
-		cams = new PhotonCamera[] {frontCam, leftCam, rightCam, backCam
+		cams = new PhotonCamera[] { frontCam, leftCam, rightCam, backCam
 		};
 		//Create PhotonVision camera simulations if the robot is in sim
 		if (Constants.currentMode == Mode.SIM) {
@@ -145,9 +146,10 @@ public class PhotonVisionS extends SubsystemChecker {
 
 	/**
 	 * Uses one particular camera to figure out if the AprilTags in the argument
-	 * is within sight or not, then returning the Pose3d if found. ROBOT RELATIVE.
+	 * is within sight or not, then returning the Pose3d if found. ROBOT
+	 * RELATIVE.
 	 * 
-	 * @param Camera        the camera to use
+	 * @param Camera       the camera to use
 	 * @param tagToLookFor the potential aprilTag to look for
 	 * @return An optional Pose3d which is ROBOT RELATIVE to the selected tag.
 	 */
@@ -155,23 +157,32 @@ public class PhotonVisionS extends SubsystemChecker {
 			int tagToLookFor) {
 		var targets = camera.getLatestResult().getTargets();
 		@SuppressWarnings("unlikely-arg-type")
-		Optional<PhotonTrackedTarget> foundTargets = targets.stream().filter(t -> t.getFiducialId() == tagToLookFor)
-		.filter(t -> !t.equals(tagToLookFor) && t.getPoseAmbiguity() <= .8 && t.getPoseAmbiguity() != -1)
-		.findFirst();
-		if (foundTargets.isPresent()){
-			Transform3d cameraToTarget = foundTargets.get().getBestCameraToTarget();
-			return Optional.of(new Pose3d(cameraToTarget.getTranslation(), cameraToTarget.getRotation()));
+		Optional<PhotonTrackedTarget> foundTargets = targets.stream()
+				.filter(t -> t.getFiducialId() == tagToLookFor)
+				.filter(t -> !t.equals(tagToLookFor) && t.getPoseAmbiguity() <= .8
+						&& t.getPoseAmbiguity() != -1)
+				.findFirst();
+		if (foundTargets.isPresent()) {
+			Transform3d cameraToTarget = foundTargets.get()
+					.getBestCameraToTarget();
+			return Optional.of(new Pose3d(cameraToTarget.getTranslation(),
+					cameraToTarget.getRotation()));
 		}
 		return Optional.empty();
 	}
+
 	/**
 	 * Create a field relative pose3d from a given pose3d
+	 * 
 	 * @param robotRelativePose the pose3d of the object RELATIVE to the robot
-	 * @param robotPose the robot pose
+	 * @param robotPose         the robot pose
 	 * @return field relative pose3d of the object
 	 */
-	public static Pose3d fieldRelativePose3d(Pose3d robotRelativePose, Pose2d robotPose){
-		return new Pose3d(robotPose).transformBy(new Transform3d(robotRelativePose.getTranslation(),robotRelativePose.getRotation()));
+	public static Pose3d fieldRelativePose3d(Pose3d robotRelativePose,
+			Pose2d robotPose) {
+		return new Pose3d(robotPose)
+				.transformBy(new Transform3d(robotRelativePose.getTranslation(),
+						robotRelativePose.getRotation()));
 	}
 
 	public static boolean aprilTagVisible(PhotonCamera camera) {
@@ -272,65 +283,65 @@ public class PhotonVisionS extends SubsystemChecker {
 		for (int i = 0; i < cams.length; i++) {
 			PhotonPoseEstimator cEstimator = camEstimates[i];
 			PhotonCamera cCam = cams[i];
-			if (cCam.isConnected()){
+			if (cCam.isConnected()) {
 				var visionEst = getEstimatedGlobalPose(cEstimator, cCam,
-				RobotContainer.drivetrainS.getPose());
-		visionEst.ifPresent(est -> {
-			Pose2d estPose = est.estimatedPose.toPose2d();
-			ArrayList<Integer> aprilTagList = new ArrayList<>();
-			for (PhotonTrackedTarget target : est.targetsUsed)
-				aprilTagList.add(target.getFiducialId());
-			/*for (PhotonTrackedTarget target : est.targetsUsed) { //To test the Offset feature, uncomment this.
-				if (target.getFiducialId() == 6) {
-					estPose = estPose.div(4012);
-					//estPose = new Pose2d(0, 0, new Rotation2d(0,0));
-				}
-			}*/
-			double time = est.timestampSeconds;
-			// Change our trust in the measurement based on the tags we can see
-			// We do this because we should trust cam estimates with closer apriltags than farther ones.
-			Matrix<N3, N1> estStdDevs = getEstimationStdDevs(estPose,
-					cEstimator, cCam);
-			String response = shouldAcceptVision(time, estStdDevs, estPose,
-					RobotContainer.drivetrainS.getPose(),
-					RobotContainer.drivetrainS.getChassisSpeeds(), aprilTagList);
-			if (response == "OK") {
-				addVisionMeasurement(est.estimatedPose.toPose2d(),
-						est.timestampSeconds, estStdDevs);
-				for (int tag : numTags) {
-					VisionConstants.FieldConstants.aprilTagOffsets[tag] = Math
-							.min(1,
-									VisionConstants.FieldConstants.aprilTagOffsets[tag]
-											+ .001);
-				}
+						RobotContainer.drivetrainS.getPose());
+				visionEst.ifPresent(est -> {
+					Pose2d estPose = est.estimatedPose.toPose2d();
+					ArrayList<Integer> aprilTagList = new ArrayList<>();
+					for (PhotonTrackedTarget target : est.targetsUsed)
+						aprilTagList.add(target.getFiducialId());
+					/*for (PhotonTrackedTarget target : est.targetsUsed) { //To test the Offset feature, uncomment this.
+						if (target.getFiducialId() == 6) {
+							estPose = estPose.div(4012);
+							//estPose = new Pose2d(0, 0, new Rotation2d(0,0));
+						}
+					}*/
+					double time = est.timestampSeconds;
+					String response = shouldAcceptVision(time, estPose,
+							RobotContainer.drivetrainS.getPose(),
+							RobotContainer.drivetrainS.getChassisSpeeds(),
+							aprilTagList);
+					if (response == "OK") {
+						// Change our trust in the measurement based on the tags we can see
+						// We do this because we should trust cam estimates with closer apriltags than farther ones.
+						Matrix<N3, N1> estStdDevs = getEstimationStdDevs(estPose,
+								cEstimator, cCam);
+						addVisionMeasurement(est.estimatedPose.toPose2d(),
+								est.timestampSeconds, estStdDevs);
+						for (int tag : numTags) {
+							VisionConstants.FieldConstants.aprilTagOffsets[tag] = Math
+									.min(1,
+											VisionConstants.FieldConstants.aprilTagOffsets[tag]
+													+ .001);
+						}
+					} else {
+						if (response == "Max correction") {
+							for (int tag : numTags) {
+								VisionConstants.FieldConstants.aprilTagOffsets[tag] = Math
+										.max(0,
+												VisionConstants.FieldConstants.aprilTagOffsets[tag]
+														- .001);
+							}
+						}
+						if (response == "Min trust") {
+							for (int tag : numTags) {
+								VisionConstants.FieldConstants.aprilTagOffsets[tag] = Math
+										.min(1,
+												VisionConstants.FieldConstants.aprilTagOffsets[tag]
+														+ .001);
+							}
+						}
+					}
+					if (VisionConstants.debug) {
+						SmartDashboard.putString("CAMERAUPDATE", cCam.getName());
+						SmartDashboard.putNumberArray("OFFSETS",
+								VisionConstants.FieldConstants.aprilTagOffsets);
+					}
+				});
 			} else {
-				if (response == "Max correction") {
-					for (int tag : numTags) {
-						VisionConstants.FieldConstants.aprilTagOffsets[tag] = Math
-								.max(0,
-										VisionConstants.FieldConstants.aprilTagOffsets[tag]
-												- .001);
-					}
-				}
-				if (response == "Min trust") {
-					for (int tag : numTags) {
-						VisionConstants.FieldConstants.aprilTagOffsets[tag] = Math
-								.min(1,
-										VisionConstants.FieldConstants.aprilTagOffsets[tag]
-												+ .001);
-					}
-				}
+				addFault(cCam.getName() + "CAMERA IS NOT DETECTED", false, true);
 			}
-			if (VisionConstants.debug){
-				SmartDashboard.putString("CAMERAUPDATE", cCam.getName());
-				SmartDashboard.putNumberArray("OFFSETS",
-						VisionConstants.FieldConstants.aprilTagOffsets);
-			}
-		});
-			}else{
-				addFault(cCam.getName() + "CAMERA IS NOT DETECTED", false,true);
-			}
-			
 		}
 	}
 
@@ -377,8 +388,8 @@ public class PhotonVisionS extends SubsystemChecker {
 		return other.getTranslation().minus(current.getTranslation()).getNorm();
 	}
 
-	public String shouldAcceptVision(double timestamp, Matrix<N3, N1> estStdDevs,
-			Pose2d newEst, Pose2d lastPosition, ChassisSpeeds robotVelocity,
+	public String shouldAcceptVision(double timestamp, Pose2d newEst,
+			Pose2d lastPosition, ChassisSpeeds robotVelocity,
 			ArrayList<Integer> aprilTagList) {
 		// Check out of field
 		if (newEst.getTranslation()
@@ -455,11 +466,10 @@ public class PhotonVisionS extends SubsystemChecker {
 					.getTagPose(tgt.getFiducialId());
 			if (tagPose.isEmpty())
 				continue;
-			if (tgt.getPoseAmbiguity() > .2){
+			if (tgt.getPoseAmbiguity() > .2) {
 				avgDist += 10;
 				continue; //give zero F's about bad tags
 			}
-
 			double dist = tagPose.get().toPose2d().getTranslation()
 					.getDistance(estimatedPose.getTranslation());
 			if (dist < lowestDist) {
@@ -555,12 +565,10 @@ public class PhotonVisionS extends SubsystemChecker {
 	}
 
 	@Override
-	public List<ParentDevice> getOrchestraDevices() { 
+	public List<ParentDevice> getOrchestraDevices() {
 		return Collections.emptyList();
-	 }
+	}
 
 	@Override
-	protected Command systemCheckCommand() { 
-		return Commands.none();
-	 }
+	protected Command systemCheckCommand() { return Commands.none(); }
 }
