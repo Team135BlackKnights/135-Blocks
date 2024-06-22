@@ -81,7 +81,7 @@ public class DriveToAITarget extends Command {
 					- (Math.PI * 0.5D - Math.atan(d / Units.inchesToMeters(
 							VisionConstants.limelightLensHeightoffFloorInches)));
 			gamePieceTy = Units.radiansToDegrees(tyRad);
-			gamePieceTv = false;
+			gamePieceTv = true;
 		} else {
 			//THESE ARE IN D E G R E E S 
 			LimelightHelpers.LimelightTarget_Detector[] results = LimelightHelpers
