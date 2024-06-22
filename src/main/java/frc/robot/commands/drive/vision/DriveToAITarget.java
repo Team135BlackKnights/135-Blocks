@@ -4,6 +4,7 @@ import org.littletonrobotics.junction.Logger;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.util.Units;
@@ -13,8 +14,10 @@ import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.utils.vision.LimelightHelpers;
 import frc.robot.utils.vision.VisionConstants;
 import frc.robot.Constants;
+import frc.robot.Robot;
 import frc.robot.Constants.FRCMatchState;
 import frc.robot.Constants.Mode;
+import frc.robot.commands.drive.DriveToPose;
 import frc.robot.subsystems.drive.DrivetrainS;
 import frc.robot.utils.GeomUtil;
 import frc.robot.utils.SimGamePiece;
@@ -30,22 +33,20 @@ import frc.robot.utils.drive.DriveConstants;
  */
 public class DriveToAITarget extends Command {
 	private final DrivetrainS swerveS;
-	private boolean isFinished = false;
-	private boolean loaded = false; //do we have game Piece?
+	private boolean isFinished = false, goingToCenterLine = false, loaded = false; //do we have game Piece?
 	public static boolean takeOver = false; //to stop driver input
 	private static boolean close = false; //when close, stop moving
 	private Translation2d targetPieceLocation = null; //no target known unless in SIM
 	private Pose2d currentPose;
 	private ChassisSpeeds speeds;
+	private Command drivingToCenterLine = null;
 	Timer timer = new Timer();
 	double desiredHeading, currentHeading;
 
 	/*
-	 * Call this in all cases but
-	 * simulation autonomous
+	 * Prpvide the drive subsystem.
 	 */
 	public DriveToAITarget(DrivetrainS swerveS) { this.swerveS = swerveS; addRequirements(swerveS);}
-
 	@Override
 	public void initialize() {
 		if (Constants.currentMode == Mode.SIM) {
@@ -80,7 +81,7 @@ public class DriveToAITarget extends Command {
 					- (Math.PI * 0.5D - Math.atan(d / Units.inchesToMeters(
 							VisionConstants.limelightLensHeightoffFloorInches)));
 			gamePieceTy = Units.radiansToDegrees(tyRad);
-			gamePieceTv = true;
+			gamePieceTv = false;
 		} else {
 			//THESE ARE IN D E G R E E S 
 			LimelightHelpers.LimelightTarget_Detector[] results = LimelightHelpers
@@ -90,7 +91,7 @@ public class DriveToAITarget extends Command {
 				if (object.confidence < .4) {
 					continue;
 				}
-				if (object.className == "gamePiece") {
+				if (object.className == "note") {
 					gamePieceTx = -object.tx;
 					gamePieceTy = object.ty;
 					gamePieceTv = true;
@@ -121,14 +122,29 @@ public class DriveToAITarget extends Command {
 			close = true;
 		}
 		if (Constants.currentMatchState == FRCMatchState.AUTO
-				&& timer.get() > VisionConstants.DriveToAIMaxAutoTime) {
-			isFinished = true; //if in auto, and greater than max time, STOP ENTIRE COMMAND
+				&& timer.get() > 1) {
+					gamePieceTv = true;
+					//isFinished = true; //if in auto, and greater than max time, STOP ENTIRE COMMAND
 		}
 		if (gamePieceTv == false && loaded == false && close == false) {
 			// We don't see the target, seek for the target by spinning in place at a safe speed.
-			speeds = new ChassisSpeeds(0, 0,
-					0.1 * DriveConstants.kMaxTurningSpeedRadPerSec);
+			if (Constants.currentMatchState == FRCMatchState.AUTO && !goingToCenterLine){
+				if (Robot.isRed){
+					drivingToCenterLine = new DriveToPose(swerveS, new Pose2d(8.27, currentPose.getY(), new Rotation2d((Units.degreesToRadians(-90)))));
+					drivingToCenterLine.initialize();
+					goingToCenterLine = true;
+				}else{
+					drivingToCenterLine = new DriveToPose(swerveS, new Pose2d(8.27, currentPose.getY(), new Rotation2d((Units.degreesToRadians(90)))));
+					drivingToCenterLine.initialize();
+					goingToCenterLine = true;
+				}
+			}else{
+				speeds = new ChassisSpeeds(0, 0,
+				0.1 * DriveConstants.kMaxTurningSpeedRadPerSec);
+			}
 		} else if (loaded == false && close == false) { //We see a target, and we're not close.
+			drivingToCenterLine.cancel();
+			goingToCenterLine = false;
 			double speedMapperVal = GeomUtil
 					.speedMapper(Units.metersToInches(gamePieceDistance)); //change speed based on distance
 			double moveSpeed = DriveConstants.kMaxSpeedMetersPerSecond
@@ -145,7 +161,14 @@ public class DriveToAITarget extends Command {
 		if (loaded) {
 			isFinished = true;
 		}
-		swerveS.setChassisSpeeds(speeds);
+		if (goingToCenterLine == false){
+			swerveS.setChassisSpeeds(speeds);
+		}else{
+			drivingToCenterLine.execute();
+			if (drivingToCenterLine.isFinished()){
+				goingToCenterLine = false;
+			}
+		}
 	}
 
 	@Override
