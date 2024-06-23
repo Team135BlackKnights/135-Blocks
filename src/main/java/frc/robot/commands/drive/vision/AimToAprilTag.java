@@ -76,9 +76,9 @@ public class AimToAprilTag extends Command {
 			Translation2d aprilTranslation2d = aprilTagPose.get().toPose2d().getTranslation();
 			Pose3d estAprilTagPose = new Pose3d(drivePose.transformBy(GeomUtil.translationToTransform(-aprilTranslation2d.getX(),-aprilTranslation2d.getY()))).plus(new Transform3d(0, 0, 1.442593, new Rotation3d()));
 			Logger.recordOutput("FIELDREL", estAprilTagPose);
-			double targetAngle = Units.degreesToRadians(GeomUtil
+			double targetAngle = GeomUtil
 				.rotationFromCurrentToTarget(drivePose, estAprilTagPose.toPose2d(),GeomUtil.ApproachDirection.BACK)
-				.getRadians());
+				.getRadians();
 		Rotation2d currentRotation = drivePose.getRotation();
 		RobotContainer.angleOverrider = Optional
 				.of(new Rotation2d(targetAngle));

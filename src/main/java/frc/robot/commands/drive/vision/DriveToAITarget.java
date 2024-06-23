@@ -63,6 +63,10 @@ public class DriveToAITarget extends Command {
 
 	@Override
 	public void execute() {
+		//determine if game piece loaded
+		if (loaded) {
+			isFinished = true;
+		}
 		double gamePieceTx = 0, gamePieceTy = 0, gamePieceDistance = 0;
 		boolean gamePieceTv = false;
 		if (Constants.currentMode == Mode.SIM) {
@@ -123,8 +127,7 @@ public class DriveToAITarget extends Command {
 		}
 		if (Constants.currentMatchState == FRCMatchState.AUTO
 				&& timer.get() > 1) {
-					gamePieceTv = true;
-					//isFinished = true; //if in auto, and greater than max time, STOP ENTIRE COMMAND
+					isFinished = true; //if in auto, and greater than max time, STOP ENTIRE COMMAND
 		}
 		if (gamePieceTv == false && loaded == false && close == false) {
 			// We don't see the target, seek for the target by spinning in place at a safe speed.
@@ -143,7 +146,6 @@ public class DriveToAITarget extends Command {
 				0.1 * DriveConstants.kMaxTurningSpeedRadPerSec);
 			}
 		} else if (loaded == false && close == false) { //We see a target, and we're not close.
-			drivingToCenterLine.cancel();
 			goingToCenterLine = false;
 			double speedMapperVal = GeomUtil
 					.speedMapper(Units.metersToInches(gamePieceDistance)); //change speed based on distance
@@ -158,10 +160,7 @@ public class DriveToAITarget extends Command {
 		} else {
 			speeds = new ChassisSpeeds(0, 0, 0); //We either have it, or are close enough to start just intaking, so stop.
 		}
-		if (loaded) {
-			isFinished = true;
-		}
-		if (goingToCenterLine == false){
+		if (!goingToCenterLine){
 			swerveS.setChassisSpeeds(speeds);
 		}else{
 			drivingToCenterLine.execute();
@@ -175,6 +174,9 @@ public class DriveToAITarget extends Command {
 	public void end(boolean interrupted) {
 		//Return control of the drivetrain
 		takeOver = false;
+		if (drivingToCenterLine != null){
+			drivingToCenterLine.cancel();
+		}
 		timer.stop();
 		timer.reset();
 		speeds = new ChassisSpeeds(0, 0, 0);

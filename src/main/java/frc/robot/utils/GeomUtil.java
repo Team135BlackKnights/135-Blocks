@@ -7,6 +7,7 @@ import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Translation3d;
+import edu.wpi.first.math.util.Units;
 
 public class GeomUtil {
 	  /**
@@ -93,7 +94,7 @@ public class GeomUtil {
         double angleDegrees = Math.toDegrees(angle);
 
         // Create a Rotation2d object from the angle
-        Rotation2d rotationFromCurrentToTarget = new Rotation2d(angleDegrees);
+        Rotation2d rotationFromCurrentToTarget = new Rotation2d(Units.degreesToRadians(angleDegrees));
 
         return rotationFromCurrentToTarget;
     }

@@ -72,9 +72,9 @@ public class AimToPose extends Command {
 		}
 		RobotContainer.currentPath = "AIMTOPOSE";
 		//set Chassis to be aimed at it.
-		double targetAngle = Units.degreesToRadians(GeomUtil
+		double targetAngle = GeomUtil
 				.rotationFromCurrentToTarget(drive.getPose(), poseSupplier.get(),GeomUtil.ApproachDirection.BACK)
-				.getRadians());
+				.getRadians();
 		Rotation2d currentRotation = drive.getPose().getRotation();
 		RobotContainer.angleOverrider = Optional
 				.of(new Rotation2d(targetAngle));
