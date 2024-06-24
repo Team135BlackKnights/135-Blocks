@@ -92,7 +92,7 @@ public class TestableCTRESwerveS extends SubsystemChecker
 	@Override
 	public void periodic(){
 		DrivetrainS.super.periodic();
-		ctreSwerveS.calculateSkidding(getChassisSpeeds());
+		ctreSwerveS.calculateSkidding();
 	}
 	public void registerSelfCheckHardware() {
 		super.registerHardware("IMU", ctreSwerveS.getPigeon2());
@@ -188,7 +188,7 @@ public class TestableCTRESwerveS extends SubsystemChecker
 		ctreSwerveS.setChassisSpeeds(speeds);
 	}
 	@Override
-	public boolean isSkidding(){
+	public boolean[] isSkidding(){
 		return ctreSwerveS.isSkidding();
 	}
 	@Override

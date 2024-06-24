@@ -33,6 +33,7 @@ import frc.robot.utils.drive.DriveConstants;
 
 import static edu.wpi.first.units.Units.Volts;
 
+import java.util.Arrays;
 import java.util.HashMap;
 
 
@@ -122,15 +123,17 @@ public class CTRESwerveS extends SwerveDrivetrain implements DrivetrainS {
 		});
 	}
 	@Override
-	public boolean isSkidding(){
-		return calculateSkidding(getChassisSpeeds());
+	public boolean[] isSkidding(){
+		return calculateSkidding();
 	}
-	public boolean calculateSkidding(ChassisSpeeds m_ChassisSpeeds) {
-		double[] moduleTranslationalSpeeds = new double[4];
+	public boolean[] calculateSkidding() {
 		SwerveModuleState[] moduleStates = super.getState().ModuleStates;
+		ChassisSpeeds currentChassisSpeeds = getChassisSpeeds();
 		// Step 1: Create a ChassisSpeeds object with solely the rotation component
 		ChassisSpeeds rotationOnlySpeeds = new ChassisSpeeds(0.0, 0.0,
-				m_ChassisSpeeds.omegaRadiansPerSecond);
+			currentChassisSpeeds.omegaRadiansPerSecond+.05);
+		double[] xComponentList = new double[4];
+		double[] yComponentList = new double[4];
 		// Step 2: Convert it into module states with kinematics
 		SwerveModuleState[] rotationalStates = m_kinematics
 				.toSwerveModuleStates(rotationOnlySpeeds);
@@ -144,26 +147,31 @@ public class CTRESwerveS extends SwerveDrivetrain implements DrivetrainS {
 					* Math.sin(moduleStates[i].angle.getRadians())
 					- rotationalStates[i].speedMetersPerSecond
 							* Math.sin(rotationalStates[i].angle.getRadians());
-			// Magnitude of the resulting vector
-			moduleTranslationalSpeeds[i] = Math
-					.sqrt(deltaX * deltaX + deltaY * deltaY);
-			SmartDashboard.putNumber("moduleVx" + i, moduleTranslationalSpeeds[i]);
+			xComponentList[i] = deltaX; 
+			yComponentList[i] = deltaY;
 		}
-		double maxTranslationalVelocity = Double.NEGATIVE_INFINITY;
-		double minTranslationalVelocity = Double.POSITIVE_INFINITY;
-		for (double velocity : moduleTranslationalSpeeds) {
-			if (velocity > maxTranslationalVelocity) {
-				maxTranslationalVelocity = velocity;
-			}
-			if (velocity < minTranslationalVelocity) {
-				minTranslationalVelocity = velocity;
+		Arrays.sort(xComponentList);
+		Arrays.sort(yComponentList);
+		SmartDashboard.putNumberArray("Module Skid X", xComponentList);
+		SmartDashboard.putNumberArray("Module Skid Y", yComponentList);
+
+		double deltaMedianX = (xComponentList[1] + xComponentList[2]) / 2;
+		double deltaMedianY = (yComponentList[1] + yComponentList[2]) / 2;
+		SmartDashboard.putNumber("Skid X Median", deltaMedianX);
+		SmartDashboard.putNumber("Skid Y Median", deltaMedianY);
+
+		boolean[] areModulesSkidding = new boolean[4];
+		for (int i = 0; i < 4; i++){
+			double deltaX = xComponentList[i];
+			double deltaY = yComponentList[i];
+			if (Math.abs(deltaX - deltaMedianX) > DriveConstants.SKID_THRESHOLD || Math.abs(deltaY - deltaMedianY) > DriveConstants.SKID_THRESHOLD){
+				areModulesSkidding[i] = true;
+			}else{
+				areModulesSkidding[i] = false;
 			}
 		}
-		double velocityRatio = maxTranslationalVelocity
-				/ minTranslationalVelocity;
-		SmartDashboard.putNumber("VELOCITY RATIO", velocityRatio);
-		final double SKID_THRESHOLD = 2;
-		return velocityRatio > SKID_THRESHOLD;
+		SmartDashboard.putBooleanArray("Module Skids", areModulesSkidding);
+		return areModulesSkidding;
 	}
   
 

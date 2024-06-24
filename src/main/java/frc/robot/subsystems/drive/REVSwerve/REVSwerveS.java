@@ -47,6 +47,7 @@ import static edu.wpi.first.units.Units.Seconds;
 import static edu.wpi.first.units.Units.Volts;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Arrays;
 import java.util.Collections;
 import frc.robot.utils.drive.DriveConstants.TrainConstants.ModulePosition;
 import frc.robot.utils.drive.Position;
@@ -70,7 +71,7 @@ public class REVSwerveS extends SubsystemChecker implements DrivetrainS {
 	ChassisSpeeds m_ChassisSpeeds;
 	static Vector<N3> stateStdDevs = VecBuilder.fill(0.1, 0.1, 0.1);
 	static Vector<N3> visionStdDevs = VecBuilder.fill(1, 1, 1);
-	boolean isSkidding = false;
+	boolean[] isSkidding = new boolean[]{false,false,false,false};
 	public SwerveDrivePoseEstimator poseEstimator;
 	Position<SwerveModulePosition[]> m_modulePositions;
 	private double m_simYaw;
@@ -151,12 +152,21 @@ public class REVSwerveS extends SubsystemChecker implements DrivetrainS {
 		);
 		registerSelfCheckHardware();
 	}
-	public boolean calculateSkidding(ChassisSpeeds m_ChassisSpeeds) {
-		double[] moduleTranslationalSpeeds = new double[4];
+	/**
+	 * Calculates the translational vectors of each module, and confirms it is within .25 m/s of the median vector.
+	 * If it isn't that module is said to be "Skidding"
+	 * @apiNote TEST ON BOT NEEDED
+	 * @param m_ChassisSpeeds
+	 * @return
+	 */
+	public boolean[] calculateSkidding() {
 		SwerveModuleState[] moduleStates = getModuleStates();
+		ChassisSpeeds currentChassisSpeeds = getChassisSpeeds();
 		// Step 1: Create a ChassisSpeeds object with solely the rotation component
 		ChassisSpeeds rotationOnlySpeeds = new ChassisSpeeds(0.0, 0.0,
-				m_ChassisSpeeds.omegaRadiansPerSecond);
+			currentChassisSpeeds.omegaRadiansPerSecond+.05);
+		double[] xComponentList = new double[4];
+		double[] yComponentList = new double[4];
 		// Step 2: Convert it into module states with kinematics
 		SwerveModuleState[] rotationalStates = kDriveKinematics
 				.toSwerveModuleStates(rotationOnlySpeeds);
@@ -170,26 +180,31 @@ public class REVSwerveS extends SubsystemChecker implements DrivetrainS {
 					* Math.sin(moduleStates[i].angle.getRadians())
 					- rotationalStates[i].speedMetersPerSecond
 							* Math.sin(rotationalStates[i].angle.getRadians());
-			// Magnitude of the resulting vector
-			moduleTranslationalSpeeds[i] = Math
-					.sqrt(deltaX * deltaX + deltaY * deltaY);
-			SmartDashboard.putNumber("moduleVx" + i, moduleTranslationalSpeeds[i]);
+			xComponentList[i] = deltaX; 
+			yComponentList[i] = deltaY;
 		}
-		double maxTranslationalVelocity = Double.NEGATIVE_INFINITY;
-		double minTranslationalVelocity = Double.POSITIVE_INFINITY;
-		for (double velocity : moduleTranslationalSpeeds) {
-			if (velocity > maxTranslationalVelocity) {
-				maxTranslationalVelocity = velocity;
-			}
-			if (velocity < minTranslationalVelocity) {
-				minTranslationalVelocity = velocity;
+		Arrays.sort(xComponentList);
+		Arrays.sort(yComponentList);
+		SmartDashboard.putNumberArray("Module Skid X", xComponentList);
+		SmartDashboard.putNumberArray("Module Skid Y", yComponentList);
+
+		double deltaMedianX = (xComponentList[1] + xComponentList[2]) / 2;
+		double deltaMedianY = (yComponentList[1] + yComponentList[2]) / 2;
+		SmartDashboard.putNumber("Skid X Median", deltaMedianX);
+		SmartDashboard.putNumber("Skid Y Median", deltaMedianY);
+
+		boolean[] areModulesSkidding = new boolean[4];
+		for (int i = 0; i < 4; i++){
+			double deltaX = xComponentList[i];
+			double deltaY = yComponentList[i];
+			if (Math.abs(deltaX - deltaMedianX) > DriveConstants.SKID_THRESHOLD || Math.abs(deltaY - deltaMedianY) > DriveConstants.SKID_THRESHOLD){
+				areModulesSkidding[i] = true;
+			}else{
+				areModulesSkidding[i] = false;
 			}
 		}
-		double velocityRatio = maxTranslationalVelocity
-				/ minTranslationalVelocity;
-		SmartDashboard.putNumber("VELOCITY RATIO", velocityRatio);
-		final double SKID_THRESHOLD = 1.8;
-		return velocityRatio > SKID_THRESHOLD;
+		SmartDashboard.putBooleanArray("Module Skids", areModulesSkidding);
+		return areModulesSkidding;
 	}
 	/**
 	 * Returns a command that will execute a quasistatic test in the given
@@ -311,7 +326,7 @@ public class REVSwerveS extends SubsystemChecker implements DrivetrainS {
 		return Rotation2d.fromDegrees(getHeading());
 	}
 	@Override
-	public boolean isSkidding(){
+	public boolean[] isSkidding(){
 		return isSkidding;
 	}
 	@Override
@@ -335,7 +350,7 @@ public class REVSwerveS extends SubsystemChecker implements DrivetrainS {
 		m_modulePositions = getPositionsWithTimestamp(getModulePositions());
 		// LIST MODULES IN THE SAME EXACT ORDER USED WHEN DECLARING SwerveDriveKinematics
 		m_ChassisSpeeds = kDriveKinematics.toChassisSpeeds(getModuleStates());
-		isSkidding = calculateSkidding(m_ChassisSpeeds);
+		isSkidding = calculateSkidding();
 		robotPosition = poseEstimator.updateWithTime(
 				m_modulePositions.getTimestamp(), getRotation2d(),
 				m_modulePositions.getPositions());
