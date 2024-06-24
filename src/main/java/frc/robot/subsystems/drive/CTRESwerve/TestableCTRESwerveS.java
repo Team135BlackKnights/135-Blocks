@@ -89,7 +89,11 @@ public class TestableCTRESwerveS extends SubsystemChecker
 				}
 		};
 	}
-
+	@Override
+	public void periodic(){
+		DrivetrainS.super.periodic();
+		ctreSwerveS.calculateSkidding(getChassisSpeeds());
+	}
 	public void registerSelfCheckHardware() {
 		super.registerHardware("IMU", ctreSwerveS.getPigeon2());
 		super.registerHardware("FrontLeftDrive", motors[0][0]);
@@ -183,7 +187,10 @@ public class TestableCTRESwerveS extends SubsystemChecker
 	public void setChassisSpeeds(ChassisSpeeds speeds) {
 		ctreSwerveS.setChassisSpeeds(speeds);
 	}
-
+	@Override
+	public boolean isSkidding(){
+		return ctreSwerveS.isSkidding();
+	}
 	@Override
 	public ChassisSpeeds getChassisSpeeds() {
 		return ctreSwerveS.getChassisSpeeds();

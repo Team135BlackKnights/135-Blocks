@@ -94,26 +94,78 @@ public class CTRESwerveS extends SwerveDrivetrain implements DrivetrainS {
 		super.registerTelemetry(logger::telemeterize);
 		SwerveModuleState[] moduleStates = super.m_moduleStates;
 		SmartDashboard.putData("Swerve Drive", new Sendable() {
-  @Override
-  public void initSendable(SendableBuilder builder) {
-    builder.setSmartDashboardType("SwerveDrive");
-
-    builder.addDoubleProperty("Front Left Angle", () -> moduleStates[0].angle.getRadians(), null);
-    builder.addDoubleProperty("Front Left Velocity", () -> moduleStates[0].speedMetersPerSecond, null);
-
-    builder.addDoubleProperty("Front Right Angle", () -> moduleStates[1].angle.getRadians(), null);
-    builder.addDoubleProperty("Front Right Velocity", () -> moduleStates[1].speedMetersPerSecond, null);
-
-    builder.addDoubleProperty("Back Left Angle", () -> moduleStates[2].angle.getRadians(), null);
-    builder.addDoubleProperty("Back Left Velocity", () -> moduleStates[2].speedMetersPerSecond, null);
-
-    builder.addDoubleProperty("Back Right Angle", () -> moduleStates[3].angle.getRadians(), null);
-    builder.addDoubleProperty("Back Right Velocity", () -> moduleStates[3].speedMetersPerSecond, null);
-
-    builder.addDoubleProperty("Robot Angle", () -> getPose().getRotation().plus(new Rotation2d(Units.degreesToRadians(0))).getRadians(), null); //🥥🥥🥥
-  }
-});
+  			@Override
+			public void initSendable(SendableBuilder builder) {
+				builder.setSmartDashboardType("SwerveDrive");
+				builder.addDoubleProperty("Front Left Angle",
+						() -> moduleStates[0].angle.getRadians(), null);
+				builder.addDoubleProperty("Front Left Velocity",
+						() -> moduleStates[0].speedMetersPerSecond, null);
+				builder.addDoubleProperty("Front Right Angle",
+						() -> moduleStates[1].angle.getRadians(), null);
+				builder.addDoubleProperty("Front Right Velocity",
+						() -> moduleStates[1].speedMetersPerSecond, null);
+				builder.addDoubleProperty("Back Left Angle",
+						() -> moduleStates[2].angle.getRadians(), null);
+				builder.addDoubleProperty("Back Left Velocity",
+						() -> moduleStates[2].speedMetersPerSecond, null);
+				builder.addDoubleProperty("Back Right Angle",
+						() -> moduleStates[3].angle.getRadians(), null);
+				builder.addDoubleProperty("Back Right Velocity",
+						() -> moduleStates[3].speedMetersPerSecond, null);
+				builder.addDoubleProperty("Robot Angle",
+						() -> getPose().getRotation()
+								.plus(new Rotation2d(Units.degreesToRadians(0)))
+								.getRadians(),
+						null); //🥥🥥🥥
+			}
+		});
 	}
+	@Override
+	public boolean isSkidding(){
+		return calculateSkidding(getChassisSpeeds());
+	}
+	public boolean calculateSkidding(ChassisSpeeds m_ChassisSpeeds) {
+		double[] moduleTranslationalSpeeds = new double[4];
+		SwerveModuleState[] moduleStates = super.getState().ModuleStates;
+		// Step 1: Create a ChassisSpeeds object with solely the rotation component
+		ChassisSpeeds rotationOnlySpeeds = new ChassisSpeeds(0.0, 0.0,
+				m_ChassisSpeeds.omegaRadiansPerSecond);
+		// Step 2: Convert it into module states with kinematics
+		SwerveModuleState[] rotationalStates = m_kinematics
+				.toSwerveModuleStates(rotationOnlySpeeds);
+		// Step 3: Subtract the rotational states from the module states and calculate the magnitudes
+		for (int i = 0; i < moduleStates.length; i++) {
+			double deltaX = moduleStates[i].speedMetersPerSecond
+					* Math.cos(moduleStates[i].angle.getRadians())
+					- rotationalStates[i].speedMetersPerSecond
+							* Math.cos(rotationalStates[i].angle.getRadians());
+			double deltaY = moduleStates[i].speedMetersPerSecond
+					* Math.sin(moduleStates[i].angle.getRadians())
+					- rotationalStates[i].speedMetersPerSecond
+							* Math.sin(rotationalStates[i].angle.getRadians());
+			// Magnitude of the resulting vector
+			moduleTranslationalSpeeds[i] = Math
+					.sqrt(deltaX * deltaX + deltaY * deltaY);
+			SmartDashboard.putNumber("moduleVx" + i, moduleTranslationalSpeeds[i]);
+		}
+		double maxTranslationalVelocity = Double.NEGATIVE_INFINITY;
+		double minTranslationalVelocity = Double.POSITIVE_INFINITY;
+		for (double velocity : moduleTranslationalSpeeds) {
+			if (velocity > maxTranslationalVelocity) {
+				maxTranslationalVelocity = velocity;
+			}
+			if (velocity < minTranslationalVelocity) {
+				minTranslationalVelocity = velocity;
+			}
+		}
+		double velocityRatio = maxTranslationalVelocity
+				/ minTranslationalVelocity;
+		SmartDashboard.putNumber("VELOCITY RATIO", velocityRatio);
+		final double SKID_THRESHOLD = 2;
+		return velocityRatio > SKID_THRESHOLD;
+	}
+  
 
 	@Override
 	public void applyRequest() {

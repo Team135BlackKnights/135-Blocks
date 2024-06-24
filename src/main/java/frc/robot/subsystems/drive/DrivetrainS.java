@@ -152,6 +152,9 @@ public interface DrivetrainS extends Subsystem {
 	default double getCurrent(){
 		return 0;
 	}
+	default boolean isSkidding(){
+		return false;
+	}
 	@Override
 	default void periodic() {
 		robotField.setRobotPose(getPose());

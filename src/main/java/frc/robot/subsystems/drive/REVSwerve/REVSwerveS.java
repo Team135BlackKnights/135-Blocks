@@ -70,6 +70,7 @@ public class REVSwerveS extends SubsystemChecker implements DrivetrainS {
 	ChassisSpeeds m_ChassisSpeeds;
 	static Vector<N3> stateStdDevs = VecBuilder.fill(0.1, 0.1, 0.1);
 	static Vector<N3> visionStdDevs = VecBuilder.fill(1, 1, 1);
+	boolean isSkidding = false;
 	public SwerveDrivePoseEstimator poseEstimator;
 	Position<SwerveModulePosition[]> m_modulePositions;
 	private double m_simYaw;
@@ -150,7 +151,46 @@ public class REVSwerveS extends SubsystemChecker implements DrivetrainS {
 		);
 		registerSelfCheckHardware();
 	}
-
+	public boolean calculateSkidding(ChassisSpeeds m_ChassisSpeeds) {
+		double[] moduleTranslationalSpeeds = new double[4];
+		SwerveModuleState[] moduleStates = getModuleStates();
+		// Step 1: Create a ChassisSpeeds object with solely the rotation component
+		ChassisSpeeds rotationOnlySpeeds = new ChassisSpeeds(0.0, 0.0,
+				m_ChassisSpeeds.omegaRadiansPerSecond);
+		// Step 2: Convert it into module states with kinematics
+		SwerveModuleState[] rotationalStates = kDriveKinematics
+				.toSwerveModuleStates(rotationOnlySpeeds);
+		// Step 3: Subtract the rotational states from the module states and calculate the magnitudes
+		for (int i = 0; i < moduleStates.length; i++) {
+			double deltaX = moduleStates[i].speedMetersPerSecond
+					* Math.cos(moduleStates[i].angle.getRadians())
+					- rotationalStates[i].speedMetersPerSecond
+							* Math.cos(rotationalStates[i].angle.getRadians());
+			double deltaY = moduleStates[i].speedMetersPerSecond
+					* Math.sin(moduleStates[i].angle.getRadians())
+					- rotationalStates[i].speedMetersPerSecond
+							* Math.sin(rotationalStates[i].angle.getRadians());
+			// Magnitude of the resulting vector
+			moduleTranslationalSpeeds[i] = Math
+					.sqrt(deltaX * deltaX + deltaY * deltaY);
+			SmartDashboard.putNumber("moduleVx" + i, moduleTranslationalSpeeds[i]);
+		}
+		double maxTranslationalVelocity = Double.NEGATIVE_INFINITY;
+		double minTranslationalVelocity = Double.POSITIVE_INFINITY;
+		for (double velocity : moduleTranslationalSpeeds) {
+			if (velocity > maxTranslationalVelocity) {
+				maxTranslationalVelocity = velocity;
+			}
+			if (velocity < minTranslationalVelocity) {
+				minTranslationalVelocity = velocity;
+			}
+		}
+		double velocityRatio = maxTranslationalVelocity
+				/ minTranslationalVelocity;
+		SmartDashboard.putNumber("VELOCITY RATIO", velocityRatio);
+		final double SKID_THRESHOLD = 1.8;
+		return velocityRatio > SKID_THRESHOLD;
+	}
 	/**
 	 * Returns a command that will execute a quasistatic test in the given
 	 * direction.
@@ -270,8 +310,10 @@ public class REVSwerveS extends SubsystemChecker implements DrivetrainS {
 	public Rotation2d getRotation2d() {
 		return Rotation2d.fromDegrees(getHeading());
 	}
-	//public static boolean getAutoLock() { return autoLock; }
-
+	@Override
+	public boolean isSkidding(){
+		return isSkidding;
+	}
 	@Override
 	public void periodic() {
 		
@@ -293,6 +335,7 @@ public class REVSwerveS extends SubsystemChecker implements DrivetrainS {
 		m_modulePositions = getPositionsWithTimestamp(getModulePositions());
 		// LIST MODULES IN THE SAME EXACT ORDER USED WHEN DECLARING SwerveDriveKinematics
 		m_ChassisSpeeds = kDriveKinematics.toChassisSpeeds(getModuleStates());
+		isSkidding = calculateSkidding(m_ChassisSpeeds);
 		robotPosition = poseEstimator.updateWithTime(
 				m_modulePositions.getTimestamp(), getRotation2d(),
 				m_modulePositions.getPositions());
