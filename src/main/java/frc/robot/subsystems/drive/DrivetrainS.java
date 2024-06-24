@@ -121,6 +121,11 @@ public interface DrivetrainS extends Subsystem {
 	 * @return if the gyro drivetrain is connected
 	 */
 	boolean isConnected();
+	/**
+	 * Checks gyros/accelerometers to check if a sudden movement has occured.
+	 * @return if a collision is detected
+	 */
+	boolean isCollisionDetected();
 
 	HashMap<String, Double>getTemps();
 	default Command getRunnableSystemCheckCommand(){
@@ -156,7 +161,7 @@ public interface DrivetrainS extends Subsystem {
 		return new boolean[]{false,false,false,false};
 	}
 	@Override
-	default void periodic() {
+	default void periodic() {	
 		robotField.setRobotPose(getPose());
 		// Logging callback for target robot pose
 		PathPlannerLogging.setLogTargetPoseCallback((pose) -> {

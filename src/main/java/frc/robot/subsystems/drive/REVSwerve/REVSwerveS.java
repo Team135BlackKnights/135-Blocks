@@ -72,9 +72,10 @@ public class REVSwerveS extends SubsystemChecker implements DrivetrainS {
 	static Vector<N3> stateStdDevs = VecBuilder.fill(0.1, 0.1, 0.1);
 	static Vector<N3> visionStdDevs = VecBuilder.fill(1, 1, 1);
 	boolean[] isSkidding = new boolean[]{false,false,false,false};
+	private boolean collisionDetected = false;
 	public SwerveDrivePoseEstimator poseEstimator;
 	Position<SwerveModulePosition[]> m_modulePositions;
-	private double m_simYaw;
+	private double m_simYaw, last_world_linear_accel_x, last_world_linear_accel_y;;
 	Measure<Velocity<Voltage>> rampRate = Volts.of(1).per(Seconds.of(1)); //for going FROM ZERO PER SECOND
 	Measure<Voltage> holdVoltage = Volts.of(8);
 	Measure<Time> timeout = Seconds.of(10);
@@ -373,6 +374,8 @@ public class REVSwerveS extends SubsystemChecker implements DrivetrainS {
 				m_ChassisSpeeds.vyMetersPerSecond).rotateBy(getRotation2d());
 		fieldVelocity = new Twist2d(linearFieldVelocity.getX(),
 				linearFieldVelocity.getY(), m_ChassisSpeeds.omegaRadiansPerSecond);
+		boolean collisionDetected = collisionDetected();
+		SmartDashboard.putBoolean("Collision Detected", collisionDetected);
 	}
 
 	@AutoLogOutput(key = "Odometry/Robot")
@@ -535,5 +538,25 @@ public class REVSwerveS extends SubsystemChecker implements DrivetrainS {
 		 tempMap.put("BRDriveTemp", m_swerveModules.get(ModulePosition.BACK_RIGHT).driveMotor.getMotorTemperature());
 		 tempMap.put("BRTurnTemp", m_swerveModules.get(ModulePosition.BACK_RIGHT).turningMotor.getMotorTemperature());
 		 return tempMap;
+	}
+
+	private boolean collisionDetected() {
+		double curr_world_linear_accel_x = gyro.getWorldLinearAccelX();
+		double currentJerkX = curr_world_linear_accel_x
+				- last_world_linear_accel_x;
+		last_world_linear_accel_x = curr_world_linear_accel_x;
+		double curr_world_linear_accel_y = gyro.getWorldLinearAccelY();
+		double currentJerkY = curr_world_linear_accel_y
+				- last_world_linear_accel_y;
+		last_world_linear_accel_y = curr_world_linear_accel_y;
+		if ((Math.abs(currentJerkX) > DriveConstants.MAX_G)
+				|| (Math.abs(currentJerkY) > DriveConstants.MAX_G)) {
+			return true;
+		}
+		return false;
+	}
+	@Override
+	public boolean isCollisionDetected() {
+		return collisionDetected;
 	}
 }

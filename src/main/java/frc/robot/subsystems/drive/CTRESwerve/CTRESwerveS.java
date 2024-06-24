@@ -44,8 +44,7 @@ import java.util.HashMap;
 public class CTRESwerveS extends SwerveDrivetrain implements DrivetrainS {
 	private static final double kSimLoopPeriod = 0.01; // 5 ms
 	private Notifier m_simNotifier = null; //Checks for updates
-	private double m_lastSimTime;
-	private double deadband = .1;
+	private double m_lastSimTime, deadband = .1, last_world_linear_accel_x, last_world_linear_accel_y;
 	private final SwerveRequest.ApplyChassisSpeeds AutoRequest = new SwerveRequest.ApplyChassisSpeeds();
 	private final SwerveRequest.SwerveDriveBrake brake = new SwerveRequest.SwerveDriveBrake();
 	private final SwerveRequest.FieldCentric drive = new SwerveRequest.FieldCentric()
@@ -173,7 +172,21 @@ public class CTRESwerveS extends SwerveDrivetrain implements DrivetrainS {
 		SmartDashboard.putBooleanArray("Module Skids", areModulesSkidding);
 		return areModulesSkidding;
 	}
-  
+	public boolean collisionDetected() {
+		double curr_world_linear_accel_x = super.m_pigeon2.getAccelerationX().getValueAsDouble();
+		double currentJerkX = curr_world_linear_accel_x
+				- last_world_linear_accel_x;
+		last_world_linear_accel_x = curr_world_linear_accel_x;
+		double curr_world_linear_accel_y = super.m_pigeon2.getAccelerationY().getValueAsDouble();
+		double currentJerkY = curr_world_linear_accel_y
+				- last_world_linear_accel_y;
+		last_world_linear_accel_y = curr_world_linear_accel_y;
+		if ((Math.abs(currentJerkX) > DriveConstants.MAX_G)
+				|| (Math.abs(currentJerkY) > DriveConstants.MAX_G)) {
+			return true;
+		}
+		return false;
+	}
 
 	@Override
 	public void applyRequest() {
@@ -391,4 +404,8 @@ public class CTRESwerveS extends SwerveDrivetrain implements DrivetrainS {
 	@Override
 	public HashMap<String, Double> getTemps() { 
 	throw new UnsupportedOperationException("Unimplemented method 'getTemps'"); }
+
+	@Override
+	public boolean isCollisionDetected() {
+	throw new UnsupportedOperationException("Unimplemented method 'isCollisionDetected'"); }
 }

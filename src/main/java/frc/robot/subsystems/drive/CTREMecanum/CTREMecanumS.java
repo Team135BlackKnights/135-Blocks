@@ -37,6 +37,7 @@ import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.simulation.DCMotorSim;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
@@ -45,6 +46,8 @@ import frc.robot.Constants;
 import frc.robot.Robot;
 import frc.robot.subsystems.SubsystemChecker;
 import frc.robot.subsystems.drive.DrivetrainS;
+import frc.robot.utils.drive.DriveConstants;
+
 import java.util.ArrayList;
 import static edu.wpi.first.units.Units.Seconds;
 import static edu.wpi.first.units.Units.Volts;
@@ -56,7 +59,8 @@ public class CTREMecanumS extends SubsystemChecker implements DrivetrainS {
 	private static Pigeon2 pigeon;
 	private static TalonFX[] motors;
 	private static double kWheelDiameter, kDriveBaseRadius, kMaxSpeedMetersPerSecond, kDriveMotorGearRatio;
-	private static double dtSeconds = 0.02;
+	private double dtSeconds = 0.02, last_world_linear_accel_x, last_world_linear_accel_y;
+	private boolean collisionDetected;
 	MecanumDriveKinematics kinematics;
 	private Twist2d fieldVelocity = new Twist2d();
 	MecanumDriveWheelSpeeds wheelSpeeds = new MecanumDriveWheelSpeeds(0, 0, 0,
@@ -220,6 +224,8 @@ public class CTREMecanumS extends SubsystemChecker implements DrivetrainS {
 				m_ChassisSpeeds.vyMetersPerSecond).rotateBy(getRotation2d());
 		fieldVelocity = new Twist2d(linearFieldVelocity.getX(),
 				linearFieldVelocity.getY(), m_ChassisSpeeds.omegaRadiansPerSecond);
+		boolean collisionDetected = collisionDetected();
+		SmartDashboard.putBoolean("Collision Detected", collisionDetected);
 	}
 
 	@Override
@@ -240,7 +246,25 @@ public class CTREMecanumS extends SubsystemChecker implements DrivetrainS {
 
 	@Override
 	public Pose2d getPose() { return pose; }
-
+	public boolean collisionDetected() {
+		double curr_world_linear_accel_x = pigeon.getAccelerationX().getValueAsDouble();
+		double currentJerkX = curr_world_linear_accel_x
+				- last_world_linear_accel_x;
+		last_world_linear_accel_x = curr_world_linear_accel_x;
+		double curr_world_linear_accel_y = pigeon.getAccelerationY().getValueAsDouble();
+		double currentJerkY = curr_world_linear_accel_y
+				- last_world_linear_accel_y;
+		last_world_linear_accel_y = curr_world_linear_accel_y;
+		if ((Math.abs(currentJerkX) > DriveConstants.MAX_G)
+				|| (Math.abs(currentJerkY) > DriveConstants.MAX_G)) {
+			return true;
+		}
+		return false;
+	}
+	@Override
+	public boolean isCollisionDetected(){
+		return collisionDetected;
+	}
 	@Override
 	public void stopModules() {
 		for (int i = 0; i < motors.length; i++) {

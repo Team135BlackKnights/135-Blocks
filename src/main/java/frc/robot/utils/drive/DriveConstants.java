@@ -44,7 +44,8 @@ public class DriveConstants {
 			kFrontRightAbsEncoderOffsetRad = 0.548137,
 			kBackLeftAbsEncoderOffsetRad = 2 * Math.PI - 2.891372,
 			kBackRightAbsEncoderOffsetRad = 2 * Math.PI - 0.116861,
-			SKID_THRESHOLD = .5; //Meters per second
+			SKID_THRESHOLD = .5, //Meters per second
+			MAX_G = .5;
 	public static PathConstraints pathConstraints = new PathConstraints(kMaxSpeedMetersPerSecond, kTeleDriveMaxAcceleration, kMaxTurningSpeedRadPerSec, kTeleTurningMaxAcceleration);
 	// kP = 0.1, kI = 0, kD = 0, kDistanceMultipler = .2; //for autoLock
 	// Declare the position of each module

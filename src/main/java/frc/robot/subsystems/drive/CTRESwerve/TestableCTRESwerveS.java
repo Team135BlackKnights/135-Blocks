@@ -19,6 +19,7 @@ import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
@@ -32,6 +33,7 @@ import java.util.HashMap;
 public class TestableCTRESwerveS extends SubsystemChecker
 		implements DrivetrainS {
 	final CTRESwerveS ctreSwerveS;
+	private boolean collisionDetected = false;
 	TalonFX[][] motors;
 
 	public TestableCTRESwerveS(SwerveDrivetrainConstants driveTrainConstants,
@@ -93,6 +95,8 @@ public class TestableCTRESwerveS extends SubsystemChecker
 	public void periodic(){
 		DrivetrainS.super.periodic();
 		ctreSwerveS.calculateSkidding();
+		boolean collisionDetected = ctreSwerveS.collisionDetected();
+		SmartDashboard.putBoolean("Collision Detected", collisionDetected);
 	}
 	public void registerSelfCheckHardware() {
 		super.registerHardware("IMU", ctreSwerveS.getPigeon2());
@@ -266,5 +270,8 @@ public class TestableCTRESwerveS extends SubsystemChecker
 		 tempMap.put("BRDriveTemp", motors[3][0].getDeviceTemp().getValueAsDouble());
 		 tempMap.put("BRTurnTemp", motors[3][1].getDeviceTemp().getValueAsDouble());
 		 return tempMap;
-	}	
+	}
+
+	@Override
+	public boolean isCollisionDetected() { return collisionDetected; }	
 }
