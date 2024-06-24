@@ -488,9 +488,10 @@ public class PhotonVisionS extends SubsystemChecker {
 	private double calculateXYStdDev(double lowestDist, double avgDist,
 			double avgPoseAmbiguity, double weighAverage, int numTags) {
 		double distWeight = Math.pow(lowestDist / 2.0, 2.0);
+		double avgDistWeight = Math.pow(avgDist / 3.5,2.0);
 		double poseWeight = Math.pow(avgPoseAmbiguity / 0.2, 2.0);
 		double weighAverageWeight = Math.pow(weighAverage, 2.0);
-		return VisionConstants.std_dev_multiplier * (distWeight + poseWeight + weighAverageWeight) / (numTags * 2);
+		return VisionConstants.std_dev_multiplier * (distWeight + poseWeight + weighAverageWeight + avgDistWeight) / (numTags * 2);
 	}
 
 	/**
@@ -500,10 +501,11 @@ public class PhotonVisionS extends SubsystemChecker {
 	private double calculateThetaStdDev(double lowestDist, double avgDist,
 			double avgPoseAmbiguity, double weighAverage, int numTags) {
 		double distWeight = Math.pow(lowestDist / 2.0, 2.0);
+		double avgDistWeight = Math.pow(avgDist / 3.5,2.0);
 		double poseWeight = Math.pow(avgPoseAmbiguity / 0.2, 2.0);
 		double weighAverageWeight = Math.pow(weighAverage, 2.0);
 
-    	return VisionConstants.std_dev_multiplier * (distWeight + poseWeight + weighAverageWeight) / (numTags * 2);
+    	return VisionConstants.std_dev_multiplier * (distWeight + poseWeight + weighAverageWeight + avgDistWeight) / (numTags * 2);
 	}
 
 	/**
