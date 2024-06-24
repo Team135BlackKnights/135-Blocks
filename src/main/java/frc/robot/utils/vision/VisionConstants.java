@@ -4,13 +4,9 @@ import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.apriltag.AprilTagFields;
-import edu.wpi.first.math.Matrix;
-import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation3d;
-import edu.wpi.first.math.numbers.N1;
-import edu.wpi.first.math.numbers.N3;
 import frc.robot.RobotContainer;
 import frc.robot.utils.drive.DriveConstants;
 
@@ -87,18 +83,16 @@ public class VisionConstants {
 			limelightLensHeightoffFloorInches = 22.5;
 	//For limelightHelpers
 	public static String limelightName = "limelight-swerve";
-	//Std Devs for PhotonVision Cameras
-	public static final Matrix<N3, N1> kSingleTagStdDevs = VecBuilder.fill(4, 4,
-			8);
-	public static final Matrix<N3, N1> kMultiTagStdDevs = VecBuilder.fill(0.5,
-			0.5, 1);
 	//For use in drivetoAITarget (PLACEHOLDER VALUE)
 	public static double DriveToAITargetKp = .3, DriveToAIMaxAutoTime = 2;
 	public static final double kMaxVisionCorrection = Units.inchesToMeters(5); // Jump from fused pose
+	public static final double kMaxVisionCorrectionSkid = Units.inchesToMeters(15); // Jump from fused pose
+
 	public static final double kMaxVelocity = Units.feetToMeters(4);
-	public static final double std_dev_multiplier = 3; 
+	public static final double std_dev_multiplier = 1; 
 	public static final double std_dev_steepness = 10;
    public static final double kMaxRotationCorrection = Units.degreesToRadians(2);
+	public static final double kMaxRotationCorrectionSkid = Units.degreesToRadians(6);
 	public static class FieldConstants {
 		public static final double kFieldLength = Units.inchesToMeters(651.223);
 		public static final double kFieldWidth = Units.inchesToMeters(323.277);

@@ -19,6 +19,7 @@ import frc.robot.utils.vision.VisionConstants.PVCameras;
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.math.Matrix;
+import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Transform3d;
@@ -377,6 +378,22 @@ public class PhotonVisionS extends SubsystemChecker {
 			return "Outside field";
 		}
 		double overallChange;
+		if (RobotContainer.drivetrainS.isSkidding()){
+			if (GeomUtil.distancePose(lastPosition,
+			newEst) > VisionConstants.kMaxVisionCorrectionSkid){
+				SmartDashboard.putString("Vision validation", "Max correction");
+				return "Max correction";
+			}
+			if (Math
+				.abs(newEst.getRotation().minus(lastPosition.getRotation())
+						.getRadians()) > VisionConstants.kMaxRotationCorrectionSkid
+				&& (RobotContainer.drivetrainS.isConnected())) {
+					SmartDashboard.putString("Vision validation", "Max rotation");
+					return "Max rotation";
+				}
+			SmartDashboard.putString("Vision validation", "Override Skid");
+			return "OK";
+		}
 		if (robotVelocity.vyMetersPerSecond == 0) {
 			overallChange = Math.abs(robotVelocity.vxMetersPerSecond);
 		} else {
@@ -422,12 +439,11 @@ public class PhotonVisionS extends SubsystemChecker {
 	public Matrix<N3, N1> getEstimationStdDevs(Pose2d estimatedPose,
 			PhotonPoseEstimator photonEstimator, PhotonCamera cam) {
 		//Default Std deviation
-		var estStdDevs = VisionConstants.kSingleTagStdDevs;
 		//All the targets that have been pulled from a camera
 		var targets = cam.getLatestResult().getTargets();
 		//Number of tags and average distance
 		numTags.clear();
-		double avgDist = 0;
+		double avgDist = 0, avgPoseAmbiguity = 0;
 		double lowestDist = Double.MAX_VALUE;
 		//Iterate through each target
 		for (var tgt : targets) {
@@ -437,7 +453,7 @@ public class PhotonVisionS extends SubsystemChecker {
 					.getTagPose(tgt.getFiducialId());
 			if (tagPose.isEmpty())
 				continue;
-			if (tgt.getPoseAmbiguity() > .2) {
+			if (tgt.getPoseAmbiguity() > .3) {
 				avgDist += 10;
 				continue; //give zero F's about bad tags
 			}
@@ -447,23 +463,66 @@ public class PhotonVisionS extends SubsystemChecker {
 				lowestDist = dist;
 			}
 			avgDist += dist;
+			avgPoseAmbiguity += tgt.getPoseAmbiguity();
 		}
 		avgDist /= numTags.size();
-		double xyStdDev = VisionConstants.std_dev_multiplier * (0.1)
-				* ((0.01 * Math.pow(lowestDist, 2.0))
-						+ (0.005 * Math.pow(avgDist, 2.0)))
-				/ numTags.size();
+		avgPoseAmbiguity /= numTags.size();
 		double weighAverage = 0;
 		for (int tag : numTags) {
 			weighAverage += VisionConstants.FieldConstants.aprilTagOffsets[tag];
 		}
 		weighAverage /= numTags.size();
-		xyStdDev *= VisionConstants.std_dev_steepness
-				* (1 - Math.exp(-16 * (1 - weighAverage))) + 1;
-		xyStdDev = Math.max(0.01, xyStdDev);
-		return estStdDevs;
+		double xyStdDev = calculateXYStdDev(lowestDist, avgDist, avgPoseAmbiguity,
+				weighAverage, numTags.size());
+		double thetaStdDev = calculateThetaStdDev(lowestDist, avgDist,
+				avgPoseAmbiguity, weighAverage, numTags.size());
+		xyStdDev = applyAdditionalAdjustments(xyStdDev,numTags.size());
+		thetaStdDev = applyAdditionalAdjustments(thetaStdDev,numTags.size());
+		return VecBuilder.fill(xyStdDev, xyStdDev, thetaStdDev);
 	}
 
+	/**
+	 * Calculate xyStdDev based on distance, average distance, average pose
+	 * ambiguity, weigh average, and number of tags.
+	 */
+	private double calculateXYStdDev(double lowestDist, double avgDist,
+			double avgPoseAmbiguity, double weighAverage, int numTags) {
+		double distWeight = Math.pow(lowestDist / 2.0, 2.0);
+		double poseWeight = Math.pow(avgPoseAmbiguity / 0.2, 2.0);
+		double weighAverageWeight = Math.pow(weighAverage, 2.0);
+		return VisionConstants.std_dev_multiplier * (distWeight + poseWeight + weighAverageWeight) / (numTags * 2);
+	}
+
+	/**
+	 * Calculate thetaStdDev based on distance, average distance, average pose
+	 * ambiguity, weigh average, and number of tags.
+	 */
+	private double calculateThetaStdDev(double lowestDist, double avgDist,
+			double avgPoseAmbiguity, double weighAverage, int numTags) {
+		double distWeight = Math.pow(lowestDist / 2.0, 2.0);
+		double poseWeight = Math.pow(avgPoseAmbiguity / 0.2, 2.0);
+		double weighAverageWeight = Math.pow(weighAverage, 2.0);
+
+    	return VisionConstants.std_dev_multiplier * (distWeight + poseWeight + weighAverageWeight) / (numTags * 2);
+	}
+
+	/**
+	 * Apply any additional adjustments or constraints to the calculated standard
+	 * deviation.
+	 */
+	private double applyAdditionalAdjustments(double stdDev, double tagCount) {
+		if (RobotContainer.drivetrainS.isSkidding()) {
+			stdDev /= 2;
+			return Math.max(0.05,stdDev);
+		}
+		if (tagCount == 1){
+			return Math.max(0.35,stdDev);
+		}else if (tagCount == 2){
+			return Math.max(0.2,stdDev);
+		}
+		// Add more adjustments as needed
+		return Math.max(0.02, stdDev); // Minimum threshold
+	}
 
 
 	@Override
