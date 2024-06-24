@@ -378,7 +378,8 @@ public class PhotonVisionS extends SubsystemChecker {
 			return "Outside field";
 		}
 		double overallChange;
-		if (RobotContainer.drivetrainS.isSkidding()){
+		boolean[] moduleSkids = RobotContainer.drivetrainS.isSkidding();
+		if (moduleSkids[0] || moduleSkids[1] || moduleSkids[2] || moduleSkids[3]){
 			if (GeomUtil.distancePose(lastPosition,
 			newEst) > VisionConstants.kMaxVisionCorrectionSkid){
 				SmartDashboard.putString("Vision validation", "Max correction");
@@ -401,6 +402,7 @@ public class PhotonVisionS extends SubsystemChecker {
 			SmartDashboard.putString("Vision validation", "Override Skid");
 			return "OK";
 		}
+		//The following check for velocity MAY be unneeded!
 		if (robotVelocity.vyMetersPerSecond == 0) {
 			overallChange = Math.abs(robotVelocity.vxMetersPerSecond);
 		} else {
@@ -523,8 +525,13 @@ public class PhotonVisionS extends SubsystemChecker {
 	 * deviation.
 	 */
 	private double applyAdditionalAdjustments(double stdDev, double tagCount) {
-		if (RobotContainer.drivetrainS.isSkidding()) {
-			stdDev /= 2;
+		boolean[] moduleSkids = RobotContainer.drivetrainS.isSkidding();
+		for (boolean moduleSkid : moduleSkids){
+			if (moduleSkid){
+				stdDev /= 2;
+			}
+		}
+		if (moduleSkids[0] || moduleSkids[1] || moduleSkids[2] || moduleSkids[3]){
 			return Math.max(0.05,stdDev);
 		}
 		if (tagCount == 1){
