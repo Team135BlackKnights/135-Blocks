@@ -303,7 +303,7 @@ public class PhotonVisionS extends SubsystemChecker {
 					String response = shouldAcceptVision(time, estPose,
 							RobotContainer.drivetrainS.getPose(),
 							RobotContainer.drivetrainS.getChassisSpeeds(),
-							aprilTagList);
+							aprilTagList,cCam);
 					if (response == "OK") {
 						// Change our trust in the measurement based on the tags we can see
 						// We do this because we should trust cam estimates with closer apriltags than farther ones.
@@ -362,7 +362,7 @@ public class PhotonVisionS extends SubsystemChecker {
 
 	public String shouldAcceptVision(double timestamp, Pose2d newEst,
 			Pose2d lastPosition, ChassisSpeeds robotVelocity,
-			ArrayList<Integer> aprilTagList) {
+			ArrayList<Integer> aprilTagList, PhotonCamera cam) {
 		// Check out of field
 		if (newEst.getTranslation()
 				.getX() < -VisionConstants.FieldConstants.kFieldBorderMargin
@@ -391,6 +391,13 @@ public class PhotonVisionS extends SubsystemChecker {
 					SmartDashboard.putString("Vision validation", "Max rotation");
 					return "Max rotation";
 				}
+			var targets = cam.getLatestResult().getTargets();
+			for (var target : targets){
+				if (target.getPoseAmbiguity() > .5){
+					SmartDashboard.putString("Vision validation", "Max ambiguity");
+					return "Max ambiguity";
+				}
+			}
 			SmartDashboard.putString("Vision validation", "Override Skid");
 			return "OK";
 		}
@@ -420,6 +427,13 @@ public class PhotonVisionS extends SubsystemChecker {
 		for (int aprilTagID : aprilTagList) {
 			if (VisionConstants.FieldConstants.aprilTagOffsets[aprilTagID] < VisionConstants.FieldConstants.kFieldTagMinTrust) {
 				SmartDashboard.putString("Vision validation", "Min trust");
+			}
+		}
+		var targets = cam.getLatestResult().getTargets();
+		for (var target : targets){
+			if (target.getPoseAmbiguity() > .3){
+				SmartDashboard.putString("Vision validation", "Max ambiguity");
+				return "Max ambiguity";
 			}
 		}
 		SmartDashboard.putString("Vision validation", "OK");
@@ -453,10 +467,6 @@ public class PhotonVisionS extends SubsystemChecker {
 					.getTagPose(tgt.getFiducialId());
 			if (tagPose.isEmpty())
 				continue;
-			if (tgt.getPoseAmbiguity() > .3) {
-				avgDist += 10;
-				continue; //give zero F's about bad tags
-			}
 			double dist = tagPose.get().toPose2d().getTranslation()
 					.getDistance(estimatedPose.getTranslation());
 			if (dist < lowestDist) {
