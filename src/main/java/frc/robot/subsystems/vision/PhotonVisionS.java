@@ -27,6 +27,7 @@ import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.Constants.Mode;
@@ -52,7 +53,8 @@ public class PhotonVisionS extends SubsystemChecker {
 	public static double camXError = 0f;
 	static double distance = 0;
 	private static PhotonCamera frontCam, rightCam, leftCam, backCam;
-
+	private boolean override = false;
+	private Timer timer = new Timer();
 	public PhotonVisionS() {
 		//load the field 
 		AprilTagFieldLayout fieldLayout = AprilTagFieldLayout
@@ -106,10 +108,10 @@ public class PhotonVisionS extends SubsystemChecker {
 			/*We use ARDUCAM OV9281s, which are the same cameras as on the limelight 3G. BLACK AND WHITE 
 			This means we can use the limelight properties. In an array for iteration.*/
 			SimCameraProperties[] properties = new SimCameraProperties[] {
-					SimCameraProperties.LL2_960_720(),
-					SimCameraProperties.LL2_960_720(),
-					SimCameraProperties.LL2_960_720(),
-					SimCameraProperties.LL2_960_720(),
+					SimCameraProperties.LL2_1280_720(),
+					SimCameraProperties.LL2_1280_720(),
+					SimCameraProperties.LL2_1280_720(),
+					SimCameraProperties.LL2_1280_720(),
 			};
 			//Adds each camera present in the previous array to the visionSim. 
 			for (var i = 0; i < cams.length; i++) {
@@ -281,6 +283,10 @@ public class PhotonVisionS extends SubsystemChecker {
 		if (Constants.currentMode == Mode.SIM) {
 			visionSim.update(RobotContainer.drivetrainS.getPose());
 		}
+		if (timer.get() > 1){
+			timer.stop();
+			override = false;
+		}
 		//Update the global pose for each camera
 		for (int i = 0; i < cams.length; i++) {
 			PhotonPoseEstimator cEstimator = camEstimates[i];
@@ -379,7 +385,11 @@ public class PhotonVisionS extends SubsystemChecker {
 		}
 		double overallChange;
 		boolean[] moduleSkids = RobotContainer.drivetrainS.isSkidding();
-		if (moduleSkids[0] || moduleSkids[1] || moduleSkids[2] || moduleSkids[3]){
+		if (moduleSkids[0] || moduleSkids[1] || moduleSkids[2] || moduleSkids[3] || RobotContainer.drivetrainS.isCollisionDetected() || override){
+			if (RobotContainer.drivetrainS.isCollisionDetected()){
+				override = true;
+				timer.restart();
+			}
 			if (GeomUtil.distancePose(lastPosition,
 			newEst) > VisionConstants.kMaxVisionCorrectionSkid){
 				SmartDashboard.putString("Vision validation", "Max correction");
@@ -399,7 +409,7 @@ public class PhotonVisionS extends SubsystemChecker {
 					return "Max ambiguity";
 				}
 			}
-			SmartDashboard.putString("Vision validation", "Override Skid");
+			SmartDashboard.putString("Vision validation", "Override");
 			return "OK";
 		}
 		//The following check for velocity MAY be unneeded!
@@ -530,6 +540,9 @@ public class PhotonVisionS extends SubsystemChecker {
 			if (moduleSkid){
 				stdDev /= 2;
 			}
+		}
+		if (RobotContainer.drivetrainS.isCollisionDetected() || override){
+			stdDev /= 4;
 		}
 		if (moduleSkids[0] || moduleSkids[1] || moduleSkids[2] || moduleSkids[3]){
 			return Math.max(0.05,stdDev);
