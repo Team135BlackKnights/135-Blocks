@@ -5,6 +5,8 @@ package frc.robot;
 
 import frc.robot.commands.drive.DrivetrainC;
 import frc.robot.subsystems.SubsystemChecker;
+import frc.robot.commands.servos.ServoC;
+
 import frc.robot.subsystems.drive.DrivetrainS;
 import frc.robot.subsystems.drive.CTREMecanum.CTREMecanumConstantContainer;
 import frc.robot.subsystems.drive.CTREMecanum.CTREMecanumS;
@@ -22,6 +24,7 @@ import frc.robot.subsystems.drive.Tank.DriveIOSparkMax;
 import frc.robot.subsystems.drive.Tank.DriveIOTalonFX;
 import frc.robot.subsystems.drive.Tank.Tank;
 import frc.robot.utils.RunTest;
+import frc.robot.subsystems.servos.ServoS;
 import frc.robot.utils.drive.DriveConstants;
 
 import frc.robot.utils.drive.DriveConstants.TrainConstants;
@@ -89,7 +92,8 @@ public class RobotContainer {
 	public static int currentTest = 0, currentGamePieceStatus = 0;
 	public static String currentPath = "";
 	public static Field2d field = new Field2d();
-   public static Pose2d opposingBotPose;
+  public static Pose2d opposingBotPose;
+	final static ServoS servoS = new ServoS();
 
 	// POVButton manipPOVZero = new POVButton(manipController, 0);
 	// POVButton manipPOV180 = new POVButton(manipController, 180);
@@ -206,8 +210,8 @@ y	 * @throws NotActiveException IF mecanum and Replay
 						"Mecanum does NOT support replay.");
 			}
 		}
-		
 		drivetrainS.setDefaultCommand(new DrivetrainC(drivetrainS));
+
 		List<Pair<String, Command>> autoCommands = Arrays.asList(
 		//new Pair<String,Command>("AimAtAmp",new AimToPose(drivetrainS, new Pose2d(1.9,7.7, new Rotation2d(Units.degreesToRadians(0)))))
 		//new Pair<String, Command>("BranchGrabbingGamePiece", new BranchAuto("grabGamePieceBranch",new Pose2d(0,0,new Rotation2d())))
@@ -217,7 +221,6 @@ y	 * @throws NotActiveException IF mecanum and Replay
 		);
 		Pathfinding.setPathfinder(new LocalADStarAK());
 		NamedCommands.registerCommands(autoCommands);
-		PathfindingCommand.warmupCommand().schedule();
 		if (Constants.isCompetition) {
 			PPLibTelemetry.enableCompetitionMode();
 		}
@@ -225,6 +228,7 @@ y	 * @throws NotActiveException IF mecanum and Replay
 		.finallyDo(() -> RobotContainer.field.getObject("target pose")
 				.setPose(new Pose2d(-50, -50, new Rotation2d())))
 		.schedule();
+		servoS.setDefaultCommand(new ServoC(servoS));
 		autoChooser = AutoBuilder.buildAutoChooser();
 		SmartDashboard.putData(field);
 		SmartDashboard.putData("Auto Chooser", autoChooser);
@@ -316,7 +320,7 @@ y	 * @throws NotActiveException IF mecanum and Replay
 	 * @return a command with all of them in a sequence.
 	 */
 	public static Command allSystemsCheck() {
-	return Commands.sequence(drivetrainS.getRunnableSystemCheckCommand());
+	return Commands.sequence(drivetrainS.getRunnableSystemCheckCommand(),servoS.getSystemCheckCommand());
 	}
 	public static HashMap<String, Double> combineMaps(List<HashMap<String, Double>> maps) {
 		HashMap<String, Double> combinedMap = new HashMap<>();
@@ -342,7 +346,8 @@ y	 * @throws NotActiveException IF mecanum and Replay
 	 * @return true if ALL systems were good.
 	 */
 	public static boolean allSystemsOK() {
-		return drivetrainS.getTrueSystemStatus() == SubsystemChecker.SystemStatus.OK;
+		return drivetrainS.getTrueSystemStatus() == SubsystemChecker.SystemStatus.OK
+		&& servoS.getSystemStatus() == SubsystemChecker.SystemStatus.OK;
 	 }
 	public static Collection<ParentDevice> getOrchestraDevices() {
 		Collection<ParentDevice> devices = new ArrayList<>();
@@ -350,8 +355,9 @@ y	 * @throws NotActiveException IF mecanum and Replay
 		return devices;
 	}
 	public static Subsystem[] getAllSubsystems(){
-		Subsystem[] subsystems = new Subsystem[1];
+		Subsystem[] subsystems = new Subsystem[2];
 		subsystems[0] = drivetrainS;
+    subsystems[1] = servoS;
 		return subsystems;
 	}
 }
