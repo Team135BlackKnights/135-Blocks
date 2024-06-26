@@ -7,6 +7,7 @@ import java.util.List;
 
 public class SelfCheckingCANCoder implements SelfChecking {
   private final String label;
+  private final CANcoder canCoder;
   private final StatusSignal<Boolean> hardwareFaultSignal;
   private final StatusSignal<Boolean> bootEnabledSignal;
   private final StatusSignal<Boolean> badMagnetSignal;
@@ -14,7 +15,7 @@ public class SelfCheckingCANCoder implements SelfChecking {
 
   public SelfCheckingCANCoder(String label, CANcoder canCoder) {
     this.label = label;
-
+	 this.canCoder = canCoder;
     this.hardwareFaultSignal = canCoder.getFault_Hardware();
     this.bootEnabledSignal = canCoder.getFault_BootDuringEnable();
     this.badMagnetSignal = canCoder.getFault_BadMagnet();
@@ -43,4 +44,8 @@ public class SelfCheckingCANCoder implements SelfChecking {
 
     return faults;
   }
+
+@Override
+public Object getHardware() { return canCoder; }
+  
 }

@@ -23,4 +23,8 @@ public class SelfCheckingPWMMotor implements SelfChecking {
 
     return faults;
   }
+
+@Override
+public Object getHardware() {return motor;}
+  
 }

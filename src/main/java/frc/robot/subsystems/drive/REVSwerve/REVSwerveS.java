@@ -559,4 +559,8 @@ public class REVSwerveS extends SubsystemChecker implements DrivetrainS {
 	public boolean isCollisionDetected() {
 		return collisionDetected;
 	}
+	@Override
+	public double getCurrent(){
+		return 0;
+	}
 }

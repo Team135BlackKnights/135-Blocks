@@ -34,7 +34,6 @@ import edu.wpi.first.units.Time;
 import edu.wpi.first.units.Velocity;
 import edu.wpi.first.units.Voltage;
 import edu.wpi.first.wpilibj.RobotController;
-import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.simulation.DCMotorSim;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -54,6 +53,8 @@ import static edu.wpi.first.units.Units.Volts;
 import java.util.HashMap;
 
 import java.util.List;
+
+import org.littletonrobotics.junction.Logger;
 
 public class CTREMecanumS extends SubsystemChecker implements DrivetrainS {
 	private static Pigeon2 pigeon;
@@ -110,7 +111,7 @@ public class CTREMecanumS extends SubsystemChecker implements DrivetrainS {
 			container.getTranslation2ds()[1],
 			container.getTranslation2ds()[2],
 			container.getTranslation2ds()[3]);
-		updateTime = Timer.getFPGATimestamp();
+		updateTime = Logger.getTimestamp();
 		poseEstimator = new MecanumDrivePoseEstimator(
 			kinematics, getRotation2d(), wheelPositions, pose);	
 			motorSimModels  = new DCMotorSim[]{
@@ -159,7 +160,7 @@ public class CTREMecanumS extends SubsystemChecker implements DrivetrainS {
 
 	public void updateWheelPositions() {
 		double[] wheelPos = getWheelPositionMeters();
-		updateTime = Timer.getFPGATimestamp();
+		updateTime = Logger.getTimestamp();
 		wheelPositions.frontLeftMeters = wheelPos[0];
 		wheelPositions.frontRightMeters = wheelPos[1];
 		wheelPositions.rearLeftMeters = wheelPos[2];

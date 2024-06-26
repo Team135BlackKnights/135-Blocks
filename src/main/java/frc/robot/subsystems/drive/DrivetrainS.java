@@ -11,7 +11,6 @@ import edu.wpi.first.math.geometry.Twist2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
-import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -145,7 +144,7 @@ public interface DrivetrainS extends Subsystem {
 	 * @return
 	 */
 	default <T> Position<T> getPositionsWithTimestamp(T positions) {
-        double timestamp = Timer.getFPGATimestamp();
+        double timestamp = Logger.getTimestamp();
         return new Position<>(positions, timestamp);
     }
 	/**

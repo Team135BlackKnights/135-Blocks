@@ -8,7 +8,6 @@ import com.kauailabs.navx.frc.AHRS;
 import com.revrobotics.CANSparkBase;
 
 import edu.wpi.first.wpilibj.RobotBase;
-import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.motorcontrol.PWMMotorController;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -75,7 +74,7 @@ public abstract class SubsystemChecker extends SubsystemBase {
   }
 
   public abstract List<ParentDevice> getOrchestraDevices();
-
+  public abstract double getCurrent();
   private void setupCallbacks() {
     Robot.addPeriodic(this::checkForFaults, 0.25);
     Robot.addPeriodic(this::publishStatus, 1.0);
@@ -129,7 +128,7 @@ public abstract class SubsystemChecker extends SubsystemBase {
     SystemStatus worstStatus = SystemStatus.OK;
 
     for (SubsystemFault f : this.faults) {
-      if (f.sticky || f.timestamp > Timer.getFPGATimestamp() - 10) {
+      if (f.sticky || f.timestamp > Logger.getTimestamp() - 10) {
         if (f.isWarning) {
           if (worstStatus != SystemStatus.ERROR) {
             worstStatus = SystemStatus.WARNING;
@@ -162,7 +161,9 @@ public abstract class SubsystemChecker extends SubsystemBase {
   public void registerHardware(String label, CANcoder canCoder) {
     hardware.add(new SelfCheckingCANCoder(label, canCoder));
   }
-
+  public void registerAllHardware(List<SelfChecking> selfCheckingDevices){
+	 hardware.addAll(selfCheckingDevices);
+  }
   // Command to run a full systems check
   protected abstract Command systemCheckCommand();
 

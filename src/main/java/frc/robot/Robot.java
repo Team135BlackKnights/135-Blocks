@@ -25,10 +25,8 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.trajectory.Trajectory;
 import edu.wpi.first.net.PortForwarder;
-import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.RobotController;
-import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.simulation.BatterySim;
 import edu.wpi.first.wpilibj.simulation.RoboRioSim;
 import java.util.ArrayList;
@@ -70,6 +68,7 @@ public class Robot extends LoggedRobot {
 			break;
 		case SIM:
 			// Running a physics simulator, log to NT
+			Logger.addDataReceiver(new WPILOGWriter());
 			Logger.addDataReceiver(new NT4Publisher());
 			break;
 		case REPLAY:
@@ -81,8 +80,6 @@ public class Robot extends LoggedRobot {
 					new WPILOGWriter(LogFileUtil.addPathSuffix(logPath, "_sim")));
 			break;
 		}
-		DataLogManager.start();
-		DriverStation.startDataLog(DataLogManager.getLog());
 		Logger.registerURCL(URCL.startExternal(Constants.manCanIdsToNames()));
 		Logger.start();
 		m_robotContainer = new RobotContainer();
@@ -280,10 +277,10 @@ public class Robot extends LoggedRobot {
     }
 
     private void runIfReady() {
-      if (Timer.getFPGATimestamp() > lastRunTimeSeconds + periodSeconds) {
+      if (Logger.getTimestamp() > lastRunTimeSeconds + periodSeconds) {
         callback.run();
 
-        lastRunTimeSeconds = Timer.getFPGATimestamp();
+        lastRunTimeSeconds = Logger.getTimestamp();
       }
     }
   }

@@ -1,5 +1,8 @@
 package frc.robot.utils;
 
+import edu.wpi.first.math.controller.PIDController;
+import edu.wpi.first.math.controller.SimpleMotorFeedforward;
+
 /**
  * Class designed to hold the values for Kp, Ks, Kv for state-space models and P and D for PID loops. Remember to check whether your loop should be position or velocity
  * @param Kp
@@ -37,6 +40,20 @@ public class MotorConstantContainer {
 			this.valueHolderArray[3] = P;
 			this.valueHolderArray[4] = D;
 		}
+	}
+	/**
+	 * Easy to use FeedForward implementation
+	 * @return SimpleMotorFeedforward of Ks and Kv
+	 */
+	public SimpleMotorFeedforward getFeedforward(){
+		return new SimpleMotorFeedforward((getKs()), getKv());
+	}
+		/**
+	 * Easy to use PD implementation
+	 * @return PID of P and D.
+	 */
+	public PIDController getPidController(){
+		return new PIDController(getP(), 0, getD());
 	}
 	/**
 	 * 

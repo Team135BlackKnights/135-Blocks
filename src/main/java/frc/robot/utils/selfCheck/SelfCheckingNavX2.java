@@ -24,4 +24,9 @@ public class SelfCheckingNavX2 implements SelfChecking {
 	 }
     return faults;
   }
+
+@Override
+public Object getHardware() { 
+	return navX;
+ }
 }

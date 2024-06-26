@@ -8,8 +8,8 @@ import frc.robot.utils.MotorConstantContainer;
 
 public class DriveConstants {
 	//ONLY CTRE_SWERVE IS *FULLY* CURRENT DRAW ACCURATE IN SIM
-	public static MotorVendor robotMotorController = MotorVendor.CTRE_MOTORS;
-	public static driveTrainType driveType = driveTrainType.SWERVE;
+	public static MotorVendor robotMotorController = MotorVendor.NEO_SPARK_MAX;
+	public static driveTrainType driveType = driveTrainType.TANK;
 
 	/**
 	 * What motors and motorContollers are we using
@@ -24,7 +24,6 @@ public class DriveConstants {
 	public enum driveTrainType {
 		SWERVE, TANK, MECANUM
 	}
-
 	public static boolean fieldOriented = true;
 	//135-Blocks was tested on a chassis with all CANSparkMaxes, as well as all Kraken-x60s.
 	public static final double kChassisWidth = Units.inchesToMeters(24.25), // Distance between Left and Right wheels
@@ -66,7 +65,9 @@ public class DriveConstants {
 			kBackLeftAbsEncoderPort = 3, // 3
 			kBackRightDrivePort = 12, // 14
 			kBackRightTurningPort = 13, // 24
-			kBackRightAbsEncoderPort = 1; // 4
+			kBackRightAbsEncoderPort = 1, // 4
+			kMaxDriveCurrent = 40,
+			kMaxTurnCurrent = 30;
 	public static boolean kFrontLeftDriveReversed = true,
 			kFrontLeftTurningReversed = true, kFrontLeftAbsEncoderReversed = false,
 			kFrontRightDriveReversed = false, kFrontRightTurningReversed = true,
@@ -89,9 +90,12 @@ public class DriveConstants {
 				kDriveEncoderRPM2MeterPerSec = kDriveEncoderRot2Meter/60,
 				kTurningEncoderRot2Rad = kTurningMotorGearRatio * 2 * Math.PI,
 				kTurningEncoderRPM2RadPerSec = kTurningEncoderRot2Rad/60,
-				kDeadband = 0.1;
+				kDeadband = 0.1,weight = Units.lbsToKilograms(45);
 		public static final MotorConstantContainer overallTurningMotorConstantContainer = new MotorConstantContainer(
-				.2907325, .002131625, .000203095, 1.07062 * 4, 0.019508), //Average the turning motors for these vals.
+				0.001, 0.001, 0.001, 7, 0.001), //Average the turning motors for these vals.
+				overallDriveMotorConstantContainer = new MotorConstantContainer(
+						.1, .13, 0.001,
+						0.05, 0.001),
 				frontRightDriveMotorConstantContainer = new MotorConstantContainer(
 						.04248, 2.9041, 1.52, 2.4646, 0),
 				frontLeftDriveMotorConstantContainer = new MotorConstantContainer(
