@@ -23,7 +23,13 @@ public class VisionConstants {
 
 	//We put the cameras into an enum to make iteration easier
 	public static enum PVCameras {
-		Front_Camera, Left_Camera, Right_Camera, Back_Camera
+		Front_Camera, Left_Camera, Right_Camera, Back_Camera;
+		public static PVCameras getCameraByIndex(int index) {
+			if (index < 0 || index >= PVCameras.values().length) {
+				 throw new IndexOutOfBoundsException("Index out of bounds for PVCameras enum.");
+			}
+			return PVCameras.values()[index];
+	  }
 	}
 	//We used 2 cameras for our 2024 year, adjust these accordingly by removing camera names (there are two extra cameras here)
 	//Camera names, from photonVision web interface
@@ -93,6 +99,7 @@ public class VisionConstants {
 	public static final double std_dev_steepness = 10;
    public static final double kMaxRotationCorrection = Units.degreesToRadians(2);
 	public static final double kMaxRotationCorrectionSkid = Units.degreesToRadians(6);
+    public static final double timestampLatencyOffset = 65 * 1000; //65 ms to microseconds
 	public static class FieldConstants {
 		public static final double kFieldLength = Units.inchesToMeters(651.223);
 		public static final double kFieldWidth = Units.inchesToMeters(323.277);

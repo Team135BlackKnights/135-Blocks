@@ -13,16 +13,21 @@ import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.Constants;
 import frc.robot.RobotContainer;
 import frc.robot.subsystems.drive.DrivetrainS;
-import frc.robot.subsystems.vision.VisionIOPhotonVision;
 import frc.robot.utils.GeomUtil;
 import frc.robot.utils.LoggableTunedNumber;
 import java.util.Optional;
 
 import org.littletonrobotics.junction.Logger;
 import org.photonvision.PhotonCamera;
+/**
+ * @deprecated
+ * NOT CURRENTLY FUNCTIONAL. AimToAprilTag is NO LONGER supported. Use DriveToPose or AimToPose. They're much more stable.
+ */
 public class AimToAprilTag extends Command {
 	private final DrivetrainS drivetrainS;
+	@SuppressWarnings("unused")
 	private final int aprilTagID;
+	@SuppressWarnings("unused")
 	private final PhotonCamera cam;
 	private final ProfiledPIDController thetaController = new ProfiledPIDController(
 			0.0, 0.0, 0.0, new TrapezoidProfile.Constraints(0.0, 0.0), .02);
