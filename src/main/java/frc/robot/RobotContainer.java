@@ -24,8 +24,9 @@ import frc.robot.subsystems.drive.Tank.Tank;
 import frc.robot.utils.RunTest;
 import frc.robot.utils.drive.DriveConstants;
 import frc.robot.commands.drive.vision.DriveToAITarget;
-
-import frc.robot.subsystems.vision.PhotonVisionS;
+import frc.robot.subsystems.vision.Vision;
+import frc.robot.subsystems.vision.VisionIO;
+import frc.robot.subsystems.vision.VisionIOPhotonVision;
 import frc.robot.utils.vision.VisionConstants;
 
 import frc.robot.utils.drive.DriveConstants.TrainConstants;
@@ -72,7 +73,7 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 public class RobotContainer {
 	// The robot's subsystems and commands are defined here...
 	public static DrivetrainS drivetrainS;
-	private final static PhotonVisionS photonVisionS = new PhotonVisionS();
+	private static Vision visionS;
 	private final SendableChooser<Command> autoChooser;
 	static PowerDistribution PDH = new PowerDistribution(
 			Constants.PowerDistributionID, PowerDistribution.ModuleType.kRev);
@@ -158,6 +159,7 @@ y	 * @throws NotActiveException IF mecanum and Replay
 				throw new IllegalArgumentException(
 						"Unknown implementation type, please check DriveConstants.java!");
 			}
+			visionS = new Vision(new VisionIOPhotonVision());
 			break;
 		case SIM:
 			switch (DriveConstants.driveType) {
@@ -196,6 +198,8 @@ y	 * @throws NotActiveException IF mecanum and Replay
 						.setRotationTargetOverride(this::getRotationTargetOverride);
 				break;
 			}
+			visionS = new Vision(new VisionIOPhotonVision()); //yes, they're the same!
+
 			break;
 		default:
 			switch (DriveConstants.driveType) {
@@ -210,6 +214,7 @@ y	 * @throws NotActiveException IF mecanum and Replay
 				throw new IllegalArgumentException(
 						"Mecanum does NOT support replay.");
 			}
+			visionS = new Vision(new VisionIO(){});
 		}
 		
 		drivetrainS.setDefaultCommand(new DrivetrainC(drivetrainS));
@@ -327,7 +332,7 @@ y	 * @throws NotActiveException IF mecanum and Replay
 	 * @return a command with all of them in a sequence.
 	 */
 	public static Command allSystemsCheck() {
-	return Commands.sequence(photonVisionS.getSystemCheckCommand(),drivetrainS.getRunnableSystemCheckCommand());
+	return Commands.sequence(visionS.getSystemCheckCommand(),drivetrainS.getRunnableSystemCheckCommand());
 	}
 	public static HashMap<String, Double> combineMaps(List<HashMap<String, Double>> maps) {
 		HashMap<String, Double> combinedMap = new HashMap<>();
@@ -354,7 +359,7 @@ y	 * @throws NotActiveException IF mecanum and Replay
 	 */
 	public static boolean allSystemsOK() {
 		return drivetrainS.getTrueSystemStatus() == SubsystemChecker.SystemStatus.OK
-		&& photonVisionS.getSystemStatus() == SubsystemChecker.SystemStatus.OK;
+		&& visionS.getSystemStatus() == SubsystemChecker.SystemStatus.OK;
 	 }
 	public static Collection<ParentDevice> getOrchestraDevices() {
 		Collection<ParentDevice> devices = new ArrayList<>();
