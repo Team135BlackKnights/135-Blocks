@@ -224,7 +224,10 @@ public class Tank extends SubsystemChecker implements DrivetrainS {
 	}
 	@Override
 	public double getCurrent(){
-		return inputs.leftCurrentAmps[0] + inputs.leftCurrentAmps[1] + inputs.rightCurrentAmps[0] + inputs.rightCurrentAmps[1];
+		if (inputs.leftCurrentAmps.length ==1){
+			return Math.abs(inputs.leftCurrentAmps[0]) + Math.abs(inputs.rightCurrentAmps[0]);
+		}
+		return Math.abs(inputs.leftCurrentAmps[0]) + Math.abs(inputs.leftCurrentAmps[1]) + Math.abs(inputs.rightCurrentAmps[0]) + Math.abs(inputs.rightCurrentAmps[1]);
 	}
 	@Override
 	public SystemStatus getTrueSystemStatus() { return getSystemStatus(); }
