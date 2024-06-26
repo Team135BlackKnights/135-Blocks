@@ -47,6 +47,7 @@ import static edu.wpi.first.units.Units.Seconds;
 import static edu.wpi.first.units.Units.Volts;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Arrays;
 import java.util.Collections;
 import frc.robot.utils.drive.DriveConstants.TrainConstants.ModulePosition;
 import frc.robot.utils.drive.Position;
@@ -70,9 +71,11 @@ public class REVSwerveS extends SubsystemChecker implements DrivetrainS {
 	ChassisSpeeds m_ChassisSpeeds;
 	static Vector<N3> stateStdDevs = VecBuilder.fill(0.1, 0.1, 0.1);
 	static Vector<N3> visionStdDevs = VecBuilder.fill(1, 1, 1);
+	boolean[] isSkidding = new boolean[]{false,false,false,false};
+	private boolean collisionDetected = false;
 	public SwerveDrivePoseEstimator poseEstimator;
 	Position<SwerveModulePosition[]> m_modulePositions;
-	private double m_simYaw;
+	private double m_simYaw, last_world_linear_accel_x, last_world_linear_accel_y;;
 	Measure<Velocity<Voltage>> rampRate = Volts.of(1).per(Seconds.of(1)); //for going FROM ZERO PER SECOND
 	Measure<Voltage> holdVoltage = Volts.of(8);
 	Measure<Time> timeout = Seconds.of(10);
@@ -150,7 +153,60 @@ public class REVSwerveS extends SubsystemChecker implements DrivetrainS {
 		);
 		registerSelfCheckHardware();
 	}
+	/**
+	 * Calculates the translational vectors of each module, and confirms it is within .25 m/s of the median vector.
+	 * If it isn't that module is said to be "Skidding"
+	 * @apiNote TEST ON BOT NEEDED
+	 * @param m_ChassisSpeeds
+	 * @return
+	 */
+	public boolean[] calculateSkidding() {
+		SwerveModuleState[] moduleStates = getModuleStates();
+		ChassisSpeeds currentChassisSpeeds = getChassisSpeeds();
+		// Step 1: Create a ChassisSpeeds object with solely the rotation component
+		ChassisSpeeds rotationOnlySpeeds = new ChassisSpeeds(0.0, 0.0,
+			currentChassisSpeeds.omegaRadiansPerSecond+.05);
+		double[] xComponentList = new double[4];
+		double[] yComponentList = new double[4];
+		// Step 2: Convert it into module states with kinematics
+		SwerveModuleState[] rotationalStates = kDriveKinematics
+				.toSwerveModuleStates(rotationOnlySpeeds);
+		// Step 3: Subtract the rotational states from the module states and calculate the magnitudes
+		for (int i = 0; i < moduleStates.length; i++) {
+			double deltaX = moduleStates[i].speedMetersPerSecond
+					* Math.cos(moduleStates[i].angle.getRadians())
+					- rotationalStates[i].speedMetersPerSecond
+							* Math.cos(rotationalStates[i].angle.getRadians());
+			double deltaY = moduleStates[i].speedMetersPerSecond
+					* Math.sin(moduleStates[i].angle.getRadians())
+					- rotationalStates[i].speedMetersPerSecond
+							* Math.sin(rotationalStates[i].angle.getRadians());
+			xComponentList[i] = deltaX; 
+			yComponentList[i] = deltaY;
+		}
+		Arrays.sort(xComponentList);
+		Arrays.sort(yComponentList);
+		SmartDashboard.putNumberArray("Module Skid X", xComponentList);
+		SmartDashboard.putNumberArray("Module Skid Y", yComponentList);
 
+		double deltaMedianX = (xComponentList[1] + xComponentList[2]) / 2;
+		double deltaMedianY = (yComponentList[1] + yComponentList[2]) / 2;
+		SmartDashboard.putNumber("Skid X Median", deltaMedianX);
+		SmartDashboard.putNumber("Skid Y Median", deltaMedianY);
+
+		boolean[] areModulesSkidding = new boolean[4];
+		for (int i = 0; i < 4; i++){
+			double deltaX = xComponentList[i];
+			double deltaY = yComponentList[i];
+			if (Math.abs(deltaX - deltaMedianX) > DriveConstants.SKID_THRESHOLD || Math.abs(deltaY - deltaMedianY) > DriveConstants.SKID_THRESHOLD){
+				areModulesSkidding[i] = true;
+			}else{
+				areModulesSkidding[i] = false;
+			}
+		}
+		SmartDashboard.putBooleanArray("Module Skids", areModulesSkidding);
+		return areModulesSkidding;
+	}
 	/**
 	 * Returns a command that will execute a quasistatic test in the given
 	 * direction.
@@ -270,8 +326,10 @@ public class REVSwerveS extends SubsystemChecker implements DrivetrainS {
 	public Rotation2d getRotation2d() {
 		return Rotation2d.fromDegrees(getHeading());
 	}
-	//public static boolean getAutoLock() { return autoLock; }
-
+	@Override
+	public boolean[] isSkidding(){
+		return isSkidding;
+	}
 	@Override
 	public void periodic() {
 		
@@ -293,6 +351,7 @@ public class REVSwerveS extends SubsystemChecker implements DrivetrainS {
 		m_modulePositions = getPositionsWithTimestamp(getModulePositions());
 		// LIST MODULES IN THE SAME EXACT ORDER USED WHEN DECLARING SwerveDriveKinematics
 		m_ChassisSpeeds = kDriveKinematics.toChassisSpeeds(getModuleStates());
+		isSkidding = calculateSkidding();
 		robotPosition = poseEstimator.updateWithTime(
 				m_modulePositions.getTimestamp(), getRotation2d(),
 				m_modulePositions.getPositions());
@@ -315,6 +374,8 @@ public class REVSwerveS extends SubsystemChecker implements DrivetrainS {
 				m_ChassisSpeeds.vyMetersPerSecond).rotateBy(getRotation2d());
 		fieldVelocity = new Twist2d(linearFieldVelocity.getX(),
 				linearFieldVelocity.getY(), m_ChassisSpeeds.omegaRadiansPerSecond);
+		boolean collisionDetected = collisionDetected();
+		SmartDashboard.putBoolean("Collision Detected", collisionDetected);
 	}
 
 	@AutoLogOutput(key = "Odometry/Robot")
@@ -477,5 +538,29 @@ public class REVSwerveS extends SubsystemChecker implements DrivetrainS {
 		 tempMap.put("BRDriveTemp", m_swerveModules.get(ModulePosition.BACK_RIGHT).driveMotor.getMotorTemperature());
 		 tempMap.put("BRTurnTemp", m_swerveModules.get(ModulePosition.BACK_RIGHT).turningMotor.getMotorTemperature());
 		 return tempMap;
+	}
+
+	private boolean collisionDetected() {
+		double curr_world_linear_accel_x = gyro.getWorldLinearAccelX();
+		double currentJerkX = curr_world_linear_accel_x
+				- last_world_linear_accel_x;
+		last_world_linear_accel_x = curr_world_linear_accel_x;
+		double curr_world_linear_accel_y = gyro.getWorldLinearAccelY();
+		double currentJerkY = curr_world_linear_accel_y
+				- last_world_linear_accel_y;
+		last_world_linear_accel_y = curr_world_linear_accel_y;
+		if ((Math.abs(currentJerkX) > DriveConstants.MAX_G)
+				|| (Math.abs(currentJerkY) > DriveConstants.MAX_G)) {
+			return true;
+		}
+		return false;
+	}
+	@Override
+	public boolean isCollisionDetected() {
+		return collisionDetected;
+	}
+	@Override
+	public double getCurrent(){
+		return 0;
 	}
 }

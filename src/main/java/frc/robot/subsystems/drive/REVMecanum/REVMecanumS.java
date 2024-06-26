@@ -17,6 +17,7 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 import frc.robot.Constants;
 import frc.robot.Robot;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.subsystems.SubsystemChecker;
 import frc.robot.subsystems.drive.DrivetrainS;
 import edu.wpi.first.math.kinematics.MecanumDriveKinematics;
@@ -62,7 +63,7 @@ public class REVMecanumS extends SubsystemChecker implements DrivetrainS {
 	private static CANSparkBase[] sparkMotors = new CANSparkBase[4];
 	private static int[] motorIDs;
 	Field2d robotField = new Field2d();
-	private double m_simYaw;
+	private double m_simYaw, last_world_linear_accel_x, last_world_linear_accel_y;;
 	private static DCMotorSim[] motorSims = new DCMotorSim[4];
 	private static RelativeEncoder[] wheelRelativeEncoders = new RelativeEncoder[4];
 	private static AHRS gyro;
@@ -72,6 +73,7 @@ public class REVMecanumS extends SubsystemChecker implements DrivetrainS {
 	private static double maxDriveVelMetersPerSec, kDriveBaseRadius;
 	private static Translation2d[] kModuleTranslations;
 	private static double gearing, kWheelDiameterMeters;
+	private boolean collisionDetected = false;
 	private static Pose2d pose = new Pose2d(0, 0, new Rotation2d(0));
 	Measure<Velocity<Voltage>> rampRate = Volts.of(1).per(Seconds.of(1)); //for going FROM ZERO PER SECOND
 	Measure<Voltage> holdVoltage = Volts.of(4);
@@ -195,7 +197,8 @@ public class REVMecanumS extends SubsystemChecker implements DrivetrainS {
 			}
 		}
 		DrivetrainS.super.periodic();
-	}
+		boolean collisionDetected = collisionDetected();
+		SmartDashboard.putBoolean("Collision Detected", collisionDetected);	}
 
 	@Override
 	public double getCurrent() {
@@ -357,7 +360,25 @@ public class REVMecanumS extends SubsystemChecker implements DrivetrainS {
                 !getFaults().isEmpty())
         .andThen(runOnce(() ->setChassisSpeeds(new ChassisSpeeds(0,0,0))));
 	}
-	
+	private boolean collisionDetected() {
+		double curr_world_linear_accel_x = gyro.getWorldLinearAccelX();
+		double currentJerkX = curr_world_linear_accel_x
+				- last_world_linear_accel_x;
+		last_world_linear_accel_x = curr_world_linear_accel_x;
+		double curr_world_linear_accel_y = gyro.getWorldLinearAccelY();
+		double currentJerkY = curr_world_linear_accel_y
+				- last_world_linear_accel_y;
+		last_world_linear_accel_y = curr_world_linear_accel_y;
+		if ((Math.abs(currentJerkX) > DriveConstants.MAX_G)
+				|| (Math.abs(currentJerkY) > DriveConstants.MAX_G)) {
+			return true;
+		}
+		return false;
+	}
+	@Override
+	public boolean isCollisionDetected(){
+		return collisionDetected;
+	}
 	@Override
 	public HashMap<String, Double> getTemps() {
 		 HashMap<String, Double> tempMap = new HashMap<>();

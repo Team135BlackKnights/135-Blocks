@@ -8,6 +8,7 @@ import java.util.List;
 
 public class SelfCheckingPigeon2 implements SelfChecking {
   private final String label;
+  private final Pigeon2 pigeon;
   private final StatusSignal<Integer> firmwareVersionSignal;
   private final StatusSignal<Boolean> hardwareFaultSignal;
   private final StatusSignal<Boolean> bootEnabledSignal;
@@ -17,7 +18,7 @@ public class SelfCheckingPigeon2 implements SelfChecking {
 
   public SelfCheckingPigeon2(String label, Pigeon2 pigeon) {
     this.label = label;
-
+	 this.pigeon = pigeon;
     this.firmwareVersionSignal = pigeon.getVersion();
     this.hardwareFaultSignal = pigeon.getFault_Hardware();
     this.bootEnabledSignal = pigeon.getFault_BootDuringEnable();
@@ -60,4 +61,8 @@ public class SelfCheckingPigeon2 implements SelfChecking {
 
     return faults;
   }
+
+@Override
+public Object getHardware() { return pigeon;}
+  
 }

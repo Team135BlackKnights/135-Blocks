@@ -4,4 +4,5 @@ import java.util.List;
 
 public interface SelfChecking {
   List<SubsystemFault> checkForFaults();
+  Object getHardware();
 }

@@ -21,6 +21,7 @@ import edu.wpi.first.units.Voltage;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.simulation.DCMotorSim;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
@@ -29,6 +30,7 @@ import frc.robot.Constants;
 import frc.robot.Robot;
 import frc.robot.subsystems.SubsystemChecker;
 import frc.robot.subsystems.drive.DrivetrainS;
+import frc.robot.utils.drive.DriveConstants;
 import frc.robot.utils.drive.Position;
 
 import static edu.wpi.first.units.Units.Seconds;
@@ -60,7 +62,8 @@ public class CTRETankS extends SubsystemChecker implements DrivetrainS {
 	private TalonFX rightLeader, rightFollower, leftLeader, leftFollower;
 	private TalonFX[] motors;
 	private static DCMotorSim[] motorSimModels;
-	private double dtSeconds = 0.02;
+	private double dtSeconds = 0.02, last_world_linear_accel_x, last_world_linear_accel_y;
+	private boolean collisionDetected = false;
 	private DifferentialDriveKinematics kinematics;
 	private Position<DifferentialDriveWheelPositions> wheelPositions;
 	private DifferentialDriveWheelSpeeds wheelSpeeds;
@@ -211,6 +214,8 @@ public class CTRETankS extends SubsystemChecker implements DrivetrainS {
 				m_ChassisSpeeds.vyMetersPerSecond).rotateBy(getRotation2d());
 		fieldVelocity = new Twist2d(linearFieldVelocity.getX(),
 				linearFieldVelocity.getY(), m_ChassisSpeeds.omegaRadiansPerSecond);
+		boolean collisionDetected = collisionDetected();
+		SmartDashboard.putBoolean("Collision Detected", collisionDetected);
 	}
 
 	@Override
@@ -304,7 +309,25 @@ public class CTRETankS extends SubsystemChecker implements DrivetrainS {
 	public boolean isConnected() {
 		return pigeon.getFault_Hardware().getValue();
 	}
-
+	public boolean collisionDetected() {
+		double curr_world_linear_accel_x = pigeon.getAccelerationX().getValueAsDouble();
+		double currentJerkX = curr_world_linear_accel_x
+				- last_world_linear_accel_x;
+		last_world_linear_accel_x = curr_world_linear_accel_x;
+		double curr_world_linear_accel_y = pigeon.getAccelerationY().getValueAsDouble();
+		double currentJerkY = curr_world_linear_accel_y
+				- last_world_linear_accel_y;
+		last_world_linear_accel_y = curr_world_linear_accel_y;
+		if ((Math.abs(currentJerkX) > DriveConstants.MAX_G)
+				|| (Math.abs(currentJerkY) > DriveConstants.MAX_G)) {
+			return true;
+		}
+		return false;
+	}
+	@Override
+	public boolean isCollisionDetected(){
+		return collisionDetected;
+	}
 	@Override
 	public double getYawVelocity() {
 		if (Constants.currentMode == Constants.Mode.REAL) {

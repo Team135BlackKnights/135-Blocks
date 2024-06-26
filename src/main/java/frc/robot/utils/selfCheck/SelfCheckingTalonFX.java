@@ -7,6 +7,7 @@ import java.util.List;
 
 public class SelfCheckingTalonFX implements SelfChecking {
   private final String label;
+  private final TalonFX talon;
   private final StatusSignal<Integer> firmwareVersionSignal;
   private final StatusSignal<Boolean> hardwareFaultSignal;
   private final StatusSignal<Boolean> bootEnabledSignal;
@@ -15,7 +16,7 @@ public class SelfCheckingTalonFX implements SelfChecking {
 
   public SelfCheckingTalonFX(String label, TalonFX talon) {
     this.label = label;
-
+	 this.talon = talon;
     firmwareVersionSignal = talon.getVersion();
     hardwareFaultSignal = talon.getFault_Hardware();
     bootEnabledSignal = talon.getFault_BootDuringEnable();
@@ -55,4 +56,9 @@ public class SelfCheckingTalonFX implements SelfChecking {
 
     return faults;
   }
+
+@Override
+public Object getHardware() {
+	return talon;
+ }
 }

@@ -1,6 +1,7 @@
 package frc.robot.utils.selfCheck;
 
-import edu.wpi.first.wpilibj.Timer;
+import org.littletonrobotics.junction.Logger;
+
 
 public class SubsystemFault {
   public final String description;
@@ -18,7 +19,7 @@ public class SubsystemFault {
 
   public SubsystemFault(String description, boolean isWarning, boolean sticky) {
     this.description = description;
-    this.timestamp = Timer.getFPGATimestamp();
+    this.timestamp = Logger.getTimestamp();
     this.isWarning = isWarning;
     this.sticky = sticky;
   }

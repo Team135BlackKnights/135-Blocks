@@ -47,5 +47,9 @@ public class SelfCheckingSparkBase implements SelfChecking {
 
 		return faults;
 	}
+	@Override
+	public Object getHardware() { 
+		return sparkBase;
+	}
 	
 }

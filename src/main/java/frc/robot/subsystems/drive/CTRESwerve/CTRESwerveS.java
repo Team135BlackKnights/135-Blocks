@@ -33,6 +33,7 @@ import frc.robot.utils.drive.DriveConstants;
 
 import static edu.wpi.first.units.Units.Volts;
 
+import java.util.Arrays;
 import java.util.HashMap;
 
 
@@ -43,8 +44,7 @@ import java.util.HashMap;
 public class CTRESwerveS extends SwerveDrivetrain implements DrivetrainS {
 	private static final double kSimLoopPeriod = 0.01; // 5 ms
 	private Notifier m_simNotifier = null; //Checks for updates
-	private double m_lastSimTime;
-	private double deadband = .1;
+	private double m_lastSimTime, deadband = .1, last_world_linear_accel_x, last_world_linear_accel_y;
 	private final SwerveRequest.ApplyChassisSpeeds AutoRequest = new SwerveRequest.ApplyChassisSpeeds();
 	private final SwerveRequest.SwerveDriveBrake brake = new SwerveRequest.SwerveDriveBrake();
 	private final SwerveRequest.FieldCentric drive = new SwerveRequest.FieldCentric()
@@ -94,25 +94,98 @@ public class CTRESwerveS extends SwerveDrivetrain implements DrivetrainS {
 		super.registerTelemetry(logger::telemeterize);
 		SwerveModuleState[] moduleStates = super.m_moduleStates;
 		SmartDashboard.putData("Swerve Drive", new Sendable() {
-  @Override
-  public void initSendable(SendableBuilder builder) {
-    builder.setSmartDashboardType("SwerveDrive");
+  			@Override
+			public void initSendable(SendableBuilder builder) {
+				builder.setSmartDashboardType("SwerveDrive");
+				builder.addDoubleProperty("Front Left Angle",
+						() -> moduleStates[0].angle.getRadians(), null);
+				builder.addDoubleProperty("Front Left Velocity",
+						() -> moduleStates[0].speedMetersPerSecond, null);
+				builder.addDoubleProperty("Front Right Angle",
+						() -> moduleStates[1].angle.getRadians(), null);
+				builder.addDoubleProperty("Front Right Velocity",
+						() -> moduleStates[1].speedMetersPerSecond, null);
+				builder.addDoubleProperty("Back Left Angle",
+						() -> moduleStates[2].angle.getRadians(), null);
+				builder.addDoubleProperty("Back Left Velocity",
+						() -> moduleStates[2].speedMetersPerSecond, null);
+				builder.addDoubleProperty("Back Right Angle",
+						() -> moduleStates[3].angle.getRadians(), null);
+				builder.addDoubleProperty("Back Right Velocity",
+						() -> moduleStates[3].speedMetersPerSecond, null);
+				builder.addDoubleProperty("Robot Angle",
+						() -> getPose().getRotation()
+								.plus(new Rotation2d(Units.degreesToRadians(0)))
+								.getRadians(),
+						null); //🥥🥥🥥
+			}
+		});
+	}
+	@Override
+	public boolean[] isSkidding(){
+		return calculateSkidding();
+	}
+	public boolean[] calculateSkidding() {
+		SwerveModuleState[] moduleStates = super.getState().ModuleStates;
+		ChassisSpeeds currentChassisSpeeds = getChassisSpeeds();
+		// Step 1: Create a ChassisSpeeds object with solely the rotation component
+		ChassisSpeeds rotationOnlySpeeds = new ChassisSpeeds(0.0, 0.0,
+			currentChassisSpeeds.omegaRadiansPerSecond+.05);
+		double[] xComponentList = new double[4];
+		double[] yComponentList = new double[4];
+		// Step 2: Convert it into module states with kinematics
+		SwerveModuleState[] rotationalStates = m_kinematics
+				.toSwerveModuleStates(rotationOnlySpeeds);
+		// Step 3: Subtract the rotational states from the module states and calculate the magnitudes
+		for (int i = 0; i < moduleStates.length; i++) {
+			double deltaX = moduleStates[i].speedMetersPerSecond
+					* Math.cos(moduleStates[i].angle.getRadians())
+					- rotationalStates[i].speedMetersPerSecond
+							* Math.cos(rotationalStates[i].angle.getRadians());
+			double deltaY = moduleStates[i].speedMetersPerSecond
+					* Math.sin(moduleStates[i].angle.getRadians())
+					- rotationalStates[i].speedMetersPerSecond
+							* Math.sin(rotationalStates[i].angle.getRadians());
+			xComponentList[i] = deltaX; 
+			yComponentList[i] = deltaY;
+		}
+		Arrays.sort(xComponentList);
+		Arrays.sort(yComponentList);
+		SmartDashboard.putNumberArray("Module Skid X", xComponentList);
+		SmartDashboard.putNumberArray("Module Skid Y", yComponentList);
 
-    builder.addDoubleProperty("Front Left Angle", () -> moduleStates[0].angle.getRadians(), null);
-    builder.addDoubleProperty("Front Left Velocity", () -> moduleStates[0].speedMetersPerSecond, null);
+		double deltaMedianX = (xComponentList[1] + xComponentList[2]) / 2;
+		double deltaMedianY = (yComponentList[1] + yComponentList[2]) / 2;
+		SmartDashboard.putNumber("Skid X Median", deltaMedianX);
+		SmartDashboard.putNumber("Skid Y Median", deltaMedianY);
 
-    builder.addDoubleProperty("Front Right Angle", () -> moduleStates[1].angle.getRadians(), null);
-    builder.addDoubleProperty("Front Right Velocity", () -> moduleStates[1].speedMetersPerSecond, null);
-
-    builder.addDoubleProperty("Back Left Angle", () -> moduleStates[2].angle.getRadians(), null);
-    builder.addDoubleProperty("Back Left Velocity", () -> moduleStates[2].speedMetersPerSecond, null);
-
-    builder.addDoubleProperty("Back Right Angle", () -> moduleStates[3].angle.getRadians(), null);
-    builder.addDoubleProperty("Back Right Velocity", () -> moduleStates[3].speedMetersPerSecond, null);
-
-    builder.addDoubleProperty("Robot Angle", () -> getPose().getRotation().plus(new Rotation2d(Units.degreesToRadians(0))).getRadians(), null); //🥥🥥🥥
-  }
-});
+		boolean[] areModulesSkidding = new boolean[4];
+		for (int i = 0; i < 4; i++){
+			double deltaX = xComponentList[i];
+			double deltaY = yComponentList[i];
+			if (Math.abs(deltaX - deltaMedianX) > DriveConstants.SKID_THRESHOLD || Math.abs(deltaY - deltaMedianY) > DriveConstants.SKID_THRESHOLD){
+				areModulesSkidding[i] = true;
+			}else{
+				areModulesSkidding[i] = false;
+			}
+		}
+		SmartDashboard.putBooleanArray("Module Skids", areModulesSkidding);
+		return areModulesSkidding;
+	}
+	public boolean collisionDetected() {
+		double curr_world_linear_accel_x = super.m_pigeon2.getAccelerationX().getValueAsDouble();
+		double currentJerkX = curr_world_linear_accel_x
+				- last_world_linear_accel_x;
+		last_world_linear_accel_x = curr_world_linear_accel_x;
+		double curr_world_linear_accel_y = super.m_pigeon2.getAccelerationY().getValueAsDouble();
+		double currentJerkY = curr_world_linear_accel_y
+				- last_world_linear_accel_y;
+		last_world_linear_accel_y = curr_world_linear_accel_y;
+		if ((Math.abs(currentJerkX) > DriveConstants.MAX_G)
+				|| (Math.abs(currentJerkY) > DriveConstants.MAX_G)) {
+			return true;
+		}
+		return false;
 	}
 
 	@Override
@@ -331,4 +404,8 @@ public class CTRESwerveS extends SwerveDrivetrain implements DrivetrainS {
 	@Override
 	public HashMap<String, Double> getTemps() { 
 	throw new UnsupportedOperationException("Unimplemented method 'getTemps'"); }
+
+	@Override
+	public boolean isCollisionDetected() {
+	throw new UnsupportedOperationException("Unimplemented method 'isCollisionDetected'"); }
 }

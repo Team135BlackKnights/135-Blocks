@@ -6,7 +6,7 @@ public class Position<T> {
 	/**
 	 * Create a new Position for the drivebase
 	 * @param positions defaulted to ambiguous variable. 
-	 * @param timestamp in Timer.getFPGATimestamp()
+	 * @param timestamp in Logger.getTimestamp()
 	 */
 	public Position(T positions, double timestamp) {
 		 this.positions = positions;
