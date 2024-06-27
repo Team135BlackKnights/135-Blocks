@@ -15,6 +15,7 @@ import frc.robot.utils.vision.LimelightHelpers;
 import frc.robot.utils.vision.VisionConstants;
 import frc.robot.Constants;
 import frc.robot.Robot;
+import frc.robot.RobotContainer;
 import frc.robot.Constants.FRCMatchState;
 import frc.robot.Constants.Mode;
 import frc.robot.commands.drive.DriveToPose;
@@ -59,6 +60,7 @@ public class DriveToAITarget extends Command {
 		timer.start();
 		close = false;
 		takeOver = true; //stop user control
+		RobotContainer.currentPath = "INTAKING";
 	}
 
 	@Override
