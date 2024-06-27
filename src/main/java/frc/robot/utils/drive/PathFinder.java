@@ -32,9 +32,11 @@ public class PathFinder {
 	 * @return pre-made command
 	 */
 	public static Command goToPose(Pose2d pose, PathConstraints constraints,
-			DrivetrainS drive, boolean isAuto) {
+			DrivetrainS drive, boolean isAuto, double endVelocity) {
 		if (isAuto){ //skip accuracy for speed
-					return AutoBuilder.pathfindToPose((pose),constraints).finallyDo(() -> 	RobotContainer.field.getObject("target pose").setPose(new Pose2d(-50,-50,new Rotation2d())));
+					return AutoBuilder.pathfindToPose((pose),constraints, endVelocity).andThen(new DriveToPose(drive, pose, constraints))
+					.finallyDo(() -> RobotContainer.field.getObject("target pose")
+							.setPose(new Pose2d(-50, -50, new Rotation2d()))); //the void		));
 		}
 		return AutoBuilder.pathfindToPose((pose), constraints)
 				.andThen(new DriveToPose(drive, pose, constraints))

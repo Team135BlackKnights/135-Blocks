@@ -9,7 +9,7 @@ import frc.robot.utils.MotorConstantContainer;
 public class DriveConstants {
 	//ONLY CTRE_SWERVE IS *FULLY* CURRENT DRAW ACCURATE IN SIM
 	public static MotorVendor robotMotorController = MotorVendor.NEO_SPARK_MAX;
-	public static driveTrainType driveType = driveTrainType.TANK;
+	public static driveTrainType driveType = driveTrainType.SWERVE;
 
 	/**
 	 * What motors and motorContollers are we using
