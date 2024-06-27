@@ -81,12 +81,15 @@ public class Vision extends SubsystemChecker {
 					}
 				} else {
 					if (response == "Max correction") {
-						for (int tag : aprilTagList) {
-							VisionConstants.FieldConstants.aprilTagOffsets[tag] = Math
-									.max(0,
-											VisionConstants.FieldConstants.aprilTagOffsets[tag]
-													- .001);
+						if (inputs.avgDist[i] < VisionConstants.offsetMaxDistance){
+							for (int tag : aprilTagList) {
+								VisionConstants.FieldConstants.aprilTagOffsets[tag] = Math
+										.max(0,
+												VisionConstants.FieldConstants.aprilTagOffsets[tag]
+														- .001);
+							}
 						}
+
 					}
 					if (response == "Min trust") {
 						for (int tag : aprilTagList) {

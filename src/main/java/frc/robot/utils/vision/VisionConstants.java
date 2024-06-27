@@ -93,7 +93,7 @@ public class VisionConstants {
 	public static double DriveToAITargetKp = .3, DriveToAIMaxAutoTime = 2;
 	public static final double kMaxVisionCorrection = Units.inchesToMeters(5); // Jump from fused pose
 	public static final double kMaxVisionCorrectionSkid = Units.inchesToMeters(15); // Jump from fused pose
-
+	public static final double offsetMaxDistance = 4; //in meters
 	public static final double kMaxVelocity = Units.feetToMeters(4);
 	public static final double std_dev_multiplier = 1; 
 	public static final double std_dev_steepness = 10;
