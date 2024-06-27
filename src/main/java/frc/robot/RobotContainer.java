@@ -13,12 +13,13 @@ import frc.robot.subsystems.drive.FastSwerve.GyroIO;
 import frc.robot.subsystems.drive.FastSwerve.GyroIOPigeon2;
 import frc.robot.subsystems.drive.FastSwerve.ModuleIO;
 import frc.robot.subsystems.drive.FastSwerve.ModuleIOSim;
-import frc.robot.subsystems.drive.FastSwerve.ModuleIOSparkMax;
+import frc.robot.subsystems.drive.FastSwerve.ModuleIOSparkBase;
+import frc.robot.subsystems.drive.FastSwerve.ModuleIOTalonFX;
 import frc.robot.subsystems.drive.REVMecanum.REVMecanumConstantContainer;
 import frc.robot.subsystems.drive.REVMecanum.REVMecanumS;
 import frc.robot.subsystems.drive.Tank.DriveIO;
 import frc.robot.subsystems.drive.Tank.DriveIOSim;
-import frc.robot.subsystems.drive.Tank.DriveIOSparkMax;
+import frc.robot.subsystems.drive.Tank.DriveIOSparkBase;
 import frc.robot.subsystems.drive.Tank.DriveIOTalonFX;
 import frc.robot.subsystems.drive.Tank.Tank;
 import frc.robot.utils.RunTest;
@@ -111,9 +112,19 @@ y	 * @throws NotActiveException IF mecanum and Replay
 		case REAL:
 			switch (DriveConstants.driveType) {
 			case SWERVE:
-				drivetrainS = new Swerve(new GyroIOPigeon2(false),
-						new ModuleIOSparkMax(0), new ModuleIOSparkMax(1),
-						new ModuleIOSparkMax(2), new ModuleIOSparkMax(3));
+				switch (DriveConstants.robotMotorController) {
+				case CTRE_MOTORS:
+					drivetrainS = new Swerve(new GyroIOPigeon2(false),
+							new ModuleIOTalonFX(0), new ModuleIOTalonFX(1),
+							new ModuleIOTalonFX(2), new ModuleIOTalonFX(3));
+					break;
+				case NEO_SPARK_MAX:
+				case VORTEX_SPARK_FLEX:
+					drivetrainS = new Swerve(new GyroIOPigeon2(false),
+							new ModuleIOSparkBase(0), new ModuleIOSparkBase(1),
+							new ModuleIOSparkBase(2), new ModuleIOSparkBase(3));
+					break;
+				}
 				PPHolonomicDriveController
 						.setRotationTargetOverride(this::getRotationTargetOverride);
 				break;
@@ -124,7 +135,7 @@ y	 * @throws NotActiveException IF mecanum and Replay
 					break;
 				case NEO_SPARK_MAX:
 				case VORTEX_SPARK_FLEX:
-					drivetrainS = new Tank(new DriveIOSparkMax());
+					drivetrainS = new Tank(new DriveIOSparkBase());
 					break;
 				}
 				break;
@@ -168,7 +179,7 @@ y	 * @throws NotActiveException IF mecanum and Replay
 						new ModuleIOSim(), new ModuleIOSim(), new ModuleIOSim());
 				break;
 			case TANK:
-			System.err.println("MAKING");
+				System.err.println("MAKING");
 				drivetrainS = new Tank(new DriveIOSim());
 				break;
 			default:

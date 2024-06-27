@@ -55,11 +55,32 @@ public class Robot extends LoggedRobot {
 	 */
 	@Override
 	public void robotInit() {
-		PortForwarder.add(22, "orangepi@photonvision.local", 22);
-		PortForwarder.add(22, "photonvision.local", 22);
+		if (!Constants.isCompetition){
+			PortForwarder.add(22, "orangepi@photonvision.local", 22);
+			PortForwarder.add(22, "photonvision.local", 22);
+		}
 		// Instantiate our RobotContainer.  This will perform all our button bindings, and put our
 		// autonomous chooser on the dashboard
 		Logger.recordMetadata("ProjectName", "The Chef"); // Set a metadata value
+		Logger.recordMetadata("TuningMode", Boolean.toString(Constants.isTuningPID));
+    	Logger.recordMetadata("RuntimeType", getRuntimeType().toString());
+    	Logger.recordMetadata("ProjectName", BuildConstants.MAVEN_NAME);
+    	Logger.recordMetadata("BuildDate", BuildConstants.BUILD_DATE);
+    	Logger.recordMetadata("GitSHA", BuildConstants.GIT_SHA);
+    	Logger.recordMetadata("GitDate", BuildConstants.GIT_DATE);
+    	Logger.recordMetadata("GitBranch", BuildConstants.GIT_BRANCH);
+		//TODO: Test the Git integration by making a local change (not commited) and then trying to Deploy Robot Code (Event) in an event branch.
+    switch (BuildConstants.DIRTY) {
+      case 0:
+        Logger.recordMetadata("GitDirty", "All changes committed");
+        break;
+      case 1:
+        Logger.recordMetadata("GitDirty", "Uncomitted changes");
+        break;
+      default:
+        Logger.recordMetadata("GitDirty", "Unknown");
+        break;
+    }
 		switch (Constants.currentMode) {
 		case REAL:
 			// Running on a real robot, log to a USB stick ("/U/logs")
@@ -193,6 +214,11 @@ public class Robot extends LoggedRobot {
 		/*An FRC teleop period takes 2 minutes and 15 seconds (135 seconds). Endgame occurs during the last 20 seconds.
 		Based on this, endgame should initialize at 115 seconds and end at 135 seconds. */
 		double matchTime = DriverStation.getMatchTime();
+		if (RobotContainer.angleOverrider.isPresent()){
+			Logger.recordOutput("Odometry/AimGoal", new Pose2d(RobotContainer.drivetrainS.getPose().getTranslation(),RobotContainer.angleOverrider.get()));
+		}else{
+			Logger.recordOutput("Odometry/AimGoal",RobotContainer.drivetrainS.getPose());
+		}
 		if (DriverStation.isFMSAttached() || isPracticeDSMode) {
 			if (matchTime > 30) {
 				Constants.currentMatchState = FRCMatchState.TELEOP;

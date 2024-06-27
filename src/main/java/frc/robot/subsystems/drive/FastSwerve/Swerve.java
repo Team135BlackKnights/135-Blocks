@@ -70,7 +70,7 @@ public class Swerve extends SubsystemChecker implements DrivetrainS {
 	private boolean collisionDetected;
 	private boolean[] isSkidding;
 	private Twist2d fieldVelocity;
-
+	private int debounce = 0;
 	public Swerve(GyroIO gyroIO, ModuleIO flModuleIO, ModuleIO frModuleIO,
 			ModuleIO blModuleIO, ModuleIO brModuleIO) {
 		this.gyroIO = gyroIO;
@@ -118,6 +118,11 @@ public class Swerve extends SubsystemChecker implements DrivetrainS {
 		}
 		odometryLock.unlock();
 		Logger.processInputs("Drive/Gyro", gyroInputs);
+		if (debounce ==1 && isConnected()){
+			poseEstimator.resetPosition(gyroInputs.yawPosition, lastModulePositions,
+			getPose());
+			debounce = 0;
+		}
 		for (var module : modules) {
 			module.periodic();
 		}
@@ -513,12 +518,13 @@ public class Swerve extends SubsystemChecker implements DrivetrainS {
 		throw new UnsupportedOperationException(
 				"Unimplemented method 'sysIdQuasistaticTurn'");
 	}
-
+	/**
+	 * UNTESTED!
+	 */
 	@Override
 	public void zeroHeading() {
 		gyroIO.reset();
-		poseEstimator.resetPosition(gyroInputs.yawPosition, lastModulePositions,
-				getPose());
+		debounce = 1;
 	}
 
 	@Override

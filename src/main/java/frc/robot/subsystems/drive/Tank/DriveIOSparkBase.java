@@ -11,6 +11,8 @@ import com.ctre.phoenix6.StatusCode;
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.Pigeon2Configuration;
 import com.ctre.phoenix6.hardware.Pigeon2;
+import com.revrobotics.CANSparkBase;
+import com.revrobotics.CANSparkFlex;
 import com.revrobotics.CANSparkBase.ControlType;
 import com.revrobotics.CANSparkLowLevel.MotorType;
 import com.revrobotics.CANSparkMax;
@@ -19,6 +21,7 @@ import com.revrobotics.SparkPIDController;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.util.Units;
 import frc.robot.utils.drive.DriveConstants;
+import frc.robot.utils.drive.DriveConstants.MotorVendor;
 import frc.robot.utils.selfCheck.SelfChecking;
 import frc.robot.utils.selfCheck.SelfCheckingPigeon2;
 import frc.robot.utils.selfCheck.SelfCheckingSparkBase;
@@ -27,24 +30,20 @@ import frc.robot.utils.selfCheck.SelfCheckingSparkBase;
  * NOTE: To use the Spark Flex / NEO Vortex, replace all instances of
  * "CANSparkMax" with "CANSparkFlex".
  */
-public class DriveIOSparkMax implements DriveIO {
+public class DriveIOSparkBase implements DriveIO {
 	private static final double GEAR_RATIO = DriveConstants.TrainConstants.kDriveMotorGearRatio;
 	private static final double KP = DriveConstants.TrainConstants.overallDriveMotorConstantContainer
 			.getP();
 	private static final double KD = DriveConstants.TrainConstants.overallDriveMotorConstantContainer
 			.getD();
-	private final CANSparkMax leftLeader = new CANSparkMax(
-			DriveConstants.kFrontLeftDrivePort, MotorType.kBrushless);
-	private final CANSparkMax rightLeader = new CANSparkMax(
-			DriveConstants.kFrontRightDrivePort, MotorType.kBrushless);
-	private final CANSparkMax leftFollower = new CANSparkMax(
-			DriveConstants.kBackLeftDrivePort, MotorType.kBrushless);
-	private final CANSparkMax rightFollower = new CANSparkMax(
-			DriveConstants.kBackRightDrivePort, MotorType.kBrushless);
-	private final RelativeEncoder leftEncoder = leftLeader.getEncoder();
-	private final RelativeEncoder rightEncoder = rightLeader.getEncoder();
-	private final SparkPIDController leftPID = leftLeader.getPIDController();
-	private final SparkPIDController rightPID = rightLeader.getPIDController();
+	private final CANSparkBase leftLeader;
+	private final CANSparkBase rightLeader;
+	private final CANSparkBase leftFollower;
+	private final CANSparkBase rightFollower;
+	private final RelativeEncoder leftEncoder;
+	private final RelativeEncoder rightEncoder;
+	private final SparkPIDController leftPID;
+	private final SparkPIDController rightPID;
 	private final Pigeon2 pigeon = new Pigeon2(30);
 	private final StatusSignal<Double> yaw = pigeon.getYaw();
 	private final StatusSignal<Double> accelX = pigeon.getAccelerationX();
@@ -52,7 +51,30 @@ public class DriveIOSparkMax implements DriveIO {
 	private double last_world_linear_accel_x;
 	private double last_world_linear_accel_y;
 
-	public DriveIOSparkMax() {
+	public DriveIOSparkBase() {
+		if (DriveConstants.robotMotorController == MotorVendor.NEO_SPARK_MAX){
+		leftLeader = new CANSparkMax(DriveConstants.kFrontLeftDrivePort,
+				MotorType.kBrushless);
+		rightLeader = new CANSparkMax(DriveConstants.kFrontRightDrivePort,
+				MotorType.kBrushless);
+		leftFollower = new CANSparkMax(DriveConstants.kBackLeftDrivePort,
+				MotorType.kBrushless);
+		rightFollower = new CANSparkMax(DriveConstants.kBackRightDrivePort,
+				MotorType.kBrushless);
+		}else{
+			leftLeader = new CANSparkFlex(DriveConstants.kFrontLeftDrivePort,
+			MotorType.kBrushless);
+	rightLeader = new CANSparkFlex(DriveConstants.kFrontRightDrivePort,
+			MotorType.kBrushless);
+	leftFollower = new CANSparkFlex(DriveConstants.kBackLeftDrivePort,
+			MotorType.kBrushless);
+	rightFollower = new CANSparkFlex(DriveConstants.kBackRightDrivePort,
+			MotorType.kBrushless);
+		}
+		leftEncoder = leftLeader.getEncoder();
+		rightEncoder = rightLeader.getEncoder();
+		leftPID = leftLeader.getPIDController();
+		rightPID = rightLeader.getPIDController();
 		leftLeader.restoreFactoryDefaults();
 		rightLeader.restoreFactoryDefaults();
 		leftFollower.restoreFactoryDefaults();
