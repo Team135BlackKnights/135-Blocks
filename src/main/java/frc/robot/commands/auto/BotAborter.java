@@ -110,7 +110,7 @@ public class BotAborter extends Command{
 		Logger.recordOutput("SIMINTAKEgamePiece", estimatedgamePiecePose3d);
 		gamePieceDistance = GeomUtil.calculateDistanceFromPose3d(currentPose,
 				estimatedgamePiecePose3d);
-		if (robotTv && gamePieceTv){
+		if (robotTv && gamePieceTv && RobotContainer.currentPath != "INTAKING"){
 			Pose3d estimatedOpposingBotPose3d = GeomUtil.calculateFieldRelativePose3d(
 				currentPose, robotTx, robotTy,
 				Units.inchesToMeters(
@@ -131,6 +131,7 @@ public class BotAborter extends Command{
 				double ourTimeTogamePiece = gamePieceDistance / (ourSpeedTowardsgamePiece+.001); //avoid divide/0 crash
 				double opposingRobotTimeTogamePiece = opposinggamePieceDistance / (opposingRobotSpeedTowardsgamePiece+.001);
 				if (opposingRobotTimeTogamePiece < ourTimeTogamePiece+.75) {
+					RobotContainer.currentGamePieceStatus = 1;
 					isFinished = true;
 			   }
 		  }
@@ -139,11 +140,6 @@ public class BotAborter extends Command{
 	}
 	@Override
 	public void end(boolean interrupted){
-		if (interrupted){
-			RobotContainer.currentGamePieceStatus =0;
-		}else{
-			RobotContainer.currentGamePieceStatus = 1;
-		}
 		previousOpposingBotPose = null;
 
 	}
