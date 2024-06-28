@@ -14,8 +14,8 @@ import frc.robot.utils.drive.DriveConstants;
 /**
  * Physics sim implementation of module IO.
  * <p>
- * Uses two flywheel sims for the drive and turn motors, with the absolute
- * position initialized to a random value. The flywheel sims are not physically
+ * Uses two dc motor sims for the drive and turn motors, with the absolute
+ * position initialized to a random value. The dc motor sims are not physically
  * accurate, but provide a decent approximation for the behavior of the module.
  */
 public class ModuleIOSim implements ModuleIO {

@@ -14,18 +14,19 @@ public class BranchAuto extends Command{
 	private Command path;
 	private final Pose2d backupPose;
 	private final String choreoTraj;
-
-	public BranchAuto(String choreoTraj, Pose2d backupPose){
+	private final double endSpeed;
+	public BranchAuto(String choreoTraj, Pose2d backupPose, double endSpeed){
 		this.choreoTraj = choreoTraj;
+		this.endSpeed = endSpeed;
 		this.backupPose = backupPose;
 	}
 	public void initialize(){
 			isFinished = false;
 			if (RobotContainer.currentGamePieceStatus == 0){
 				//PathPlannerPath.fromChoreoTrajectory will automatically execute any event markers in the choreo Traj.
-				path = AutoBuilder.followPath(PathPlannerPath.fromChoreoTrajectory(choreoTraj));
+				path = AutoBuilder.followPath(PathPlannerPath.fromChoreoTrajectory(choreoTraj)).andThen(PathFinder.goToPose(backupPose,DriveConstants.pathConstraints, RobotContainer.drivetrainS,true,endSpeed));
 			}else{
-				path = PathFinder.goToPose(backupPose,DriveConstants.pathConstraints, RobotContainer.drivetrainS,true);
+				path = PathFinder.goToPose(backupPose,DriveConstants.pathConstraints, RobotContainer.drivetrainS,true,endSpeed);
 			}
 			path.initialize();
 	}

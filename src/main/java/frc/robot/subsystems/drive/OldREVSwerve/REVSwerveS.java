@@ -1,4 +1,4 @@
-package frc.robot.subsystems.drive.REVSwerve;
+package frc.robot.subsystems.drive.OldREVSwerve;
 
 import com.ctre.phoenix6.hardware.ParentDevice;
 import com.kauailabs.navx.frc.AHRS;
@@ -40,7 +40,7 @@ import frc.robot.utils.drive.DriveConstants;
 import frc.robot.Constants.Mode;
 import frc.robot.subsystems.SubsystemChecker;
 import frc.robot.subsystems.drive.DrivetrainS;
-import frc.robot.subsystems.drive.REVSwerve.SwerveModules.REVSwerveModule;
+import frc.robot.subsystems.drive.OldREVSwerve.SwerveModules.REVSwerveModule;
 import frc.robot.Robot;
 
 import static edu.wpi.first.units.Units.Seconds;

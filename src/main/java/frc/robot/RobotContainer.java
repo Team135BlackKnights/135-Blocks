@@ -3,31 +3,40 @@
 // the WPILib BSD license file in the root directory of this project.
 package frc.robot;
 
+import frc.robot.commands.auto.BranchAuto;
+import frc.robot.commands.auto.SimDefenseBot;
+import frc.robot.commands.drive.AimToPose;
 import frc.robot.commands.drive.DrivetrainC;
 import frc.robot.subsystems.SubsystemChecker;
 import frc.robot.commands.servos.ServoC;
 
 import frc.robot.subsystems.drive.DrivetrainS;
-import frc.robot.subsystems.drive.CTREMecanum.CTREMecanumConstantContainer;
-import frc.robot.subsystems.drive.CTREMecanum.CTREMecanumS;
 import frc.robot.subsystems.drive.FastSwerve.Swerve;
+import frc.robot.subsystems.drive.Mecanum.Mecanum;
+import frc.robot.subsystems.drive.Mecanum.MecanumIO;
+import frc.robot.subsystems.drive.Mecanum.MecanumIOSim;
+import frc.robot.subsystems.drive.Mecanum.MecanumIOSparkBaseNavx;
+import frc.robot.subsystems.drive.Mecanum.MecanumIOSparkBasePigeon;
+import frc.robot.subsystems.drive.Mecanum.MecanumIOTalonFXNavx;
+import frc.robot.subsystems.drive.Mecanum.MecanumIOTalonFXPigeon;
 import frc.robot.subsystems.drive.FastSwerve.GyroIO;
+import frc.robot.subsystems.drive.FastSwerve.GyroIONavX;
 import frc.robot.subsystems.drive.FastSwerve.GyroIOPigeon2;
 import frc.robot.subsystems.drive.FastSwerve.ModuleIO;
 import frc.robot.subsystems.drive.FastSwerve.ModuleIOSim;
-import frc.robot.subsystems.drive.FastSwerve.ModuleIOSparkMax;
-import frc.robot.subsystems.drive.REVMecanum.REVMecanumConstantContainer;
-import frc.robot.subsystems.drive.REVMecanum.REVMecanumS;
-import frc.robot.subsystems.drive.Tank.DriveIO;
-import frc.robot.subsystems.drive.Tank.DriveIOSim;
-import frc.robot.subsystems.drive.Tank.DriveIOSparkMax;
-import frc.robot.subsystems.drive.Tank.DriveIOTalonFX;
+import frc.robot.subsystems.drive.FastSwerve.ModuleIOSparkBase;
+import frc.robot.subsystems.drive.FastSwerve.ModuleIOTalonFX;
+import frc.robot.subsystems.drive.Tank.TankIO;
+import frc.robot.subsystems.drive.Tank.TankIOSim;
+import frc.robot.subsystems.drive.Tank.TankIOSparkBaseNavx;
+import frc.robot.subsystems.drive.Tank.TankIOSparkBasePigeon;
+import frc.robot.subsystems.drive.Tank.TankIOTalonFXNavx;
+import frc.robot.subsystems.drive.Tank.TankIOTalonFXPigeon;
 import frc.robot.subsystems.drive.Tank.Tank;
 import frc.robot.utils.RunTest;
 import frc.robot.subsystems.servos.ServoS;
 import frc.robot.utils.drive.DriveConstants;
 
-import frc.robot.utils.drive.DriveConstants.TrainConstants;
 import frc.robot.utils.drive.LocalADStarAK;
 import frc.robot.utils.drive.PathFinder;
 import com.ctre.phoenix6.SignalLogger;
@@ -41,17 +50,16 @@ import com.pathplanner.lib.util.PPLibTelemetry;
 import java.util.List;
 import java.util.Optional;
 
-
-
 import edu.wpi.first.math.Pair;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.util.Units;
+
 import java.util.HashMap;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 
-import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.PowerDistribution;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
@@ -80,7 +88,7 @@ public class RobotContainer {
 	public static Optional<Rotation2d> angleOverrider = Optional.empty();
 	public static double angularSpeed = 0;
 	static JoystickButton xButtonDrive = new JoystickButton(driveController, 3),
-			//yButtonDrive = new JoystickButton(driveController, 4), //used for Aim/Drive to pose
+			yButtonDrive = new JoystickButton(driveController, 4), //used for Aim/Drive to pose
 			aButtonTest = new JoystickButton(testingController, 1),
 			bButtonTest = new JoystickButton(testingController, 2),
 			xButtonTest = new JoystickButton(testingController, 3),
@@ -92,15 +100,14 @@ public class RobotContainer {
 	public static int currentTest = 0, currentGamePieceStatus = 0;
 	public static String currentPath = "";
 	public static Field2d field = new Field2d();
-  public static Pose2d opposingBotPose;
+  	public static Pose2d opposingBotPose;
 	final static ServoS servoS = new ServoS();
 
 	// POVButton manipPOVZero = new POVButton(manipController, 0);
 	// POVButton manipPOV180 = new POVButton(manipController, 180);
 	/**
 	 * The container for the robot. Contains subsystems, OI devices, and
-	 * commands.
-y	 * @throws NotActiveException IF mecanum and Replay
+	 * commands. y * @throws NotActiveException IF mecanum and Replay
 	 */
 	public RobotContainer() {
 		//We check to see what drivetrain type we have here, and create the correct drivetrain system based on that. 
@@ -109,44 +116,90 @@ y	 * @throws NotActiveException IF mecanum and Replay
 		case REAL:
 			switch (DriveConstants.driveType) {
 			case SWERVE:
-				drivetrainS = new Swerve(new GyroIOPigeon2(false),
-						new ModuleIOSparkMax(0), new ModuleIOSparkMax(1),
-						new ModuleIOSparkMax(2), new ModuleIOSparkMax(3));
+				switch (DriveConstants.robotMotorController) {
+				case CTRE_MOTORS:
+					switch (DriveConstants.gyroType) {
+					case NAVX:
+						drivetrainS = new Swerve(new GyroIONavX(true),
+								new ModuleIOTalonFX(0), new ModuleIOTalonFX(1),
+								new ModuleIOTalonFX(2), new ModuleIOTalonFX(3));
+						break;
+					case PIGEON:
+						drivetrainS = new Swerve(new GyroIOPigeon2(true),
+								new ModuleIOTalonFX(0), new ModuleIOTalonFX(1),
+								new ModuleIOTalonFX(2), new ModuleIOTalonFX(3));
+						break;
+					default:
+						break;
+					}
+					break;
+				case NEO_SPARK_MAX:
+				case VORTEX_SPARK_FLEX:
+					switch (DriveConstants.gyroType) {
+					case NAVX:
+						drivetrainS = new Swerve(new GyroIONavX(false),
+								new ModuleIOSparkBase(0), new ModuleIOSparkBase(1),
+								new ModuleIOSparkBase(2), new ModuleIOSparkBase(3));
+						break;
+					case PIGEON:
+						drivetrainS = new Swerve(new GyroIOPigeon2(false),
+								new ModuleIOSparkBase(0), new ModuleIOSparkBase(1),
+								new ModuleIOSparkBase(2), new ModuleIOSparkBase(3));
+					default:
+						break;
+					}
+					break;
+				}
 				PPHolonomicDriveController
 						.setRotationTargetOverride(this::getRotationTargetOverride);
 				break;
 			case TANK:
 				switch (DriveConstants.robotMotorController) {
 				case CTRE_MOTORS:
-					drivetrainS = new Tank(new DriveIOTalonFX());
+					switch (DriveConstants.gyroType) {
+					case PIGEON:
+						drivetrainS = new Tank(new TankIOTalonFXPigeon());
+						break;
+					case NAVX:
+						drivetrainS = new Tank(new TankIOTalonFXNavx());
+						break;
+					}
 					break;
 				case NEO_SPARK_MAX:
 				case VORTEX_SPARK_FLEX:
-					drivetrainS = new Tank(new DriveIOSparkMax());
+					switch (DriveConstants.gyroType) {
+					case PIGEON:
+						drivetrainS = new Tank(new TankIOSparkBasePigeon());
+						break;
+					case NAVX:
+						drivetrainS = new Tank(new TankIOSparkBaseNavx());
+						break;
+					}
 					break;
 				}
 				break;
 			case MECANUM:
 				switch (DriveConstants.robotMotorController) {
 				case CTRE_MOTORS:
-					drivetrainS = new CTREMecanumS(new CTREMecanumConstantContainer(
-							30, DriveConstants.kFrontLeftDrivePort,
-							DriveConstants.kBackLeftDrivePort,
-							DriveConstants.kFrontRightDrivePort,
-							DriveConstants.kBackRightDrivePort,
-							DriveConstants.kChassisWidth,
-							TrainConstants.kDriveMotorGearRatio,
-							TrainConstants.kDriveEncoderRot2Meter,
-							DriveConstants.kMaxSpeedMetersPerSecond,
-							DriveConstants.kDriveBaseRadius,
-							DriveConstants.kModuleTranslations));
+					switch (DriveConstants.gyroType) {
+					case PIGEON:
+						drivetrainS = new Mecanum(new MecanumIOTalonFXPigeon());
+						break;
+					case NAVX:
+						drivetrainS = new Mecanum(new MecanumIOTalonFXNavx());
+						break;
+					}
 					break;
-				default:
-					//10, 11, 12, 13, 80, 7.5,
-					drivetrainS = new REVMecanumS(new REVMecanumConstantContainer(10,
-							11, 12, 13, 80, 7.5, TrainConstants.kWheelDiameter,
-							DriveConstants.kModuleTranslations,
-							Units.inchesToMeters(6)));
+				case NEO_SPARK_MAX:
+				case VORTEX_SPARK_FLEX:
+					switch (DriveConstants.gyroType) {
+					case PIGEON:
+						drivetrainS = new Mecanum(new MecanumIOSparkBasePigeon());
+						break;
+					case NAVX:
+						drivetrainS = new Mecanum(new MecanumIOSparkBaseNavx());
+						break;
+					}
 					break;
 				}
 				PPHolonomicDriveController
@@ -165,32 +218,10 @@ y	 * @throws NotActiveException IF mecanum and Replay
 						new ModuleIOSim(), new ModuleIOSim(), new ModuleIOSim());
 				break;
 			case TANK:
-			System.err.println("MAKING");
-				drivetrainS = new Tank(new DriveIOSim());
+				drivetrainS = new Tank(new TankIOSim());
 				break;
 			default:
-				switch (DriveConstants.robotMotorController) {
-				case CTRE_MOTORS:
-					drivetrainS = new CTREMecanumS(new CTREMecanumConstantContainer(
-							30, DriveConstants.kFrontLeftDrivePort,
-							DriveConstants.kBackLeftDrivePort,
-							DriveConstants.kFrontRightDrivePort,
-							DriveConstants.kBackRightDrivePort,
-							DriveConstants.kChassisWidth,
-							TrainConstants.kDriveMotorGearRatio,
-							TrainConstants.kDriveEncoderRot2Meter,
-							DriveConstants.kMaxSpeedMetersPerSecond,
-							DriveConstants.kDriveBaseRadius,
-							DriveConstants.kModuleTranslations));
-					break;
-				default:
-					//10, 11, 12, 13, 80, 7.5,
-					drivetrainS = new REVMecanumS(new REVMecanumConstantContainer(10,
-							11, 12, 13, 80, 7.5, TrainConstants.kWheelDiameter,
-							DriveConstants.kModuleTranslations,
-							Units.inchesToMeters(6)));
-					break;
-				}
+				drivetrainS = new Mecanum(new MecanumIOSim());
 				PPHolonomicDriveController
 						.setRotationTargetOverride(this::getRotationTargetOverride);
 				break;
@@ -203,22 +234,23 @@ y	 * @throws NotActiveException IF mecanum and Replay
 						new ModuleIO() {}, new ModuleIO() {}, new ModuleIO() {});
 				break;
 			case TANK:
-				drivetrainS = new Tank(new DriveIO() {});
+				drivetrainS = new Tank(new TankIO() {});
 				break;
 			case MECANUM:
-				throw new IllegalArgumentException(
-						"Mecanum does NOT support replay.");
+				drivetrainS = new Mecanum(new MecanumIO() {});
 			}
 		}
 		drivetrainS.setDefaultCommand(new DrivetrainC(drivetrainS));
 
 		List<Pair<String, Command>> autoCommands = Arrays.asList(
-		//new Pair<String,Command>("AimAtAmp",new AimToPose(drivetrainS, new Pose2d(1.9,7.7, new Rotation2d(Units.degreesToRadians(0)))))
-		//new Pair<String, Command>("BranchGrabbingGamePiece", new BranchAuto("grabGamePieceBranch",new Pose2d(0,0,new Rotation2d())))
-		//new Pair<String, Command>("DriveToAmp",new DriveToPose(drivetrainS, false,new Pose2d(1.9,7.7,new Rotation2d(Units.degreesToRadians(90))))),
-		//new Pair<String,Command>("PlayMiiSong", new OrchestraC("mii")),
-		//new Pair<String,Command>("SimBot",new SimDefenseBot())
-		);
+				//new Pair<String, Command>("AimAtAmp",new AimToPose(drivetrainS, new Pose2d(1.9,7.7, new Rotation2d(Units.degreesToRadians(0))))),
+				new Pair<String, Command>("BranchGrabbingGamePiece",
+						new BranchAuto("Shoot",
+								new Pose2d(7.4, 5.8, new Rotation2d()), 4)),
+				//new Pair<String, Command>("BotAborter", new BotAborter(drivetrainS)), //NEEDS A WAY TO KNOW WHEN TO ABORT FOR THE EXAMPLE AUTO!!!
+				//new Pair<String, Command>("DriveToAmp",new DriveToPose(drivetrainS, false,new Pose2d(1.9,7.7,new Rotation2d(Units.degreesToRadians(90))))),
+				//new Pair<String, Command>("PlayMiiSong", new OrchestraC("mii")),
+				new Pair<String, Command>("SimBot", new SimDefenseBot()));
 		Pathfinding.setPathfinder(new LocalADStarAK());
 		NamedCommands.registerCommands(autoCommands);
 		if (Constants.isCompetition) {
@@ -249,15 +281,17 @@ y	 * @throws NotActiveException IF mecanum and Replay
 		configureBindings();
 		addNTCommands();
 	}
-	public Optional<Rotation2d> getRotationTargetOverride(){
+
+	public Optional<Rotation2d> getRotationTargetOverride() {
 		// Some condition that should decide if we want to override rotation
 		return angleOverrider;
 	}
+
 	private void configureBindings() {
 		xButtonDrive
 				.and(aButtonTest.or(bButtonTest).or(xButtonTest).or(yButtonTest)
 						.negate())
-				.onTrue(new InstantCommand(() -> drivetrainS.zeroHeading()));  //whileTrue(PathFinder.goToPose(new Pose2d(1.9, 7.7,new Rotation2d(Units.degreesToRadians(90))),DriveConstants.pathConstraints, drivetrainS, false))
+				.onTrue(new InstantCommand(() -> drivetrainS.zeroHeading())); //whileTrue(PathFinder.goToPose(new Pose2d(1.9, 7.7,new Rotation2d(Units.degreesToRadians(90))),DriveConstants.pathConstraints, drivetrainS, false))
 		yButtonTest.whileTrue(
 				new RunTest(SysIdRoutine.Direction.kForward, true, drivetrainS));
 		bButtonTest.whileTrue(
@@ -267,7 +301,11 @@ y	 * @throws NotActiveException IF mecanum and Replay
 		xButtonTest.whileTrue(
 				new RunTest(SysIdRoutine.Direction.kReverse, false, drivetrainS));
 		//Example Aim To 2024 Amp Pose, Bind to what you need.
-		//yButtonDrive.and(aButtonTest.or(bButtonTest).or(xButtonTest).or(yButtonTest).negate()).whileTrue(new AimToPose(drivetrainS,new Pose2d(1.9,7.7, new Rotation2d(Units.degreesToRadians(90)))));
+		yButtonDrive
+				.and(aButtonTest.or(bButtonTest).or(xButtonTest).or(yButtonTest)
+						.negate())
+				.whileTrue(new AimToPose(drivetrainS, new Pose2d(1.9, 7.7,
+						new Rotation2d(Units.degreesToRadians(90)))));
 		//swerve DRIVE tests
 		//When user hits right bumper, go to next test, or wrap back to starting test for SysID.
 		rightBumperTest.onTrue(new InstantCommand(() -> {
@@ -308,41 +346,44 @@ y	 * @throws NotActiveException IF mecanum and Replay
 	 * @return Current in amps.
 	 */
 	public static double[] getCurrentDraw() {
-		return new double[] {Math.min(drivetrainS.getCurrent(), 200)
+		return new double[] { Math.min(drivetrainS.getCurrent(), 200)
 		};
 	}
+
 	private static void addNTCommands() {
 		SmartDashboard.putData("SystemStatus/AllSystemsCheck", allSystemsCheck());
-	 }
+	}
+
 	/**
-	 * RUN EACH system's test command.
-	 * Does NOT run any checks on vision. 
+	 * RUN EACH system's test command. Does NOT run any checks on vision.
+	 * 
 	 * @return a command with all of them in a sequence.
 	 */
 	public static Command allSystemsCheck() {
 	return Commands.sequence(drivetrainS.getRunnableSystemCheckCommand(),servoS.getSystemCheckCommand());
 	}
-	public static HashMap<String, Double> combineMaps(List<HashMap<String, Double>> maps) {
-		HashMap<String, Double> combinedMap = new HashMap<>();
 
+	public static HashMap<String, Double> combineMaps(
+			List<HashMap<String, Double>> maps) {
+		HashMap<String, Double> combinedMap = new HashMap<>();
 		// Iterate over the list of maps
 		for (HashMap<String, Double> map : maps) {
-			 combinedMap.putAll(map);
+			combinedMap.putAll(map);
 		}
-
 		return combinedMap;
-  }
+	}
 
-	public static HashMap<String, Double> getAllTemps(){
+	public static HashMap<String, Double> getAllTemps() {
 		// List of HashMaps
 		List<HashMap<String, Double>> maps = List.of(drivetrainS.getTemps());
-
 		// Combine all maps
 		HashMap<String, Double> combinedMap = combineMaps(maps);
 		return combinedMap;
 	}
+
 	/**
-	 * Checks EACH system's status (DOES NOT RUN THE TESTS)  
+	 * Checks EACH system's status (DOES NOT RUN THE TESTS)
+	 * 
 	 * @return true if ALL systems were good.
 	 */
 	public static boolean allSystemsOK() {
@@ -357,7 +398,7 @@ y	 * @throws NotActiveException IF mecanum and Replay
 	public static Subsystem[] getAllSubsystems(){
 		Subsystem[] subsystems = new Subsystem[2];
 		subsystems[0] = drivetrainS;
-    subsystems[1] = servoS;
+    	subsystems[1] = servoS;
 		return subsystems;
 	}
 }
