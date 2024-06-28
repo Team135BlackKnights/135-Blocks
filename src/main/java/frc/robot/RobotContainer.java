@@ -5,7 +5,6 @@ package frc.robot;
 
 import frc.robot.commands.auto.BranchAuto;
 import frc.robot.commands.auto.SimDefenseBot;
-import frc.robot.commands.drive.AimToPose;
 import frc.robot.commands.drive.DrivetrainC;
 import frc.robot.subsystems.SubsystemChecker;
 import frc.robot.subsystems.drive.DrivetrainS;
@@ -55,7 +54,6 @@ import java.util.Optional;
 import edu.wpi.first.math.Pair;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.util.Units;
 
 import java.util.HashMap;
 import java.util.ArrayList;
