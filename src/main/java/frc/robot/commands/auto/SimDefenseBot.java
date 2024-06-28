@@ -23,7 +23,7 @@ public class SimDefenseBot extends Command {
 		// Create a sequence of movements with interpolation
 		botPose = new Pose2d(15, 6.7, new Rotation2d());
 		Command sequence = new SequentialCommandGroup(
-				interpolatePose(0, 11, 7, 5), interpolatePose(5, 8.3, 5.785, 5));
+				interpolatePose(0, 8.2, 7.4, 5));//, interpolatePose(5, 8.3, 5.785, 5));
 		// Schedule the sequence to start immediately
 		CommandScheduler.getInstance().schedule(sequence);
 	}

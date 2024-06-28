@@ -7,24 +7,24 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.ctre.phoenix6.BaseStatusSignal;
-import com.ctre.phoenix6.StatusCode;
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.Follower;
 import com.ctre.phoenix6.controls.VelocityVoltage;
 import com.ctre.phoenix6.controls.VoltageOut;
-import com.ctre.phoenix6.hardware.Pigeon2;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
-import edu.wpi.first.math.geometry.Rotation2d;
+import com.kauailabs.navx.frc.AHRS;
+
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.wpilibj.SerialPort.Port;
 import frc.robot.utils.drive.DriveConstants;
 import frc.robot.utils.selfCheck.SelfChecking;
-import frc.robot.utils.selfCheck.SelfCheckingPigeon2;
+import frc.robot.utils.selfCheck.SelfCheckingNavX2;
 import frc.robot.utils.selfCheck.SelfCheckingTalonFX;
 
-public class DriveIOTalonFX implements DriveIO {
+public class TankIOTalonFXNavx implements TankIO {
 	private static final double GEAR_RATIO = DriveConstants.TrainConstants.kDriveMotorGearRatio;
 	private static final double KP = DriveConstants.TrainConstants.overallDriveMotorConstantContainer
 			.getP();
@@ -62,14 +62,11 @@ public class DriveIOTalonFX implements DriveIO {
 			.getDeviceTemp();
 	private final StatusSignal<Double> rightFollowerTemp = rightFollower
 			.getDeviceTemp();
-	private final Pigeon2 pigeon = new Pigeon2(30);
-	private final StatusSignal<Double> yaw = pigeon.getYaw();
-	private final StatusSignal<Double> accelX = pigeon.getAccelerationX();
-	private final StatusSignal<Double> accelY = pigeon.getAccelerationY();
+	private final AHRS navX = new AHRS(Port.kUSB);
 	private double last_world_linear_accel_x;
 	private double last_world_linear_accel_y;
 
-	public DriveIOTalonFX() {
+	public TankIOTalonFXNavx() {
 		var config = new TalonFXConfiguration();
 		config.CurrentLimits.SupplyCurrentLimit = DriveConstants.kMaxDriveCurrent;
 		config.CurrentLimits.SupplyCurrentLimitEnable = true;
@@ -97,7 +94,7 @@ public class DriveIOTalonFX implements DriveIO {
 		rightFollower.setControl(new Follower(rightLeader.getDeviceID(),
 				DriveConstants.kBackRightDriveReversed));
 		BaseStatusSignal.setUpdateFrequencyForAll(100.0, leftPosition,
-				rightPosition, yaw); // Required for odometry, use faster rate
+				rightPosition); // Required for odometry, use faster rate
 		BaseStatusSignal.setUpdateFrequencyForAll(50.0, leftVelocity,
 				leftAppliedVolts, leftLeaderCurrent, leftFollowerCurrent,
 				leftLeaderTemp, leftFollowerTemp, rightVelocity, rightAppliedVolts,
@@ -107,11 +104,10 @@ public class DriveIOTalonFX implements DriveIO {
 		leftFollower.optimizeBusUtilization();
 		rightLeader.optimizeBusUtilization();
 		rightFollower.optimizeBusUtilization();
-		pigeon.optimizeBusUtilization();
 	}
 
 	@Override
-	public void updateInputs(DriveIOInputs inputs) {
+	public void updateInputs(TankIOInputs inputs) {
 		BaseStatusSignal.refreshAll(leftPosition, leftVelocity, leftAppliedVolts,
 				leftLeaderCurrent, leftFollowerCurrent, leftLeaderTemp,
 				leftFollowerTemp, rightPosition, rightVelocity, rightAppliedVolts,
@@ -139,18 +135,17 @@ public class DriveIOTalonFX implements DriveIO {
 		};
 		inputs.frontRightDriveTemp = rightLeaderTemp.getValueAsDouble();
 		inputs.backRightDriveTemp = rightFollowerTemp.getValueAsDouble();
-		inputs.gyroConnected = BaseStatusSignal.refreshAll(yaw, accelX, accelY)
-				.equals(StatusCode.OK);
-		inputs.gyroYaw = Rotation2d.fromDegrees(yaw.getValueAsDouble());
-		double curr_world_linear_accel_x = accelX.getValueAsDouble();
+		inputs.gyroConnected = navX.isConnected();
+		inputs.gyroYaw = navX.getRotation2d();
+		double curr_world_linear_accel_x = navX.getWorldLinearAccelX();
 		double currentJerkX = curr_world_linear_accel_x
 				- last_world_linear_accel_x;
 		last_world_linear_accel_x = curr_world_linear_accel_x;
-		double curr_world_linear_accel_y = accelY.getValueAsDouble();
+		double curr_world_linear_accel_y = navX.getWorldLinearAccelY();
 		double currentJerkY = curr_world_linear_accel_y
 				- last_world_linear_accel_y;
 		last_world_linear_accel_y = curr_world_linear_accel_y;
-		if ((Math.abs(currentJerkX) > DriveConstants.MAX_G)
+		if ((Math.abs(currentJerkX) > DriveConstants.MAX_G) //if we suddenly move .5 G's
 				|| (Math.abs(currentJerkY) > DriveConstants.MAX_G)) {
 			inputs.collisionDetected = true;
 		}
@@ -158,7 +153,7 @@ public class DriveIOTalonFX implements DriveIO {
 	}
 
 	@Override
-	public void reset() { pigeon.reset(); }
+	public void reset() { navX.reset(); }
 
 	@Override
 	public void setVoltage(double leftVolts, double rightVolts) {
@@ -180,7 +175,7 @@ public class DriveIOTalonFX implements DriveIO {
 	@Override
 	public List<SelfChecking> getSelfCheckingHardware() {
 		List<SelfChecking> hardware = new ArrayList<SelfChecking>();
-		hardware.add(new SelfCheckingPigeon2("IMU", pigeon));
+		hardware.add(new SelfCheckingNavX2("IMU", navX));
 		hardware.add(new SelfCheckingTalonFX("FrontLeftDrive", leftLeader));
 		hardware.add(new SelfCheckingTalonFX("BackLeftDrive", leftFollower));
 		hardware.add(new SelfCheckingTalonFX("FrontRightDrive", rightLeader));

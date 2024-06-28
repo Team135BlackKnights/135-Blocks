@@ -11,9 +11,9 @@ import java.util.List;
 
 import org.littletonrobotics.junction.AutoLog;
 
-public interface DriveIO {
+public interface TankIO {
 	@AutoLog
-	public static class DriveIOInputs {
+	public static class TankIOInputs {
 		public double leftPositionRad = 0.0;
 		public double leftVelocityRadPerSec = 0.0;
 		public double leftAppliedVolts = 0.0;
@@ -32,7 +32,7 @@ public interface DriveIO {
 	}
 
 	/** Updates the set of loggable inputs. */
-	public default void updateInputs(DriveIOInputs inputs) {}
+	public default void updateInputs(TankIOInputs inputs) {}
 
 	/** Run open loop at the specified voltage. */
 	public default void setVoltage(double leftVolts, double rightVolts) {}

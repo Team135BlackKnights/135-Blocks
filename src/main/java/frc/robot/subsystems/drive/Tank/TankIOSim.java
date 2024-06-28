@@ -9,7 +9,7 @@ import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.wpilibj.simulation.DifferentialDrivetrainSim;
 import frc.robot.utils.drive.DriveConstants;
 
-public class DriveIOSim implements DriveIO {
+public class TankIOSim implements TankIO {
 	private static final double KP = DriveConstants.TrainConstants.overallDriveMotorConstantContainer
 			.getP();
 	private static final double KD = DriveConstants.TrainConstants.overallDriveMotorConstantContainer
@@ -28,7 +28,7 @@ public class DriveIOSim implements DriveIO {
 	private double rightFFVolts = 0.0;
 
 	@Override
-	public void updateInputs(DriveIOInputs inputs) {
+	public void updateInputs(TankIOInputs inputs) {
 		if (closedLoop) {
 			leftAppliedVolts = MathUtil.clamp(leftPID.calculate(
 					sim.getLeftVelocityMetersPerSecond() / Tank.WHEEL_RADIUS)

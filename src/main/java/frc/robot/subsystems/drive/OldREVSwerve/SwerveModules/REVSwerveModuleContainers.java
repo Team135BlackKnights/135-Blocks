@@ -1,6 +1,6 @@
-package frc.robot.subsystems.drive.REVSwerve.SwerveModules;
+package frc.robot.subsystems.drive.OldREVSwerve.SwerveModules;
 
-import frc.robot.subsystems.drive.REVSwerve.REVModuleConstantContainer;
+import frc.robot.subsystems.drive.OldREVSwerve.REVModuleConstantContainer;
 import frc.robot.utils.drive.DriveConstants;
 import frc.robot.utils.drive.DriveConstants.TrainConstants;
 import frc.robot.utils.drive.DriveConstants.TrainConstants.*;
@@ -16,7 +16,7 @@ public interface REVSwerveModuleContainers {
 			TrainConstants.kDriveMotorGearRatio,
 			TrainConstants.kTurningMotorGearRatio,
 			DriveConstants.kFrontLeftAbsEncoderReversed, ModulePosition.FRONT_LEFT,
-			DriveConstants.TrainConstants.frontLeftDriveMotorConstantContainer,
+			DriveConstants.TrainConstants.overallDriveMotorConstantContainer,
 			DriveConstants.TrainConstants.overallTurningMotorConstantContainer,
 			DriveConstants.kModuleTranslations[0]),
 			frontRightConstantContainer = new REVModuleConstantContainer(
@@ -30,7 +30,7 @@ public interface REVSwerveModuleContainers {
 					TrainConstants.kTurningMotorGearRatio,
 					DriveConstants.kFrontRightAbsEncoderReversed,
 					ModulePosition.FRONT_RIGHT,
-					DriveConstants.TrainConstants.frontRightDriveMotorConstantContainer,
+					DriveConstants.TrainConstants.overallDriveMotorConstantContainer,
 					DriveConstants.TrainConstants.overallTurningMotorConstantContainer,
 					DriveConstants.kModuleTranslations[1]),
 			backLeftConstantContainer = new REVModuleConstantContainer(
@@ -44,7 +44,7 @@ public interface REVSwerveModuleContainers {
 			TrainConstants.kTurningMotorGearRatio,
 					DriveConstants.kBackLeftAbsEncoderReversed,
 					ModulePosition.BACK_LEFT,
-					DriveConstants.TrainConstants.backLeftDriveMotorConstantContainer,
+					DriveConstants.TrainConstants.overallDriveMotorConstantContainer,
 					DriveConstants.TrainConstants.overallTurningMotorConstantContainer,
 					DriveConstants.kModuleTranslations[2]),
 			backRightConstantContainer = new REVModuleConstantContainer(
@@ -58,7 +58,7 @@ public interface REVSwerveModuleContainers {
 			TrainConstants.kTurningMotorGearRatio,
 					DriveConstants.kBackRightAbsEncoderReversed,
 					ModulePosition.BACK_RIGHT,
-					DriveConstants.TrainConstants.backRightDriveMotorConstantContainer,
+					DriveConstants.TrainConstants.overallDriveMotorConstantContainer,
 					DriveConstants.TrainConstants.overallTurningMotorConstantContainer,
 					DriveConstants.kModuleTranslations[3]);
 }

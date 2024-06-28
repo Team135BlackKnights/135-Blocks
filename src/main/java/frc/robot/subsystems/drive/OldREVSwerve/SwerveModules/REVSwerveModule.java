@@ -1,4 +1,4 @@
-package frc.robot.subsystems.drive.REVSwerve.SwerveModules;
+package frc.robot.subsystems.drive.OldREVSwerve.SwerveModules;
 
 // import
 // com.ctre.phoenix.sensors.CANCoder;
@@ -19,6 +19,7 @@ import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.util.Units;
 import frc.robot.utils.drive.DriveConstants.TrainConstants.ModulePosition;
+
 import com.revrobotics.CANSparkBase;
 import com.revrobotics.CANSparkFlex;
 
@@ -26,7 +27,7 @@ import com.revrobotics.CANSparkFlex;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
-import frc.robot.subsystems.drive.REVSwerve.REVModuleConstantContainer;
+import frc.robot.subsystems.drive.OldREVSwerve.REVModuleConstantContainer;
 import frc.robot.utils.drive.DriveConstants;
 
 public class REVSwerveModule extends SubsystemBase {
@@ -73,7 +74,6 @@ public class REVSwerveModule extends SubsystemBase {
 			this.m_moduleNumber = -1;
 			break;
 		}
-		//TODO: Check if wheelDiameter should be here
 		driveEncoderRot2Meter = container.getDriveMotorGearing()*Math.PI;
 		driveEncoderRPM2MeterPerSec = container.getDriveMotorGearing()*Math.PI/60;
 		turningEncoderRot2Rad = container.getTurnMotorGearing()*2*Math.PI;

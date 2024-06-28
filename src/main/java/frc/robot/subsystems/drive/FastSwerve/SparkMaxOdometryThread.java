@@ -69,7 +69,7 @@ public class SparkMaxOdometryThread {
 
 	private void periodic() {
 		Swerve.odometryLock.lock();
-		double timestamp = Logger.getRealTimestamp() / 1e6;
+		double timestamp = Logger.getTimestamp() / 1e6;
 		try {
 			double[] values = new double[signals.size()];
 			boolean isValid = true;

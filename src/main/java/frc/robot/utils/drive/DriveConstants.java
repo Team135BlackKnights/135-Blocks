@@ -7,10 +7,9 @@ import edu.wpi.first.math.util.Units;
 import frc.robot.utils.MotorConstantContainer;
 
 public class DriveConstants {
-	//ONLY CTRE_SWERVE IS *FULLY* CURRENT DRAW ACCURATE IN SIM
-	public static MotorVendor robotMotorController = MotorVendor.NEO_SPARK_MAX;
-	public static driveTrainType driveType = driveTrainType.SWERVE;
-
+	public static MotorVendor robotMotorController = MotorVendor.CTRE_MOTORS;
+	public static DriveTrainType driveType = DriveTrainType.MECANUM;
+	public static GyroType gyroType = GyroType.PIGEON;
 	/**
 	 * What motors and motorContollers are we using
 	 */
@@ -21,8 +20,15 @@ public class DriveConstants {
 	/**
 	 * The drivetrain type
 	 */
-	public enum driveTrainType {
+	public enum DriveTrainType {
 		SWERVE, TANK, MECANUM
+	}
+	/**
+	 * The Gyro type 
+	 * @apiNote NavX Swerve is untested.
+	 */
+	public enum GyroType{
+		NAVX, PIGEON
 	}
 	public static boolean fieldOriented = true;
 	//135-Blocks was tested on a chassis with all CANSparkMaxes, as well as all Kraken-x60s.
@@ -95,22 +101,6 @@ public class DriveConstants {
 				0.001, 0.001, 0.001, 7, 0.001), //Average the turning motors for these vals.
 				overallDriveMotorConstantContainer = new MotorConstantContainer(
 						.1, .13, 0.001,
-						0.05, 0.001),
-				frontRightDriveMotorConstantContainer = new MotorConstantContainer(
-						.04248, 2.9041, 1.52, 2.4646, 0),
-				frontLeftDriveMotorConstantContainer = new MotorConstantContainer(
-						.22934, 2.8559, 1.7338, 2.3896, 0),
-				backRightDriveMotorConstantContainer = new MotorConstantContainer(
-						.070421, 2.8607, 1.1811, 2.0873, 0),
-				backLeftDriveMotorConstantContainer = new MotorConstantContainer(
-						.01842, 2.7005, 1.4511, 2.3375, 0),
-				frontLeftTurningMotorConstantContainer = new MotorConstantContainer(
-						.34809, .0021885, .00019056, 1.0181, 0),
-				frontRightTurningMotorConstantContainer = new MotorConstantContainer(
-						.28984, .0021057, .00018697, .99768, 0),
-				backLeftTurningMotorConstantContainer = new MotorConstantContainer(
-						.26615, .26615, .0021315, 1.0521, 0),
-				backRightTurningMotorConstantContainer = new MotorConstantContainer(
-						.25885, .0021008, .0002368, 1.2362, 0);
+						0.05, 0.001);
 	}
 }

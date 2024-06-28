@@ -24,7 +24,7 @@ public class BranchAuto extends Command{
 			isFinished = false;
 			if (RobotContainer.currentGamePieceStatus == 0){
 				//PathPlannerPath.fromChoreoTrajectory will automatically execute any event markers in the choreo Traj.
-				path = AutoBuilder.followPath(PathPlannerPath.fromChoreoTrajectory(choreoTraj));
+				path = AutoBuilder.followPath(PathPlannerPath.fromChoreoTrajectory(choreoTraj)).andThen(PathFinder.goToPose(backupPose,DriveConstants.pathConstraints, RobotContainer.drivetrainS,true,endSpeed));
 			}else{
 				path = PathFinder.goToPose(backupPose,DriveConstants.pathConstraints, RobotContainer.drivetrainS,true,endSpeed);
 			}

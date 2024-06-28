@@ -6,11 +6,7 @@ package frc.robot.subsystems.drive.Tank;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.ctre.phoenix6.BaseStatusSignal;
-import com.ctre.phoenix6.StatusCode;
-import com.ctre.phoenix6.StatusSignal;
-import com.ctre.phoenix6.configs.Pigeon2Configuration;
-import com.ctre.phoenix6.hardware.Pigeon2;
+import com.kauailabs.navx.frc.AHRS;
 import com.revrobotics.CANSparkBase;
 import com.revrobotics.CANSparkFlex;
 import com.revrobotics.CANSparkBase.ControlType;
@@ -18,19 +14,15 @@ import com.revrobotics.CANSparkLowLevel.MotorType;
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.SparkPIDController;
-import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.wpilibj.SerialPort.Port;
 import frc.robot.utils.drive.DriveConstants;
 import frc.robot.utils.drive.DriveConstants.MotorVendor;
 import frc.robot.utils.selfCheck.SelfChecking;
-import frc.robot.utils.selfCheck.SelfCheckingPigeon2;
+import frc.robot.utils.selfCheck.SelfCheckingNavX2;
 import frc.robot.utils.selfCheck.SelfCheckingSparkBase;
 
-/**
- * NOTE: To use the Spark Flex / NEO Vortex, replace all instances of
- * "CANSparkMax" with "CANSparkFlex".
- */
-public class DriveIOSparkBase implements DriveIO {
+public class TankIOSparkBaseNavx implements TankIO {
 	private static final double GEAR_RATIO = DriveConstants.TrainConstants.kDriveMotorGearRatio;
 	private static final double KP = DriveConstants.TrainConstants.overallDriveMotorConstantContainer
 			.getP();
@@ -44,14 +36,11 @@ public class DriveIOSparkBase implements DriveIO {
 	private final RelativeEncoder rightEncoder;
 	private final SparkPIDController leftPID;
 	private final SparkPIDController rightPID;
-	private final Pigeon2 pigeon = new Pigeon2(30);
-	private final StatusSignal<Double> yaw = pigeon.getYaw();
-	private final StatusSignal<Double> accelX = pigeon.getAccelerationX();
-	private final StatusSignal<Double> accelY = pigeon.getAccelerationY();
+	private final AHRS navX = new AHRS(Port.kUSB);
 	private double last_world_linear_accel_x;
 	private double last_world_linear_accel_y;
 
-	public DriveIOSparkBase() {
+	public TankIOSparkBaseNavx() {
 		if (DriveConstants.robotMotorController == MotorVendor.NEO_SPARK_MAX){
 		leftLeader = new CANSparkMax(DriveConstants.kFrontLeftDrivePort,
 				MotorType.kBrushless);
@@ -99,14 +88,10 @@ public class DriveIOSparkBase implements DriveIO {
 		rightLeader.burnFlash();
 		leftFollower.burnFlash();
 		rightFollower.burnFlash();
-		pigeon.getConfigurator().apply(new Pigeon2Configuration());
-		pigeon.getConfigurator().setYaw(0.0);
-		yaw.setUpdateFrequency(100.0);
-		pigeon.optimizeBusUtilization();
 	}
 
 	@Override
-	public void updateInputs(DriveIOInputs inputs) {
+	public void updateInputs(TankIOInputs inputs) {
 		inputs.leftPositionRad = Units
 				.rotationsToRadians(leftEncoder.getPosition() / GEAR_RATIO);
 		inputs.leftVelocityRadPerSec = Units.rotationsPerMinuteToRadiansPerSecond(
@@ -130,18 +115,17 @@ public class DriveIOSparkBase implements DriveIO {
 		};
 		inputs.frontRightDriveTemp = rightLeader.getMotorTemperature();
 		inputs.backRightDriveTemp = rightFollower.getMotorTemperature();
-		inputs.gyroConnected = BaseStatusSignal.refreshAll(yaw, accelX, accelY)
-				.equals(StatusCode.OK);
-		inputs.gyroYaw = Rotation2d.fromDegrees(yaw.refresh().getValueAsDouble());
-		double curr_world_linear_accel_x = accelX.getValueAsDouble();
+		inputs.gyroConnected = navX.isConnected();
+		inputs.gyroYaw = navX.getRotation2d();
+		double curr_world_linear_accel_x = navX.getWorldLinearAccelX();
 		double currentJerkX = curr_world_linear_accel_x
 				- last_world_linear_accel_x;
 		last_world_linear_accel_x = curr_world_linear_accel_x;
-		double curr_world_linear_accel_y = accelY.getValueAsDouble();
+		double curr_world_linear_accel_y = navX.getWorldLinearAccelY();
 		double currentJerkY = curr_world_linear_accel_y
 				- last_world_linear_accel_y;
 		last_world_linear_accel_y = curr_world_linear_accel_y;
-		if ((Math.abs(currentJerkX) > DriveConstants.MAX_G)
+		if ((Math.abs(currentJerkX) > DriveConstants.MAX_G) //if we suddenly move .5 G's
 				|| (Math.abs(currentJerkY) > DriveConstants.MAX_G)) {
 			inputs.collisionDetected = true;
 		}
@@ -149,13 +133,13 @@ public class DriveIOSparkBase implements DriveIO {
 	}
 
 	@Override
+	public void reset() { navX.reset(); }
+
+	@Override
 	public void setVoltage(double leftVolts, double rightVolts) {
 		leftLeader.setVoltage(leftVolts);
 		rightLeader.setVoltage(rightVolts);
 	}
-
-	@Override
-	public void reset() { pigeon.reset(); }
 
 	@Override
 	public void setVelocity(double leftRadPerSec, double rightRadPerSec,
@@ -173,7 +157,7 @@ public class DriveIOSparkBase implements DriveIO {
 	@Override
 	public List<SelfChecking> getSelfCheckingHardware() {
 		List<SelfChecking> hardware = new ArrayList<SelfChecking>();
-		hardware.add(new SelfCheckingPigeon2("IMU", pigeon));
+		hardware.add(new SelfCheckingNavX2("IMU", navX));
 		hardware.add(new SelfCheckingSparkBase("FrontLeftDrive", leftLeader));
 		hardware.add(new SelfCheckingSparkBase("BackLeftDrive", leftFollower));
 		hardware.add(new SelfCheckingSparkBase("FrontRightDrive", rightLeader));
