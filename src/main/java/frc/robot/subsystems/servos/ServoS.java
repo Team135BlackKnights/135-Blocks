@@ -115,4 +115,7 @@ public class ServoS extends SubsystemChecker {
 			}
 		}));
 	 }
+
+	@Override
+	public double getCurrent() { return 0; } //negligible current draw
 }
