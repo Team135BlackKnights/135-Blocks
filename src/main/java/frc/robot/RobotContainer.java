@@ -16,9 +16,6 @@ import frc.robot.subsystems.drive.Mecanum.MecanumIOSparkBaseNavx;
 import frc.robot.subsystems.drive.Mecanum.MecanumIOSparkBasePigeon;
 import frc.robot.subsystems.drive.Mecanum.MecanumIOTalonFXNavx;
 import frc.robot.subsystems.drive.Mecanum.MecanumIOTalonFXPigeon;
-import frc.robot.subsystems.drive.FastSwerve.GyroIO;
-import frc.robot.subsystems.drive.FastSwerve.GyroIONavX;
-import frc.robot.subsystems.drive.FastSwerve.GyroIOPigeon2;
 import frc.robot.subsystems.drive.FastSwerve.ModuleIO;
 import frc.robot.subsystems.drive.FastSwerve.ModuleIOSim;
 import frc.robot.subsystems.drive.FastSwerve.ModuleIOSparkBase;
@@ -40,6 +37,10 @@ import frc.robot.utils.vision.VisionConstants;
 
 import frc.robot.utils.drive.LocalADStarAK;
 import frc.robot.utils.drive.PathFinder;
+import frc.robot.utils.drive.Sensors.GyroIO;
+import frc.robot.utils.drive.Sensors.GyroIONavX;
+import frc.robot.utils.drive.Sensors.GyroIOPigeon2;
+
 import com.ctre.phoenix6.SignalLogger;
 import com.ctre.phoenix6.hardware.ParentDevice;
 import com.pathplanner.lib.auto.AutoBuilder;

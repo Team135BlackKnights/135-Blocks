@@ -16,7 +16,7 @@ import org.littletonrobotics.junction.Logger;
 public class Module {
 	private static final double WHEEL_RADIUS = DriveConstants.TrainConstants.kWheelDiameter
 			/ 2;
-	static final double ODOMETRY_FREQUENCY = 250.0;
+	public static final double ODOMETRY_FREQUENCY = 250.0;
 	private final ModuleIO io;
 	private final ModuleIOInputsAutoLogged inputs = new ModuleIOInputsAutoLogged();
 	private final int index;

@@ -8,7 +8,7 @@ import frc.robot.utils.MotorConstantContainer;
 
 public class DriveConstants {
 	public static MotorVendor robotMotorController = MotorVendor.CTRE_MOTORS;
-	public static DriveTrainType driveType = DriveTrainType.MECANUM;
+	public static DriveTrainType driveType = DriveTrainType.SWERVE;
 	public static GyroType gyroType = GyroType.PIGEON;
 	/**
 	 * What motors and motorContollers are we using
