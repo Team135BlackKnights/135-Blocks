@@ -9,8 +9,8 @@ public class GeomUtil {
 	  /**
    * Creates a pure translating transform
    *
-   * @param x The x componenet of the translation
-   * @param y The y componenet of the translation
+   * @param x The x component of the translation
+   * @param y The y component of the translation
    * @return The resulting transform
    */
   public static Transform2d translationToTransform(double x, double y) {
