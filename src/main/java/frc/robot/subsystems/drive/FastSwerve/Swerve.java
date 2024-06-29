@@ -35,8 +35,9 @@ import frc.robot.subsystems.SubsystemChecker;
 import frc.robot.subsystems.drive.DrivetrainS;
 import frc.robot.utils.drive.DriveConstants;
 import frc.robot.utils.drive.LocalADStarAK;
+import frc.robot.utils.drive.Sensors.GyroIO;
 import frc.robot.utils.selfCheck.SelfChecking;
-
+import frc.robot.utils.drive.Sensors.GyroIOInputsAutoLogged;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;

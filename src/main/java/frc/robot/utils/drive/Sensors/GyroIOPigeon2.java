@@ -1,7 +1,7 @@
 // IO implementation creation files are from
 // http://github.com/Mechanical-Advantage
 // Be sure to understand how it creates the "inputs" variable and edits it!
-package frc.robot.subsystems.drive.FastSwerve;
+package frc.robot.utils.drive.Sensors;
 
 import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.StatusCode;
@@ -10,6 +10,9 @@ import com.ctre.phoenix6.configs.Pigeon2Configuration;
 import com.ctre.phoenix6.hardware.Pigeon2;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.util.Units;
+import frc.robot.subsystems.drive.FastSwerve.Module;
+import frc.robot.subsystems.drive.FastSwerve.PhoenixOdometryThread;
+import frc.robot.subsystems.drive.FastSwerve.SparkMaxOdometryThread;
 import frc.robot.utils.drive.DriveConstants;
 import frc.robot.utils.selfCheck.SelfChecking;
 import frc.robot.utils.selfCheck.SelfCheckingPigeon2;

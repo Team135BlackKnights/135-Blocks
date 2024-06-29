@@ -1,7 +1,7 @@
 // IO implementation creation files are from
 // http://github.com/Mechanical-Advantage
 // Be sure to understand how it creates the "inputs" variable and edits it!
-package frc.robot.subsystems.drive.FastSwerve;
+package frc.robot.utils.drive.Sensors;
 
 import edu.wpi.first.math.geometry.Rotation2d;
 import frc.robot.utils.selfCheck.SelfChecking;
