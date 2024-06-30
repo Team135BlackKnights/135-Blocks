@@ -99,7 +99,6 @@ public class VisionConstants {
 	public static final double std_dev_steepness = 10;
    public static final double kMaxRotationCorrection = Units.degreesToRadians(2);
 	public static final double kMaxRotationCorrectionSkid = Units.degreesToRadians(6);
-    public static final double timestampLatencyOffset = 65 * 1000; //65 ms to microseconds
 	public static class FieldConstants {
 		public static final double kFieldLength = Units.inchesToMeters(651.223);
 		public static final double kFieldWidth = Units.inchesToMeters(323.277);

@@ -61,8 +61,7 @@ public class Vision extends SubsystemChecker {
 					aprilTagList = inputs.backCamTagList;
 						break;
 					}
-				Double offsetTime = inputs.time[i] + VisionConstants.timestampLatencyOffset;
-				String response = shouldAcceptVision(offsetTime,
+				String response = shouldAcceptVision(inputs.time[i],
 						inputs.estPose[i], RobotContainer.drivetrainS.getPose(),
 						RobotContainer.drivetrainS.getChassisSpeeds(),
 						aprilTagList, inputs.avgPoseAmbiguity[i]);
@@ -71,7 +70,7 @@ public class Vision extends SubsystemChecker {
 					// We do this because we should trust cam estimates with closer apriltags than farther ones.
 					Matrix<N3, N1> estStdDevs = getEstimationStdDevs(
 							inputs.avgDist[i],inputs.lowestDist[i],inputs.weightAverage[i],inputs.avgPoseAmbiguity[i], aprilTagList.length);
-					addVisionMeasurement(inputs.estPose[i], offsetTime,
+					addVisionMeasurement(inputs.estPose[i], inputs.time[i],
 							estStdDevs);
 					for (int tag : aprilTagList) {
 						VisionConstants.FieldConstants.aprilTagOffsets[tag] = Math
