@@ -4,6 +4,7 @@ import com.ctre.phoenix6.StatusCode;
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.hardware.Pigeon2;
 
+import frc.robot.utils.selfCheck.SelfChecking;
 import frc.robot.utils.selfCheck.SubsystemFault;
 
 import java.util.ArrayList;

@@ -2,6 +2,7 @@ package frc.robot.utils.selfCheck.drive;
 
 import com.kauailabs.navx.frc.AHRS;
 
+import frc.robot.utils.selfCheck.SelfChecking;
 import frc.robot.utils.selfCheck.SubsystemFault;
 
 import java.util.ArrayList;

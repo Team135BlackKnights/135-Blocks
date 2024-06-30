@@ -4,6 +4,7 @@ import java.util.ArrayList;
 
 import com.revrobotics.CANSparkBase.FaultID;
 
+import frc.robot.utils.selfCheck.SelfChecking;
 import frc.robot.utils.selfCheck.SubsystemFault;
 
 import com.revrobotics.CANSparkBase;
