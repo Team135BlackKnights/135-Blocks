@@ -63,7 +63,7 @@ public class DriveToPose extends Command {
   static {
         driveKp.initDefault(2.0);
         driveKd.initDefault(0.0);
-        thetaKp.initDefault(12.16);
+        thetaKp.initDefault(6);
         thetaKd.initDefault(0.0);
         driveMaxVelocitySlow.initDefault(Units.inchesToMeters(50.0));
         thetaMaxVelocitySlow.initDefault(Units.degreesToRadians(90.0));
@@ -91,12 +91,15 @@ public class DriveToPose extends Command {
   public DriveToPose(DrivetrainS drive, boolean slowMode, Pose2d pose, PathConstraints pathConstraints) {
 	this(drive, slowMode, () -> pose,pathConstraints);
  }
-  /** Drives to the specified pose under full software control. */
+  /** Drives to the specified supplier of the pose, getting the newest wanted pose every update cycle under full software control. */
   public DriveToPose(DrivetrainS drive, Supplier<Pose2d> poseSupplier) {
     this(drive, false, poseSupplier, new PathConstraints(DriveConstants.kMaxSpeedMetersPerSecond, DriveConstants.kTeleDriveMaxAcceleration, DriveConstants.kMaxTurningSpeedRadPerSec, DriveConstants.kTeleTurningMaxAcceleration));
   }
-
-  /** Drives to the specified pose under full software control. */
+  /** Drives to the specified supplier of the pose, getting the newest wanted pose every update cycle under full software control. */
+  public DriveToPose(DrivetrainS drive, boolean slowMode, Supplier<Pose2d> poseSupplier) {
+	this(drive, slowMode, poseSupplier, new PathConstraints(DriveConstants.kMaxSpeedMetersPerSecond, DriveConstants.kTeleDriveMaxAcceleration, DriveConstants.kMaxTurningSpeedRadPerSec, DriveConstants.kTeleTurningMaxAcceleration));
+ }
+ /** Drives to the specified supplier of the pose, getting the newest wanted pose every update cycle under full software control with given constraints. */
   public DriveToPose(DrivetrainS drive, boolean slowMode, Supplier<Pose2d> poseSupplier, PathConstraints pathConstraints) {
     this.drive = drive;
     this.slowMode = slowMode;
