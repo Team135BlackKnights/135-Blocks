@@ -37,14 +37,13 @@ import edu.wpi.first.units.Voltage;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
-import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 import frc.robot.Robot;
 import frc.robot.subsystems.SubsystemChecker;
 import frc.robot.subsystems.drive.DrivetrainS;
 import frc.robot.utils.drive.DriveConstants;
 import frc.robot.utils.drive.LocalADStarAK;
 import frc.robot.utils.drive.Position;
-import frc.robot.utils.selfCheck.SelfChecking;
+import frc.robot.utils.selfCheck.drive.SelfChecking;
 
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
@@ -312,17 +311,6 @@ public class Mecanum extends SubsystemChecker implements DrivetrainS {
 	@Override
 	public Twist2d getFieldVelocity() { return fieldVelocity; }
 
-	@Override
-	public Command sysIdDynamicTurn(Direction kreverse) {
-		throw new UnsupportedOperationException(
-				"Unimplemented method 'sysIdDynamicTurn'");
-	}
-
-	@Override
-	public Command sysIdQuasistaticTurn(Direction kforwards) {
-		throw new UnsupportedOperationException(
-				"Unimplemented method 'sysIdQuasistaticTurn'");
-	}
 
 	@Override
 	public void zeroHeading() {

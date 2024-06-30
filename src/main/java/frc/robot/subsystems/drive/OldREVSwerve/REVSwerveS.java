@@ -207,27 +207,6 @@ public class REVSwerveS extends SubsystemChecker implements DrivetrainS {
 		SmartDashboard.putBooleanArray("Module Skids", areModulesSkidding);
 		return areModulesSkidding;
 	}
-	/**
-	 * Returns a command that will execute a quasistatic test in the given
-	 * direction.
-	 *
-	 * @param direction The direction (forward or reverse) to run the test in
-	 */
-	@Override
-	public Command sysIdQuasistaticTurn(SysIdRoutine.Direction direction) {
-		return sysIdRoutineTurn.quasistatic(direction);
-	}
-
-	/**
-	 * Returns a command that will execute a dynamic test in the given direction.
-	 *
-	 * @param direction The direction (forward or reverse) to run the test in
-	 */
-	@Override
-	public Command sysIdDynamicTurn(SysIdRoutine.Direction direction) {
-		return sysIdRoutineTurn.dynamic(direction);
-	}
-
 	@Override
 	public Command sysIdDynamicDrive(SysIdRoutine.Direction direction) {
 		return sysIdRoutineDrive.dynamic(direction);

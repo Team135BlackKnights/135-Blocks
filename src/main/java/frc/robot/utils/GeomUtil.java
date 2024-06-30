@@ -4,6 +4,8 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.geometry.Twist2d;
+import edu.wpi.first.math.kinematics.ChassisSpeeds;
 
 public class GeomUtil {
 	  /**
@@ -32,4 +34,14 @@ public class GeomUtil {
 
         return rotationFromCurrentToTarget;
     }
+	 /**
+   * Converts a ChassisSpeeds to a Twist2d by extracting two dimensions (Y and Z). chain
+   *
+   * @param speeds The original translation
+   * @return The resulting translation
+   */
+  public static Twist2d toTwist2d(ChassisSpeeds speeds) {
+    return new Twist2d(
+        speeds.vxMetersPerSecond, speeds.vyMetersPerSecond, speeds.omegaRadiansPerSecond);
+  }
 }

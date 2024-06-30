@@ -1,6 +1,8 @@
-package frc.robot.utils.selfCheck;
+package frc.robot.utils.selfCheck.drive;
 
 import edu.wpi.first.wpilibj.motorcontrol.PWMMotorController;
+import frc.robot.utils.selfCheck.SubsystemFault;
+
 import java.util.ArrayList;
 import java.util.List;
 

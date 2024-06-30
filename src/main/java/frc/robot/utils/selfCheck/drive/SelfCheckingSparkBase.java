@@ -1,8 +1,11 @@
-package frc.robot.utils.selfCheck;
+package frc.robot.utils.selfCheck.drive;
 import java.util.List;
 import java.util.ArrayList;
 
 import com.revrobotics.CANSparkBase.FaultID;
+
+import frc.robot.utils.selfCheck.SubsystemFault;
+
 import com.revrobotics.CANSparkBase;
 import com.revrobotics.REVLibError;
 

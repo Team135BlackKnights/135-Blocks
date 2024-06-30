@@ -25,13 +25,6 @@ public class RunTest extends Command{
 					test = RobotContainer.drivetrainS.sysIdDynamicDrive(direction);
 				}
 				break;
-			case swerveTurn:
-				if (isQuasiastic){
-					test = RobotContainer.drivetrainS.sysIdQuasistaticTurn(direction);
-				}else{
-					test = RobotContainer.drivetrainS.sysIdDynamicTurn(direction);
-				}
-			break;
 			default:
 				System.err.println("NO GIVEN ROUTINE!");
 				break;
