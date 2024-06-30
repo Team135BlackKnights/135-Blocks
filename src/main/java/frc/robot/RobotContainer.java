@@ -7,6 +7,8 @@ import frc.robot.commands.auto.BranchAuto;
 import frc.robot.commands.auto.SimDefenseBot;
 import frc.robot.commands.drive.DrivetrainC;
 import frc.robot.subsystems.SubsystemChecker;
+import frc.robot.commands.servos.ServoC;
+
 import frc.robot.subsystems.drive.DrivetrainS;
 import frc.robot.subsystems.drive.FastSwerve.Swerve;
 import frc.robot.subsystems.drive.Mecanum.Mecanum;
@@ -28,6 +30,7 @@ import frc.robot.subsystems.drive.Tank.TankIOTalonFXNavx;
 import frc.robot.subsystems.drive.Tank.TankIOTalonFXPigeon;
 import frc.robot.subsystems.drive.Tank.Tank;
 import frc.robot.utils.RunTest;
+import frc.robot.subsystems.servos.ServoS;
 import frc.robot.utils.drive.DriveConstants;
 
 import frc.robot.utils.drive.LocalADStarAK;
@@ -97,7 +100,8 @@ public class RobotContainer {
 	public static int currentTest = 0, currentGamePieceStatus = 0;
 	public static String currentPath = "";
 	public static Field2d field = new Field2d();
-	public static Pose2d opposingBotPose;
+  	public static Pose2d opposingBotPose;
+	final static ServoS servoS = new ServoS();
 
 	// POVButton manipPOVZero = new POVButton(manipController, 0);
 	// POVButton manipPOV180 = new POVButton(manipController, 180);
@@ -243,6 +247,7 @@ public class RobotContainer {
 			}
 		}
 		drivetrainS.setDefaultCommand(new DrivetrainC(drivetrainS));
+
 		List<Pair<String, Command>> autoCommands = Arrays.asList(
 				//new Pair<String, Command>("AimAtAmp",new AimToPose(drivetrainS, new Pose2d(1.9,7.7, new Rotation2d(Units.degreesToRadians(0))))),
 				new Pair<String, Command>("BranchGrabbingGamePiece",
@@ -254,14 +259,17 @@ public class RobotContainer {
 				new Pair<String, Command>("SimBot", new SimDefenseBot()));
 		Pathfinding.setPathfinder(new LocalADStarAK());
 		NamedCommands.registerCommands(autoCommands);
-		PathfindingCommand.warmupCommand().schedule();
 		if (Constants.isCompetition) {
 			PPLibTelemetry.enableCompetitionMode();
 		}
+
 		PathfindingCommand.warmupCommand().andThen(PathFinder.goToPose(new Pose2d(1.9, 7.7,new Rotation2d(Units.degreesToRadians(90))),DriveConstants.pathConstraints, drivetrainS, false,0))
 				.finallyDo(() -> RobotContainer.field.getObject("target pose")
 						.setPose(new Pose2d(-50, -50, new Rotation2d())))
 				.schedule();
+
+		servoS.setDefaultCommand(new ServoC(servoS));
+
 		autoChooser = AutoBuilder.buildAutoChooser();
 		SmartDashboard.putData(field);
 		SmartDashboard.putData("Auto Chooser", autoChooser);
@@ -360,7 +368,7 @@ public class RobotContainer {
 	 * @return a command with all of them in a sequence.
 	 */
 	public static Command allSystemsCheck() {
-		return Commands.sequence(drivetrainS.getRunnableSystemCheckCommand());
+	return Commands.sequence(drivetrainS.getRunnableSystemCheckCommand(),servoS.getSystemCheckCommand());
 	}
 
 	public static HashMap<String, Double> combineMaps(
@@ -387,19 +395,18 @@ public class RobotContainer {
 	 * @return true if ALL systems were good.
 	 */
 	public static boolean allSystemsOK() {
-		return drivetrainS
-				.getTrueSystemStatus() == SubsystemChecker.SystemStatus.OK;
-	}
-
+		return drivetrainS.getTrueSystemStatus() == SubsystemChecker.SystemStatus.OK
+		&& servoS.getSystemStatus() == SubsystemChecker.SystemStatus.OK;
+	 }
 	public static Collection<ParentDevice> getOrchestraDevices() {
 		Collection<ParentDevice> devices = new ArrayList<>();
 		devices.addAll(drivetrainS.getDriveOrchestraDevices());
 		return devices;
 	}
-
-	public static Subsystem[] getAllSubsystems() {
-		Subsystem[] subsystems = new Subsystem[1];
+	public static Subsystem[] getAllSubsystems(){
+		Subsystem[] subsystems = new Subsystem[2];
 		subsystems[0] = drivetrainS;
+    	subsystems[1] = servoS;
 		return subsystems;
 	}
 }
