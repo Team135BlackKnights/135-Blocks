@@ -6,6 +6,8 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.geometry.Twist2d;
+import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.util.Units;
 
@@ -99,6 +101,16 @@ public class GeomUtil {
         return rotationFromCurrentToTarget;
     }
 	 /**
+
+   * Converts a ChassisSpeeds to a Twist2d by extracting two dimensions (Y and Z). chain
+   *
+   * @param speeds The original translation
+   * @return The resulting translation
+   */
+  public static Twist2d toTwist2d(ChassisSpeeds speeds) {
+    return new Twist2d(
+        speeds.vxMetersPerSecond, speeds.vyMetersPerSecond, speeds.omegaRadiansPerSecond);
+  }
      * Calculates the robot-relative Pose2d based on Limelight readings.
      *
      * @param tx The horizontal angle offset to the target in degrees.
@@ -195,5 +207,4 @@ public class GeomUtil {
 public static double calculateDistanceFromPose3d(Pose2d currentPose,
 Pose3d objectPose) {
 	return currentPose.getTranslation().getDistance(objectPose.getTranslation().toTranslation2d());
-  }
 }

@@ -1,12 +1,12 @@
 package frc.robot.subsystems.drive.FastSwerve;
 
 import edu.wpi.first.wpilibj.Notifier;
+
 import java.util.ArrayList;
 import java.util.List;
-import java.util.OptionalDouble;
 import java.util.Queue;
 import java.util.concurrent.ArrayBlockingQueue;
-import java.util.function.Supplier;
+import java.util.function.DoubleSupplier;
 import org.littletonrobotics.junction.Logger;
 
 /**
@@ -18,9 +18,8 @@ import org.littletonrobotics.junction.Logger;
  * with consistent timing.
  */
 public class SparkMaxOdometryThread {
-	private List<Supplier<OptionalDouble>> signals = new ArrayList<>();
+	private List<DoubleSupplier> signals = new ArrayList<>();
 	private List<Queue<Double>> queues = new ArrayList<>();
-	private List<Queue<Double>> timestampQueues = new ArrayList<>();
 	private final Notifier notifier;
 	private static SparkMaxOdometryThread instance = null;
 
@@ -34,15 +33,10 @@ public class SparkMaxOdometryThread {
 	private SparkMaxOdometryThread() {
 		notifier = new Notifier(this::periodic);
 		notifier.setName("SparkMaxOdometryThread");
+		notifier.startPeriodic(1.0 / 250);
 	}
 
-	public void start() {
-		if (timestampQueues.size() > 0) {
-			notifier.startPeriodic(1.0 / Module.ODOMETRY_FREQUENCY);
-		}
-	}
-
-	public Queue<Double> registerSignal(Supplier<OptionalDouble> signal) {
+	public Queue<Double> registerSignal(DoubleSupplier signal) {
 		Queue<Double> queue = new ArrayBlockingQueue<>(20);
 		Swerve.odometryLock.lock();
 		try {
@@ -55,40 +49,12 @@ public class SparkMaxOdometryThread {
 		return queue;
 	}
 
-	public Queue<Double> makeTimestampQueue() {
-		Queue<Double> queue = new ArrayBlockingQueue<>(20);
-		Swerve.odometryLock.lock();
-		try {
-			timestampQueues.add(queue);
-		}
-		finally {
-			Swerve.odometryLock.unlock();
-		}
-		return queue;
-	}
-
 	private void periodic() {
 		Swerve.odometryLock.lock();
-		double timestamp = Logger.getTimestamp() / 1e6;
+		Swerve.timestampQueue.offer(Logger.getRealTimestamp() / 1.0e6);
 		try {
-			double[] values = new double[signals.size()];
-			boolean isValid = true;
 			for (int i = 0; i < signals.size(); i++) {
-				OptionalDouble value = signals.get(i).get();
-				if (value.isPresent()) {
-					values[i] = value.getAsDouble();
-				} else {
-					isValid = false;
-					break;
-				}
-			}
-			if (isValid) {
-				for (int i = 0; i < queues.size(); i++) {
-					queues.get(i).offer(values[i]);
-				}
-				for (int i = 0; i < timestampQueues.size(); i++) {
-					timestampQueues.get(i).offer(timestamp);
-				}
+				queues.get(i).offer(signals.get(i).getAsDouble());
 			}
 		}
 		finally {

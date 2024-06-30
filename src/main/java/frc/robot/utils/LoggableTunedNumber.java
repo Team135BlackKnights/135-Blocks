@@ -1,7 +1,10 @@
 package frc.robot.utils;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Consumer;
+
 import frc.robot.Constants;
 import org.littletonrobotics.junction.networktables.LoggedDashboardNumber;
 
@@ -65,7 +68,17 @@ public class LoggableTunedNumber {
       return Constants.isTuningPID ? dashboardNumber.get() : defaultValue;
     }
   }
+	public static void ifChanged(
+			int id, Consumer<double[]> action, LoggableTunedNumber... tunableNumbers) {
+		if (Arrays.stream(tunableNumbers).anyMatch(tunableNumber -> tunableNumber.hasChanged(id))) {
+			action.accept(Arrays.stream(tunableNumbers).mapToDouble(LoggableTunedNumber::get).toArray());
+		}
+	}
 
+	/** Runs action if any of the tunableNumbers have changed */
+	public static void ifChanged(int id, Runnable action, LoggableTunedNumber... tunableNumbers) {
+		ifChanged(id, values -> action.run(), tunableNumbers);
+	}
   /**
    * Checks whether the number has changed since our last check
    *

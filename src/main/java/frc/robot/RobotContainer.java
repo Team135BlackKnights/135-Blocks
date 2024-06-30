@@ -17,9 +17,9 @@ import frc.robot.subsystems.drive.Mecanum.MecanumIOSparkBasePigeon;
 import frc.robot.subsystems.drive.Mecanum.MecanumIOTalonFXNavx;
 import frc.robot.subsystems.drive.Mecanum.MecanumIOTalonFXPigeon;
 import frc.robot.subsystems.drive.FastSwerve.ModuleIO;
+import frc.robot.subsystems.drive.FastSwerve.ModuleIOKrakenFOC;
 import frc.robot.subsystems.drive.FastSwerve.ModuleIOSim;
 import frc.robot.subsystems.drive.FastSwerve.ModuleIOSparkBase;
-import frc.robot.subsystems.drive.FastSwerve.ModuleIOTalonFX;
 import frc.robot.subsystems.drive.Tank.TankIO;
 import frc.robot.subsystems.drive.Tank.TankIOSim;
 import frc.robot.subsystems.drive.Tank.TankIOSparkBaseNavx;
@@ -122,13 +122,13 @@ public class RobotContainer {
 					switch (DriveConstants.gyroType) {
 					case NAVX:
 						drivetrainS = new Swerve(new GyroIONavX(true),
-								new ModuleIOTalonFX(0), new ModuleIOTalonFX(1),
-								new ModuleIOTalonFX(2), new ModuleIOTalonFX(3));
+								new ModuleIOKrakenFOC(0), new ModuleIOKrakenFOC(1),
+								new ModuleIOKrakenFOC(2), new ModuleIOKrakenFOC(3));
 						break;
 					case PIGEON:
 						drivetrainS = new Swerve(new GyroIOPigeon2(true),
-								new ModuleIOTalonFX(0), new ModuleIOTalonFX(1),
-								new ModuleIOTalonFX(2), new ModuleIOTalonFX(3));
+								new ModuleIOKrakenFOC(0), new ModuleIOKrakenFOC(1),
+								new ModuleIOKrakenFOC(2), new ModuleIOKrakenFOC(3));
 						break;
 					default:
 						break;
@@ -216,8 +216,8 @@ public class RobotContainer {
 		case SIM:
 			switch (DriveConstants.driveType) {
 			case SWERVE:
-				drivetrainS = new Swerve(new GyroIO() {}, new ModuleIOSim(),
-						new ModuleIOSim(), new ModuleIOSim(), new ModuleIOSim());
+				drivetrainS = new Swerve(new GyroIO() {}, new ModuleIOSim(0),
+						new ModuleIOSim(1), new ModuleIOSim(2), new ModuleIOSim(3));
 				break;
 			case TANK:
 				drivetrainS = new Tank(new TankIOSim());

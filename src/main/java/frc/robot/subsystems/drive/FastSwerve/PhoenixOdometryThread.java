@@ -8,14 +8,11 @@ import com.ctre.phoenix6.hardware.ParentDevice;
 import frc.robot.utils.drive.DriveConstants;
 import frc.robot.utils.drive.DriveConstants.GyroType;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.OptionalDouble;
-import java.util.Queue;
+import java.util.*;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
-import java.util.function.Supplier;
+import java.util.function.DoubleSupplier;
 
 import org.littletonrobotics.junction.Logger;
 
@@ -32,9 +29,9 @@ import org.littletonrobotics.junction.Logger;
 public class PhoenixOdometryThread extends Thread {
 	private final Lock signalsLock = new ReentrantLock(); // Prevents conflicts when registering signals
 	private BaseStatusSignal[] signals = new BaseStatusSignal[0];
-	private List<Supplier<OptionalDouble>> navXSignals;
 	private final List<Queue<Double>> queues = new ArrayList<>();
-	private final List<Queue<Double>> timestampQueues = new ArrayList<>();
+	private List<DoubleSupplier> navXsignals;
+
 	private boolean isCANFD = false;
 	private static PhoenixOdometryThread instance = null;
 
@@ -46,18 +43,12 @@ public class PhoenixOdometryThread extends Thread {
 	}
 
 	private PhoenixOdometryThread() {
+		if (DriveConstants.gyroType == GyroType.NAVX){
+			navXsignals = new ArrayList<>();
+		}
 		setName("PhoenixOdometryThread");
 		setDaemon(true);
-		if (DriveConstants.gyroType == GyroType.NAVX){
-			navXSignals = new ArrayList<>();
-		}
-	}
-
-	@Override
-	public void start() {
-		if (timestampQueues.size() > 0) {
-			super.start();
-		}
+		start();
 	}
 
 	public Queue<Double> registerSignal(ParentDevice device,
@@ -80,11 +71,12 @@ public class PhoenixOdometryThread extends Thread {
 		}
 		return queue;
 	}
-	public Queue<Double> registerSignal(Supplier<OptionalDouble> signal) {
+
+	public Queue<Double> registerSignal(DoubleSupplier signal) {
 		Queue<Double> queue = new ArrayBlockingQueue<>(20);
 		Swerve.odometryLock.lock();
 		try {
-			navXSignals.add(signal);
+			navXsignals.add(signal);
 			queues.add(queue);
 		}
 		finally {
@@ -93,42 +85,6 @@ public class PhoenixOdometryThread extends Thread {
 		return queue;
 	}
 
-	public Queue<Double> makeTimestampQueue() {
-		Queue<Double> queue = new ArrayBlockingQueue<>(20);
-		Swerve.odometryLock.lock();
-		try {
-			timestampQueues.add(queue);
-		}
-		finally {
-			Swerve.odometryLock.unlock();
-		}
-		return queue;
-	}
-	private void periodicGyro() {
-		Swerve.odometryLock.lock();
-		double timestamp = Logger.getTimestamp() / 1e6;
-		try {
-			double[] values = new double[navXSignals.size()];
-			boolean isValid = true;
-			for (int i = 0; i < navXSignals.size(); i++) {
-				OptionalDouble value = navXSignals.get(i).get();
-				if (value.isPresent()) {
-					values[i] = value.getAsDouble();
-				} else {
-					isValid = false;
-					break;
-				}
-			}
-			if (isValid) {
-				for (int i = 0; i < queues.size(); i++) {
-					queues.get(i).offer(values[i]);
-				}
-				for (int i = 0; i < timestampQueues.size(); i++) {
-					timestampQueues.get(i).offer(timestamp);
-				}
-			}
-		}finally{}
-	}
 	@Override
 	public void run() {
 		while (true) {
@@ -136,18 +92,11 @@ public class PhoenixOdometryThread extends Thread {
 			signalsLock.lock();
 			try {
 				if (isCANFD) {
-					BaseStatusSignal.waitForAll(2.0 / Module.ODOMETRY_FREQUENCY,
-							signals);
+					BaseStatusSignal.waitForAll(.02, signals);
 				} else {
-					// "waitForAll" does not support blocking on multiple
-					// signals with a bus that is not CAN FD, regardless
-					// of Pro licensing. No reasoning for this behavior
-					// is provided by the documentation.
-					Thread.sleep((long) (1000.0 / Module.ODOMETRY_FREQUENCY));
-					if (signals.length > 0){
+					Thread.sleep((long) (1000.0 / 250));
+					if (signals.length > 0)
 						BaseStatusSignal.refreshAll(signals);
-					}
-
 				}
 			}
 			catch (InterruptedException e) {
@@ -156,24 +105,20 @@ public class PhoenixOdometryThread extends Thread {
 			finally {
 				signalsLock.unlock();
 			}
+			double fpgaTimestamp = Logger.getRealTimestamp() / 1.0e6;
 			// Save new data to queues
-			periodicGyro();
 			Swerve.odometryLock.lock();
 			try {
-				double timestamp = Logger.getRealTimestamp() / 1e6;
-				double totalLatency = 0.0;
-				for (BaseStatusSignal signal : signals) {
-					totalLatency += signal.getTimestamp().getLatency();
-				}
-				if (signals.length > 0) {
-					timestamp -= totalLatency / signals.length;
-				}
 				for (int i = 0; i < signals.length; i++) {
 					queues.get(i).offer(signals[i].getValueAsDouble());
 				}
-				for (int i = 0; i < timestampQueues.size(); i++) {
-					timestampQueues.get(i).offer(timestamp);
+				if (navXsignals != null){
+					for (int i = 0; i < navXsignals.size(); i++) {
+						queues.get(i).offer(navXsignals.get(i).getAsDouble());
+					}
 				}
+
+				Swerve.timestampQueue.offer(fpgaTimestamp);
 			}
 			finally {
 				Swerve.odometryLock.unlock();
