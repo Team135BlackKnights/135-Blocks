@@ -29,6 +29,11 @@ import frc.robot.subsystems.drive.Tank.TankIOTalonFXPigeon;
 import frc.robot.subsystems.drive.Tank.Tank;
 import frc.robot.utils.RunTest;
 import frc.robot.utils.drive.DriveConstants;
+import frc.robot.commands.drive.vision.DriveToAITarget;
+import frc.robot.subsystems.vision.Vision;
+import frc.robot.subsystems.vision.VisionIO;
+import frc.robot.subsystems.vision.VisionIOPhotonVision;
+import frc.robot.utils.vision.VisionConstants;
 
 import frc.robot.utils.drive.LocalADStarAK;
 import frc.robot.utils.drive.PathFinder;
@@ -50,7 +55,6 @@ import java.util.Optional;
 import edu.wpi.first.math.Pair;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.util.Units;
 
 import java.util.HashMap;
 import java.util.ArrayList;
@@ -76,6 +80,7 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 public class RobotContainer {
 	// The robot's subsystems and commands are defined here...
 	public static DrivetrainS drivetrainS;
+	private static Vision visionS;
 	private final SendableChooser<Command> autoChooser;
 	static PowerDistribution PDH = new PowerDistribution(
 			Constants.PowerDistributionID, PowerDistribution.ModuleType.kRev);
@@ -206,6 +211,7 @@ public class RobotContainer {
 				throw new IllegalArgumentException(
 						"Unknown implementation type, please check DriveConstants.java!");
 			}
+			visionS = new Vision(new VisionIOPhotonVision());
 			break;
 		case SIM:
 			switch (DriveConstants.driveType) {
@@ -224,6 +230,8 @@ public class RobotContainer {
 						.setRotationTargetOverride(this::getRotationTargetOverride);
 				break;
 			}
+			visionS = new Vision(new VisionIOPhotonVision()); //yes, they're the same!
+
 			break;
 		default:
 			switch (DriveConstants.driveType) {
@@ -241,6 +249,7 @@ public class RobotContainer {
 				PPHolonomicDriveController
 						.setRotationTargetOverride(this::getRotationTargetOverride);
 			}
+			visionS = new Vision(new VisionIO(){});
 		}
 		drivetrainS.setDefaultCommand(new DrivetrainC(drivetrainS));
 		List<Pair<String, Command>> autoCommands = Arrays.asList(
@@ -254,7 +263,6 @@ public class RobotContainer {
 				new Pair<String, Command>("SimBot", new SimDefenseBot()));
 		Pathfinding.setPathfinder(new LocalADStarAK());
 		NamedCommands.registerCommands(autoCommands);
-		PathfindingCommand.warmupCommand().schedule();
 		if (Constants.isCompetition) {
 			PPLibTelemetry.enableCompetitionMode();
 		}
@@ -301,11 +309,22 @@ public class RobotContainer {
 				new RunTest(SysIdRoutine.Direction.kForward, false, drivetrainS));
 		xButtonTest.whileTrue(
 				new RunTest(SysIdRoutine.Direction.kReverse, false, drivetrainS));
+
 		//Example Drive To 2024 Amp Pose, Bind to what you need.
 		yButtonDrive
 				.and(aButtonTest.or(bButtonTest).or(xButtonTest).or(yButtonTest)
 						.negate())
 				.whileTrue(PathFinder.goToPose(new Pose2d(1.9, 7.7,new Rotation2d(Units.degreesToRadians(90))),DriveConstants.pathConstraints, drivetrainS, false,0));
+
+
+		//Example Aim To 2024 Amp Pose, Bind to what you need.
+		//yButtonDrive.and(aButtonTest.or(bButtonTest).or(xButtonTest).or(yButtonTest).negate()).whileTrue(new AimToPose(drivetrainS,new Pose2d(1.9,7.7, new Rotation2d(Units.degreesToRadians(90)))));
+
+		//Example Drive To 2024 Amp Pose, Bind to what you need.
+		//yButtonDrive.and(aButtonTest.or(bButtonTest).or(xButtonTest).or(yButtonTest).negate()).whileTrue(new DriveToPose(drivetrainS, false,new Pose2d(1.9,7.7,new Rotation2d(Units.degreesToRadians(90)))));
+		VisionConstants.Controls.autoIntake.whileTrue(new DriveToAITarget(drivetrainS));
+
+
 		//swerve DRIVE tests
 		//When user hits right bumper, go to next test, or wrap back to starting test for SysID.
 		rightBumperTest.onTrue(new InstantCommand(() -> {
@@ -360,7 +379,7 @@ public class RobotContainer {
 	 * @return a command with all of them in a sequence.
 	 */
 	public static Command allSystemsCheck() {
-		return Commands.sequence(drivetrainS.getRunnableSystemCheckCommand());
+		return Commands.sequence(visionS.getSystemCheckCommand(),drivetrainS.getRunnableSystemCheckCommand());
 	}
 
 	public static HashMap<String, Double> combineMaps(
@@ -388,7 +407,8 @@ public class RobotContainer {
 	 */
 	public static boolean allSystemsOK() {
 		return drivetrainS
-				.getTrueSystemStatus() == SubsystemChecker.SystemStatus.OK;
+				.getTrueSystemStatus() == SubsystemChecker.SystemStatus.OK
+		&& visionS.getSystemStatus() == SubsystemChecker.SystemStatus.OK;
 	}
 
 	public static Collection<ParentDevice> getOrchestraDevices() {
