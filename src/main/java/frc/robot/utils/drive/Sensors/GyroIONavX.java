@@ -10,7 +10,7 @@ import edu.wpi.first.wpilibj.SerialPort.Port;
 import frc.robot.subsystems.drive.FastSwerve.PhoenixOdometryThread;
 import frc.robot.subsystems.drive.FastSwerve.SparkMaxOdometryThread;
 import frc.robot.utils.drive.DriveConstants;
-import frc.robot.utils.selfCheck.drive.SelfChecking;
+import frc.robot.utils.selfCheck.SelfChecking;
 import frc.robot.utils.selfCheck.drive.SelfCheckingNavX2;
 
 import java.util.ArrayList;

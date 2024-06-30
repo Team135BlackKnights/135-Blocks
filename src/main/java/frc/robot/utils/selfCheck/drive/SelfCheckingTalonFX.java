@@ -3,6 +3,7 @@ package frc.robot.utils.selfCheck.drive;
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.hardware.TalonFX;
 
+import frc.robot.utils.selfCheck.SelfChecking;
 import frc.robot.utils.selfCheck.SubsystemFault;
 
 import java.util.ArrayList;

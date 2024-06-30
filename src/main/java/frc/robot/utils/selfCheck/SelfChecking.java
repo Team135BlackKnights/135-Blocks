@@ -1,8 +1,6 @@
-package frc.robot.utils.selfCheck.drive;
+package frc.robot.utils.selfCheck;
 
 import java.util.List;
-
-import frc.robot.utils.selfCheck.SubsystemFault;
 
 public interface SelfChecking {
   List<SubsystemFault> checkForFaults();

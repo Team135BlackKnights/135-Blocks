@@ -14,7 +14,6 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.utils.selfCheck.*;
-import frc.robot.utils.selfCheck.drive.SelfChecking;
 import frc.robot.utils.selfCheck.drive.SelfCheckingCANCoder;
 import frc.robot.utils.selfCheck.drive.SelfCheckingNavX2;
 import frc.robot.utils.selfCheck.drive.SelfCheckingPWMMotor;

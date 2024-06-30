@@ -22,7 +22,7 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.util.Units;
 import frc.robot.utils.drive.DriveConstants;
 import frc.robot.utils.drive.DriveConstants.MotorVendor;
-import frc.robot.utils.selfCheck.drive.SelfChecking;
+import frc.robot.utils.selfCheck.SelfChecking;
 import frc.robot.utils.selfCheck.drive.SelfCheckingPigeon2;
 import frc.robot.utils.selfCheck.drive.SelfCheckingSparkBase;
 

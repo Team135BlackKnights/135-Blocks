@@ -19,7 +19,7 @@ import com.kauailabs.navx.frc.AHRS;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.SerialPort.Port;
 import frc.robot.utils.drive.DriveConstants;
-import frc.robot.utils.selfCheck.drive.SelfChecking;
+import frc.robot.utils.selfCheck.SelfChecking;
 import frc.robot.utils.selfCheck.drive.SelfCheckingNavX2;
 import frc.robot.utils.selfCheck.drive.SelfCheckingTalonFX;
 
