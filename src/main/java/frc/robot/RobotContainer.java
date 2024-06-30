@@ -218,6 +218,8 @@ public class RobotContainer {
 			case SWERVE:
 				drivetrainS = new Swerve(new GyroIO() {}, new ModuleIOSim(0),
 						new ModuleIOSim(1), new ModuleIOSim(2), new ModuleIOSim(3));
+				PPHolonomicDriveController
+						.setRotationTargetOverride(this::getRotationTargetOverride);
 				break;
 			case TANK:
 				drivetrainS = new Tank(new TankIOSim());
@@ -236,12 +238,16 @@ public class RobotContainer {
 			case SWERVE:
 				drivetrainS = new Swerve(new GyroIO() {}, new ModuleIO() {},
 						new ModuleIO() {}, new ModuleIO() {}, new ModuleIO() {});
+				PPHolonomicDriveController
+						.setRotationTargetOverride(this::getRotationTargetOverride);
 				break;
 			case TANK:
 				drivetrainS = new Tank(new TankIO() {});
 				break;
 			case MECANUM:
 				drivetrainS = new Mecanum(new MecanumIO() {});
+				PPHolonomicDriveController
+						.setRotationTargetOverride(this::getRotationTargetOverride);
 			}
 			visionS = new Vision(new VisionIO(){});
 		}
@@ -260,7 +266,7 @@ public class RobotContainer {
 		if (Constants.isCompetition) {
 			PPLibTelemetry.enableCompetitionMode();
 		}
-		PathfindingCommand.warmupCommand()
+		PathfindingCommand.warmupCommand().andThen(PathFinder.goToPose(new Pose2d(1.9, 7.7,new Rotation2d(Units.degreesToRadians(90))),DriveConstants.pathConstraints, drivetrainS, false,0))
 				.finallyDo(() -> RobotContainer.field.getObject("target pose")
 						.setPose(new Pose2d(-50, -50, new Rotation2d())))
 				.schedule();
@@ -304,12 +310,20 @@ public class RobotContainer {
 		xButtonTest.whileTrue(
 				new RunTest(SysIdRoutine.Direction.kReverse, false, drivetrainS));
 
+		//Example Drive To 2024 Amp Pose, Bind to what you need.
+		yButtonDrive
+				.and(aButtonTest.or(bButtonTest).or(xButtonTest).or(yButtonTest)
+						.negate())
+				.whileTrue(PathFinder.goToPose(new Pose2d(1.9, 7.7,new Rotation2d(Units.degreesToRadians(90))),DriveConstants.pathConstraints, drivetrainS, false,0));
+
+
 		//Example Aim To 2024 Amp Pose, Bind to what you need.
 		//yButtonDrive.and(aButtonTest.or(bButtonTest).or(xButtonTest).or(yButtonTest).negate()).whileTrue(new AimToPose(drivetrainS,new Pose2d(1.9,7.7, new Rotation2d(Units.degreesToRadians(90)))));
 
 		//Example Drive To 2024 Amp Pose, Bind to what you need.
 		//yButtonDrive.and(aButtonTest.or(bButtonTest).or(xButtonTest).or(yButtonTest).negate()).whileTrue(new DriveToPose(drivetrainS, false,new Pose2d(1.9,7.7,new Rotation2d(Units.degreesToRadians(90)))));
 		VisionConstants.Controls.autoIntake.whileTrue(new DriveToAITarget(drivetrainS));
+
 
 		//swerve DRIVE tests
 		//When user hits right bumper, go to next test, or wrap back to starting test for SysID.
