@@ -31,6 +31,7 @@ import edu.wpi.first.wpilibj.simulation.RoboRioSim;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+
 /**
  * The VM is configured to automatically run this class, and to call the
  * functions corresponding to each mode, as described in the TimedRobot
@@ -54,32 +55,33 @@ public class Robot extends LoggedRobot {
 	 */
 	@Override
 	public void robotInit() {
-		if (!Constants.isCompetition){
+		if (!Constants.isCompetition) {
 			PortForwarder.add(22, "orangepi@photonvision.local", 22);
 			PortForwarder.add(22, "photonvision.local", 22);
 		}
 		// Instantiate our RobotContainer.  This will perform all our button bindings, and put our
 		// autonomous chooser on the dashboard
 		Logger.recordMetadata("ProjectName", "The Chef"); // Set a metadata value
-		Logger.recordMetadata("TuningMode", Boolean.toString(Constants.isTuningPID));
-    	Logger.recordMetadata("RuntimeType", getRuntimeType().toString());
-    	Logger.recordMetadata("ProjectName", BuildConstants.MAVEN_NAME);
-    	Logger.recordMetadata("BuildDate", BuildConstants.BUILD_DATE);
-    	Logger.recordMetadata("GitSHA", BuildConstants.GIT_SHA);
-    	Logger.recordMetadata("GitDate", BuildConstants.GIT_DATE);
-    	Logger.recordMetadata("GitBranch", BuildConstants.GIT_BRANCH);
+		Logger.recordMetadata("TuningMode",
+				Boolean.toString(Constants.isTuningPID));
+		Logger.recordMetadata("RuntimeType", getRuntimeType().toString());
+		Logger.recordMetadata("ProjectName", BuildConstants.MAVEN_NAME);
+		Logger.recordMetadata("BuildDate", BuildConstants.BUILD_DATE);
+		Logger.recordMetadata("GitSHA", BuildConstants.GIT_SHA);
+		Logger.recordMetadata("GitDate", BuildConstants.GIT_DATE);
+		Logger.recordMetadata("GitBranch", BuildConstants.GIT_BRANCH);
 		//TODO: Test the Git integration by making a local change (not commited) and then trying to Deploy Robot Code (Event) in an event branch.
-    switch (BuildConstants.DIRTY) {
-      case 0:
-        Logger.recordMetadata("GitDirty", "All changes committed");
-        break;
-      case 1:
-        Logger.recordMetadata("GitDirty", "Uncomitted changes");
-        break;
-      default:
-        Logger.recordMetadata("GitDirty", "Unknown");
-        break;
-    }
+		switch (BuildConstants.DIRTY) {
+		case 0:
+			Logger.recordMetadata("GitDirty", "All changes committed");
+			break;
+		case 1:
+			Logger.recordMetadata("GitDirty", "Uncomitted changes");
+			break;
+		default:
+			Logger.recordMetadata("GitDirty", "Unknown");
+			break;
+		}
 		switch (Constants.currentMode) {
 		case REAL:
 			// Running on a real robot, log to a USB stick ("/U/logs")
@@ -134,24 +136,22 @@ public class Robot extends LoggedRobot {
 		CommandScheduler.getInstance().run();
 		for (PeriodicFunction f : periodicFunctions) {
 			f.runIfReady();
-		 }
-		 SmartDashboard.putNumber("MatchTime", DriverStation.getMatchTime());
-		 Logger.recordOutput("BatteryVoltage", RobotController.getBatteryVoltage());
-	
-		 CANBus.CANBusStatus canBusStatus = CANBus.getStatus("*");
-		 Logger.recordOutput("CANUtil", canBusStatus.BusUtilization * 100.0);
-	
-		 //    List<LidarDetection> robots = RobotContainer.lidar.getCurrentRobotDetections();
-		 //    List<Pair<Translation2d, Translation2d>> obs = new ArrayList<>();
-		 //    for (LidarDetection robotDet : robots) {
-		 //      Translation2d robot = robotDet.boundingBoxCenter().toTranslation2d();
-		 //      obs.add(Pair.of(robot.plus(new Translation2d(1, 1)), robot.minus(new Translation2d(1,
-		 // 1))));
-		 //    }
-		 //    Pathfinding.setDynamicObstacles(obs, RobotContainer.swerve.getPose2d().getTranslation());
-	
-		 double runtimeMS = (Logger.getRealTimestamp() - startTime) / 1000.0;
-		 Logger.recordOutput("RobotPeriodicMS", runtimeMS);
+		}
+		SmartDashboard.putNumber("MatchTime", DriverStation.getMatchTime());
+		Logger.recordOutput("BatteryVoltage",
+				RobotController.getBatteryVoltage());
+		CANBus.CANBusStatus canBusStatus = CANBus.getStatus("*");
+		Logger.recordOutput("CANUtil", canBusStatus.BusUtilization * 100.0);
+		//    List<LidarDetection> robots = RobotContainer.lidar.getCurrentRobotDetections();
+		//    List<Pair<Translation2d, Translation2d>> obs = new ArrayList<>();
+		//    for (LidarDetection robotDet : robots) {
+		//      Translation2d robot = robotDet.boundingBoxCenter().toTranslation2d();
+		//      obs.add(Pair.of(robot.plus(new Translation2d(1, 1)), robot.minus(new Translation2d(1,
+		// 1))));
+		//    }
+		//    Pathfinding.setDynamicObstacles(obs, RobotContainer.swerve.getPose2d().getTranslation());
+		double runtimeMS = (Logger.getRealTimestamp() - startTime) / 1000.0;
+		Logger.recordOutput("RobotPeriodicMS", runtimeMS);
 	}
 
 	/** This function is called once each time the robot enters Disabled mode. */
@@ -160,7 +160,7 @@ public class Robot extends LoggedRobot {
 		isPracticeDSMode = false;
 		if (Constants.currentMatchState == FRCMatchState.ENDGAME) {
 			Constants.currentMatchState = FRCMatchState.MATCHOVER;
-		}else{
+		} else {
 			Constants.currentMatchState = FRCMatchState.DISABLED;
 		}
 	}
@@ -192,7 +192,8 @@ public class Robot extends LoggedRobot {
 	public void teleopInit() {
 		Constants.currentMatchState = FRCMatchState.TELEOPINIT;
 		RobotContainer.field.getObject("path").setTrajectory(new Trajectory());
-		RobotContainer.field.getObject("target pose").setPose(new Pose2d(-50,-50,new Rotation2d())); //the void
+		RobotContainer.field.getObject("target pose")
+				.setPose(new Pose2d(-50, -50, new Rotation2d())); //the void
 		// This makes sure that the autonomous stops running when
 		// teleop starts running. If you want the autonomous to
 		// continue until interrupted by another command, remove
@@ -208,23 +209,25 @@ public class Robot extends LoggedRobot {
 		/*An FRC teleop period takes 2 minutes and 15 seconds (135 seconds). Endgame occurs during the last 20 seconds.
 		Based on this, endgame should initialize at 115 seconds and end at 135 seconds. */
 		double matchTime = DriverStation.getMatchTime();
-		if (RobotContainer.angleOverrider.isPresent()){
-			Logger.recordOutput("Odometry/AimGoal", new Pose2d(RobotContainer.drivetrainS.getPose().getTranslation(),RobotContainer.angleOverrider.get()));
-		}else{
-			Logger.recordOutput("Odometry/AimGoal",RobotContainer.drivetrainS.getPose());
+		if (RobotContainer.angleOverrider.isPresent()) {
+			Logger.recordOutput("Odometry/AimGoal",
+					new Pose2d(RobotContainer.drivetrainS.getPose().getTranslation(),
+							RobotContainer.angleOverrider.get()));
+		} else {
+			Logger.recordOutput("Odometry/AimGoal",
+					RobotContainer.drivetrainS.getPose());
 		}
 		if (DriverStation.isFMSAttached() || isPracticeDSMode) {
 			if (matchTime > 30) {
 				Constants.currentMatchState = FRCMatchState.TELEOP;
 			} else if (matchTime == 30) {
 				Constants.currentMatchState = FRCMatchState.ENDGAMEINIT;
-			} else if (matchTime < 30
-					&& matchTime > 0) {
+			} else if (matchTime < 30 && matchTime > 0) {
 				Constants.currentMatchState = FRCMatchState.ENDGAME;
 			}
 		} else {
-			if (matchTime % 1 != 0){ //is a double (running on DS)
-				if (matchTime < lastMatchTime){
+			if (matchTime % 1 != 0) { //is a double (running on DS)
+				if (matchTime < lastMatchTime) {
 					isPracticeDSMode = true;
 				}
 				lastMatchTime = matchTime;
@@ -233,11 +236,13 @@ public class Robot extends LoggedRobot {
 		}
 		if (RobotContainer.driveController.getPOV() == 0) {
 			//System.err.println("UP");
-			DataHandler.logData(new double[]{4.5,25.4}, "shouldUpdateModel");
+			DataHandler.logData(new double[] { 4.5, 25.4
+			}, "shouldUpdateModel");
 		}
 		if (RobotContainer.manipController.getAButton()) {
 			System.out.println("A");
-			DataHandler.logData(new double[]{4.5}, "modelInputs");
+			DataHandler.logData(new double[] { 4.5
+			}, "modelInputs");
 		}
 	}
 
@@ -252,8 +257,9 @@ public class Robot extends LoggedRobot {
 	/** This function is called periodically during test mode. */
 	@Override
 	public void testPeriodic() {
-		for (Map.Entry<String,Double> set : RobotContainer.getAllTemps().entrySet()){
-			Logger.recordOutput("Temps/"+set.getKey(), set.getValue());
+		for (Map.Entry<String, Double> set : RobotContainer.getAllTemps()
+				.entrySet()) {
+			Logger.recordOutput("Temps/" + set.getKey(), set.getValue());
 		}
 		Constants.currentMatchState = FRCMatchState.TEST;
 	}
@@ -268,8 +274,10 @@ public class Robot extends LoggedRobot {
 	/** This function is called periodically whilst in simulation. */
 	@Override
 	public void simulationPeriodic() {
-		RoboRioSim.setVInVoltage(BatterySim.calculateDefaultBatteryLoadedVoltage(RobotContainer.getCurrentDraw()));
-		SmartDashboard.putNumber("Robot Voltage", RobotController.getBatteryVoltage());
+		RoboRioSim.setVInVoltage(BatterySim.calculateDefaultBatteryLoadedVoltage(
+				RobotContainer.getCurrentDraw()));
+		SmartDashboard.putNumber("Robot Voltage",
+				RobotController.getBatteryVoltage());
 		SimGamePiece.updateStates(); //update position of gamePieces
 		if (Constants.currentMatchState == Constants.FRCMatchState.AUTO
 				&& !hasBeenEnabled) {
@@ -280,28 +288,27 @@ public class Robot extends LoggedRobot {
 		}
 		//DataHandler.updateHandlerState();
 	}
+
 	public static void addPeriodic(Runnable callback, double period) {
 		periodicFunctions.add(new PeriodicFunction(callback, period));
-	 }
-	 private static class PeriodicFunction {
-    private final Runnable callback;
-    private final double periodSeconds;
+	}
 
-    private double lastRunTimeSeconds;
+	private static class PeriodicFunction {
+		private final Runnable callback;
+		private final double periodSeconds;
+		private double lastRunTimeSeconds;
 
-    private PeriodicFunction(Runnable callback, double periodSeconds) {
-      this.callback = callback;
-      this.periodSeconds = periodSeconds;
+		private PeriodicFunction(Runnable callback, double periodSeconds) {
+			this.callback = callback;
+			this.periodSeconds = periodSeconds;
+			this.lastRunTimeSeconds = 0.0;
+		}
 
-      this.lastRunTimeSeconds = 0.0;
-    }
-
-    private void runIfReady() {
-      if (Logger.getTimestamp() > lastRunTimeSeconds + periodSeconds) {
-        callback.run();
-
-        lastRunTimeSeconds = Logger.getTimestamp();
-      }
-    }
-  }
+		private void runIfReady() {
+			if (Logger.getTimestamp() > lastRunTimeSeconds + periodSeconds) {
+				callback.run();
+				lastRunTimeSeconds = Logger.getTimestamp();
+			}
+		}
+	}
 }

@@ -389,13 +389,11 @@ public class Swerve extends SubsystemChecker implements DrivetrainS {
 			// Generate feasible next setpoint
 			currentSetpoint = setpointGenerator.generateSetpoint(
 					currentModuleLimits, currentSetpoint, desiredSpeeds, .02);
-			
 			SwerveModuleState[] optimizedSetpointStates = new SwerveModuleState[4];
 			SwerveModuleState[] optimizedSetpointTorques = new SwerveModuleState[4];
 			for (int i = 0; i < modules.length; i++) {
 				// Optimize setpoints
-				optimizedSetpointStates[i] = 
-						currentSetpoint.moduleStates()[i];
+				optimizedSetpointStates[i] = currentSetpoint.moduleStates()[i];
 				optimizedSetpointTorques[i] = new SwerveModuleState(0.0,
 						optimizedSetpointStates[i].angle);
 				modules[i].runSetpoint(optimizedSetpointStates[i],
@@ -585,6 +583,7 @@ public class Swerve extends SubsystemChecker implements DrivetrainS {
 				.until(() -> !getFaults().isEmpty()).andThen(
 						runOnce(() -> setChassisSpeeds(new ChassisSpeeds(0, 0, 0))));
 	}
+
 	/**
 	 * UNTESTED!
 	 */

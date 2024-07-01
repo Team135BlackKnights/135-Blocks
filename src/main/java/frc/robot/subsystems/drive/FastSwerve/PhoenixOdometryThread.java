@@ -31,7 +31,6 @@ public class PhoenixOdometryThread extends Thread {
 	private BaseStatusSignal[] signals = new BaseStatusSignal[0];
 	private final List<Queue<Double>> queues = new ArrayList<>();
 	private List<DoubleSupplier> navXsignals;
-
 	private boolean isCANFD = false;
 	private static PhoenixOdometryThread instance = null;
 
@@ -43,7 +42,7 @@ public class PhoenixOdometryThread extends Thread {
 	}
 
 	private PhoenixOdometryThread() {
-		if (DriveConstants.gyroType == GyroType.NAVX){
+		if (DriveConstants.gyroType == GyroType.NAVX) {
 			navXsignals = new ArrayList<>();
 		}
 		setName("PhoenixOdometryThread");
@@ -112,12 +111,11 @@ public class PhoenixOdometryThread extends Thread {
 				for (int i = 0; i < signals.length; i++) {
 					queues.get(i).offer(signals[i].getValueAsDouble());
 				}
-				if (navXsignals != null){
+				if (navXsignals != null) {
 					for (int i = 0; i < navXsignals.size(); i++) {
 						queues.get(i).offer(navXsignals.get(i).getAsDouble());
 					}
 				}
-
 				Swerve.timestampQueue.offer(fpgaTimestamp);
 			}
 			finally {

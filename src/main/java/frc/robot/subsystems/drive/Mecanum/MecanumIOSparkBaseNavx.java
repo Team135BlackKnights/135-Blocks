@@ -41,7 +41,6 @@ public class MecanumIOSparkBaseNavx implements MecanumIO {
 	private final SparkPIDController backLeftPID;
 	private final SparkPIDController backRightPID;
 	private final AHRS navX = new AHRS(Port.kUSB);
-
 	private double last_world_linear_accel_x;
 	private double last_world_linear_accel_y;
 

@@ -41,24 +41,24 @@ public class TankIOSparkBaseNavx implements TankIO {
 	private double last_world_linear_accel_y;
 
 	public TankIOSparkBaseNavx() {
-		if (DriveConstants.robotMotorController == MotorVendor.NEO_SPARK_MAX){
-		leftLeader = new CANSparkMax(DriveConstants.kFrontLeftDrivePort,
-				MotorType.kBrushless);
-		rightLeader = new CANSparkMax(DriveConstants.kFrontRightDrivePort,
-				MotorType.kBrushless);
-		leftFollower = new CANSparkMax(DriveConstants.kBackLeftDrivePort,
-				MotorType.kBrushless);
-		rightFollower = new CANSparkMax(DriveConstants.kBackRightDrivePort,
-				MotorType.kBrushless);
-		}else{
+		if (DriveConstants.robotMotorController == MotorVendor.NEO_SPARK_MAX) {
+			leftLeader = new CANSparkMax(DriveConstants.kFrontLeftDrivePort,
+					MotorType.kBrushless);
+			rightLeader = new CANSparkMax(DriveConstants.kFrontRightDrivePort,
+					MotorType.kBrushless);
+			leftFollower = new CANSparkMax(DriveConstants.kBackLeftDrivePort,
+					MotorType.kBrushless);
+			rightFollower = new CANSparkMax(DriveConstants.kBackRightDrivePort,
+					MotorType.kBrushless);
+		} else {
 			leftLeader = new CANSparkFlex(DriveConstants.kFrontLeftDrivePort,
-			MotorType.kBrushless);
-	rightLeader = new CANSparkFlex(DriveConstants.kFrontRightDrivePort,
-			MotorType.kBrushless);
-	leftFollower = new CANSparkFlex(DriveConstants.kBackLeftDrivePort,
-			MotorType.kBrushless);
-	rightFollower = new CANSparkFlex(DriveConstants.kBackRightDrivePort,
-			MotorType.kBrushless);
+					MotorType.kBrushless);
+			rightLeader = new CANSparkFlex(DriveConstants.kFrontRightDrivePort,
+					MotorType.kBrushless);
+			leftFollower = new CANSparkFlex(DriveConstants.kBackLeftDrivePort,
+					MotorType.kBrushless);
+			rightFollower = new CANSparkFlex(DriveConstants.kBackRightDrivePort,
+					MotorType.kBrushless);
 		}
 		leftEncoder = leftLeader.getEncoder();
 		rightEncoder = rightLeader.getEncoder();

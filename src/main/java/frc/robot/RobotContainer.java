@@ -88,7 +88,7 @@ public class RobotContainer {
 	public static Optional<Rotation2d> angleOverrider = Optional.empty();
 	public static double angularSpeed = 0;
 	static JoystickButton xButtonDrive = new JoystickButton(driveController, 3),
-			yButtonDrive = new JoystickButton(driveController, 4), //used for Aim/Drive to pose
+			//yButtonDrive = new JoystickButton(driveController, 4), //used for Aim/Drive to pose
 			aButtonTest = new JoystickButton(testingController, 1),
 			bButtonTest = new JoystickButton(testingController, 2),
 			xButtonTest = new JoystickButton(testingController, 3),
@@ -100,7 +100,7 @@ public class RobotContainer {
 	public static int currentTest = 0, currentGamePieceStatus = 0;
 	public static String currentPath = "";
 	public static Field2d field = new Field2d();
-  	public static Pose2d opposingBotPose;
+	public static Pose2d opposingBotPose;
 	final static ServoS servoS = new ServoS();
 
 	// POVButton manipPOVZero = new POVButton(manipController, 0);
@@ -247,7 +247,6 @@ public class RobotContainer {
 			}
 		}
 		drivetrainS.setDefaultCommand(new DrivetrainC(drivetrainS));
-
 		List<Pair<String, Command>> autoCommands = Arrays.asList(
 				//new Pair<String, Command>("AimAtAmp",new AimToPose(drivetrainS, new Pose2d(1.9,7.7, new Rotation2d(Units.degreesToRadians(0))))),
 				new Pair<String, Command>("BranchGrabbingGamePiece",
@@ -262,14 +261,15 @@ public class RobotContainer {
 		if (Constants.isCompetition) {
 			PPLibTelemetry.enableCompetitionMode();
 		}
-
-		PathfindingCommand.warmupCommand().andThen(PathFinder.goToPose(new Pose2d(1.9, 7.7,new Rotation2d(Units.degreesToRadians(90))),DriveConstants.pathConstraints, drivetrainS, false,0))
+		PathfindingCommand.warmupCommand()
+				.andThen(PathFinder.goToPose(
+						new Pose2d(1.9, 7.7,
+								new Rotation2d(Units.degreesToRadians(90))),
+						DriveConstants.pathConstraints, drivetrainS, false, 0))
 				.finallyDo(() -> RobotContainer.field.getObject("target pose")
 						.setPose(new Pose2d(-50, -50, new Rotation2d())))
 				.schedule();
-
 		servoS.setDefaultCommand(new ServoC(servoS));
-
 		autoChooser = AutoBuilder.buildAutoChooser();
 		SmartDashboard.putData(field);
 		SmartDashboard.putData("Auto Chooser", autoChooser);
@@ -300,7 +300,7 @@ public class RobotContainer {
 		xButtonDrive
 				.and(aButtonTest.or(bButtonTest).or(xButtonTest).or(yButtonTest)
 						.negate())
-				.onTrue(new InstantCommand(() -> drivetrainS.zeroHeading())); //whileTrue(PathFinder.goToPose(new Pose2d(1.9, 7.7,new Rotation2d(Units.degreesToRadians(90))),DriveConstants.pathConstraints, drivetrainS, false))
+				.onTrue(new InstantCommand(() -> drivetrainS.zeroHeading()));
 		yButtonTest.whileTrue(
 				new RunTest(SysIdRoutine.Direction.kForward, true, drivetrainS));
 		bButtonTest.whileTrue(
@@ -310,10 +310,13 @@ public class RobotContainer {
 		xButtonTest.whileTrue(
 				new RunTest(SysIdRoutine.Direction.kReverse, false, drivetrainS));
 		//Example Drive To 2024 Amp Pose, Bind to what you need.
-		yButtonDrive
+		/*yButtonDrive
 				.and(aButtonTest.or(bButtonTest).or(xButtonTest).or(yButtonTest)
 						.negate())
-				.whileTrue(PathFinder.goToPose(new Pose2d(1.9, 7.7,new Rotation2d(Units.degreesToRadians(90))),DriveConstants.pathConstraints, drivetrainS, false,0));
+				.whileTrue(PathFinder.goToPose(
+						new Pose2d(1.9, 7.7,
+								new Rotation2d(Units.degreesToRadians(90))),
+						DriveConstants.pathConstraints, drivetrainS, false, 0));*/
 		//swerve DRIVE tests
 		//When user hits right bumper, go to next test, or wrap back to starting test for SysID.
 		rightBumperTest.onTrue(new InstantCommand(() -> {
@@ -368,7 +371,8 @@ public class RobotContainer {
 	 * @return a command with all of them in a sequence.
 	 */
 	public static Command allSystemsCheck() {
-	return Commands.sequence(drivetrainS.getRunnableSystemCheckCommand(),servoS.getSystemCheckCommand());
+		return Commands.sequence(drivetrainS.getRunnableSystemCheckCommand(),
+				servoS.getSystemCheckCommand());
 	}
 
 	public static HashMap<String, Double> combineMaps(
@@ -395,18 +399,21 @@ public class RobotContainer {
 	 * @return true if ALL systems were good.
 	 */
 	public static boolean allSystemsOK() {
-		return drivetrainS.getTrueSystemStatus() == SubsystemChecker.SystemStatus.OK
-		&& servoS.getSystemStatus() == SubsystemChecker.SystemStatus.OK;
-	 }
+		return drivetrainS
+				.getTrueSystemStatus() == SubsystemChecker.SystemStatus.OK
+				&& servoS.getSystemStatus() == SubsystemChecker.SystemStatus.OK;
+	}
+
 	public static Collection<ParentDevice> getOrchestraDevices() {
 		Collection<ParentDevice> devices = new ArrayList<>();
 		devices.addAll(drivetrainS.getDriveOrchestraDevices());
 		return devices;
 	}
-	public static Subsystem[] getAllSubsystems(){
+
+	public static Subsystem[] getAllSubsystems() {
 		Subsystem[] subsystems = new Subsystem[2];
 		subsystems[0] = drivetrainS;
-    	subsystems[1] = servoS;
+		subsystems[1] = servoS;
 		return subsystems;
 	}
 }

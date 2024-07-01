@@ -54,7 +54,11 @@ public class Mecanum extends SubsystemChecker implements DrivetrainS {
 	public static final double TRACK_WIDTH = DriveConstants.kChassisWidth;
 	private final MecanumIO io;
 	private final MecanumIOInputsAutoLogged inputs = new MecanumIOInputsAutoLogged();
-	private final MecanumDriveKinematics kinematics = new MecanumDriveKinematics(DriveConstants.kModuleTranslations[0],DriveConstants.kModuleTranslations[1],DriveConstants.kModuleTranslations[2],DriveConstants.kModuleTranslations[3]);
+	private final MecanumDriveKinematics kinematics = new MecanumDriveKinematics(
+			DriveConstants.kModuleTranslations[0],
+			DriveConstants.kModuleTranslations[1],
+			DriveConstants.kModuleTranslations[2],
+			DriveConstants.kModuleTranslations[3]);
 	private final SimpleMotorFeedforward feedforward = DriveConstants.TrainConstants.overallDriveMotorConstantContainer
 			.getFeedforward();
 	private final SysIdRoutine sysId;
@@ -65,6 +69,7 @@ public class Mecanum extends SubsystemChecker implements DrivetrainS {
 	private boolean collisionDetected;
 	private Rotation2d rawGyroRotation = new Rotation2d();
 	private int debounce = 0;
+
 	/** Creates a new Drive. */
 	public Mecanum(MecanumIO io) {
 		this.io = io;
@@ -72,7 +77,8 @@ public class Mecanum extends SubsystemChecker implements DrivetrainS {
 		AutoBuilder.configureHolonomic(this::getPose, this::resetPose,
 				this::getChassisSpeeds, this::setChassisSpeeds,
 				new HolonomicPathFollowerConfig(
-						DriveConstants.kMaxSpeedMetersPerSecond, DriveConstants.kDriveBaseRadius,
+						DriveConstants.kMaxSpeedMetersPerSecond,
+						DriveConstants.kDriveBaseRadius,
 						new ReplanningConfig(true, true)),
 				() -> Robot.isRed, this);
 		Pathfinding.setPathfinder(new LocalADStarAK());
@@ -92,27 +98,33 @@ public class Mecanum extends SubsystemChecker implements DrivetrainS {
 						(state) -> Logger.recordOutput("Drive/SysIdState",
 								state.toString())),
 				new SysIdRoutine.Mechanism(
-						(voltage) -> driveVolts(voltage.in(Volts), voltage.in(Volts),voltage.in(Volts), voltage.in(Volts)),
+						(voltage) -> driveVolts(voltage.in(Volts), voltage.in(Volts),
+								voltage.in(Volts), voltage.in(Volts)),
 						null, this));
-		poseEstimator = new MecanumDrivePoseEstimator(kinematics,getRotation2d(),getWheelPositions(),getPose());
+		poseEstimator = new MecanumDrivePoseEstimator(kinematics, getRotation2d(),
+				getWheelPositions(), getPose());
 		registerSelfCheckHardware();
 	}
 
 	@Override
 	public ChassisSpeeds getChassisSpeeds() {
-		return kinematics.toChassisSpeeds(new MecanumDriveWheelSpeeds(
-				getFrontLeftVelocityMetersPerSec(), getFrontRightVelocityMetersPerSec(),getBackLeftVelocityMetersPerSec(), getBackRightVelocityMetersPerSec()));
+		return kinematics.toChassisSpeeds(
+				new MecanumDriveWheelSpeeds(getFrontLeftVelocityMetersPerSec(),
+						getFrontRightVelocityMetersPerSec(),
+						getBackLeftVelocityMetersPerSec(),
+						getBackRightVelocityMetersPerSec()));
 	}
 
 	@Override
 	public void setChassisSpeeds(ChassisSpeeds speeds) {
-		MecanumDriveWheelSpeeds wheelSpeeds = kinematics
-				.toWheelSpeeds(speeds);
+		MecanumDriveWheelSpeeds wheelSpeeds = kinematics.toWheelSpeeds(speeds);
 		driveVelocity(wheelSpeeds);
 	}
 
 	private MecanumDriveWheelPositions getWheelPositions() {
-		return new MecanumDriveWheelPositions(getFrontLeftPositionMeters(),getFrontRightPositionMeters(),getBackLeftPositionMeters(),getBackRightPositionMeters());
+		return new MecanumDriveWheelPositions(getFrontLeftPositionMeters(),
+				getFrontRightPositionMeters(), getBackLeftPositionMeters(),
+				getBackRightPositionMeters());
 	}
 
 	@Override
@@ -120,11 +132,10 @@ public class Mecanum extends SubsystemChecker implements DrivetrainS {
 		io.updateInputs(inputs);
 		Logger.processInputs("Mecanum", inputs);
 		// Update odometry
-
 		wheelPositions = getPositionsWithTimestamp(getWheelPositions());
-		if (debounce ==1 && isConnected()){
-			poseEstimator.resetPosition(inputs.gyroYaw, wheelPositions.getPositions(),
-			getPose());
+		if (debounce == 1 && isConnected()) {
+			poseEstimator.resetPosition(inputs.gyroYaw,
+					wheelPositions.getPositions(), getPose());
 			debounce = 0;
 		}
 		ChassisSpeeds m_ChassisSpeeds = getChassisSpeeds();
@@ -133,8 +144,8 @@ public class Mecanum extends SubsystemChecker implements DrivetrainS {
 			// Use the real gyro angle
 			rawGyroRotation = inputs.gyroYaw;
 		} else {
-			rawGyroRotation = rawGyroRotation
-				.plus(new Rotation2d(m_ChassisSpeeds.omegaRadiansPerSecond*.02));
+			rawGyroRotation = rawGyroRotation.plus(
+					new Rotation2d(m_ChassisSpeeds.omegaRadiansPerSecond * .02));
 		}
 		Translation2d linearFieldVelocity = new Translation2d(
 				m_ChassisSpeeds.vxMetersPerSecond,
@@ -148,24 +159,32 @@ public class Mecanum extends SubsystemChecker implements DrivetrainS {
 	}
 
 	/** Run open loop at the specified voltage. */
-	public void driveVolts(double frontLeftVolts, double frontRightVolts,double backLeftVolts, double backRightVolts) {
-		io.setVoltage(frontLeftVolts,frontRightVolts,backLeftVolts,backRightVolts);
+	public void driveVolts(double frontLeftVolts, double frontRightVolts,
+			double backLeftVolts, double backRightVolts) {
+		io.setVoltage(frontLeftVolts, frontRightVolts, backLeftVolts,
+				backRightVolts);
 	}
 
 	/** Run closed loop at the specified voltage. */
 	public void driveVelocity(MecanumDriveWheelSpeeds wheelSpeeds) {
-		double frontLeftRadPerSec = wheelSpeeds.frontLeftMetersPerSecond / WHEEL_RADIUS;
-		double frontRightRadPerSec = wheelSpeeds.frontRightMetersPerSecond / WHEEL_RADIUS;
-		double backLeftRadPerSec = wheelSpeeds.rearLeftMetersPerSecond / WHEEL_RADIUS;
-		double backRightRadPerSec = wheelSpeeds.rearRightMetersPerSecond / WHEEL_RADIUS;
-		io.setVelocity(frontLeftRadPerSec, frontRightRadPerSec,backLeftRadPerSec,backRightRadPerSec,
-				feedforward.calculate(frontLeftRadPerSec),feedforward.calculate(frontRightRadPerSec),
-				feedforward.calculate(backLeftRadPerSec),feedforward.calculate(backRightRadPerSec));
+		double frontLeftRadPerSec = wheelSpeeds.frontLeftMetersPerSecond
+				/ WHEEL_RADIUS;
+		double frontRightRadPerSec = wheelSpeeds.frontRightMetersPerSecond
+				/ WHEEL_RADIUS;
+		double backLeftRadPerSec = wheelSpeeds.rearLeftMetersPerSecond
+				/ WHEEL_RADIUS;
+		double backRightRadPerSec = wheelSpeeds.rearRightMetersPerSecond
+				/ WHEEL_RADIUS;
+		io.setVelocity(frontLeftRadPerSec, frontRightRadPerSec, backLeftRadPerSec,
+				backRightRadPerSec, feedforward.calculate(frontLeftRadPerSec),
+				feedforward.calculate(frontRightRadPerSec),
+				feedforward.calculate(backLeftRadPerSec),
+				feedforward.calculate(backRightRadPerSec));
 	}
 
 	/** Stops the drive. */
 	@Override
-	public void stopModules() { io.setVoltage(0.0, 0.0,0.0,0.0); }
+	public void stopModules() { io.setVoltage(0.0, 0.0, 0.0, 0.0); }
 
 	/**
 	 * Returns a command to run a quasistatic test in the specified direction.
@@ -203,6 +222,7 @@ public class Mecanum extends SubsystemChecker implements DrivetrainS {
 	public double getFrontRightPositionMeters() {
 		return inputs.rightFrontPositionRad * WHEEL_RADIUS;
 	}
+
 	/** Returns the position of the back left wheel in meters. */
 	@AutoLogOutput
 	public double getBackLeftPositionMeters() {
@@ -214,6 +234,7 @@ public class Mecanum extends SubsystemChecker implements DrivetrainS {
 	public double getBackRightPositionMeters() {
 		return inputs.rightBackPositionRad * WHEEL_RADIUS;
 	}
+
 	/** Returns the velocity of the front left wheel in meters/second. */
 	@AutoLogOutput
 	public double getFrontLeftVelocityMetersPerSec() {
@@ -225,6 +246,7 @@ public class Mecanum extends SubsystemChecker implements DrivetrainS {
 	public double getFrontRightVelocityMetersPerSec() {
 		return inputs.rightFrontVelocityRadPerSec * WHEEL_RADIUS;
 	}
+
 	/** Returns the velocity of the back left wheel in meters/second. */
 	@AutoLogOutput
 	public double getBackLeftVelocityMetersPerSec() {
@@ -236,10 +258,13 @@ public class Mecanum extends SubsystemChecker implements DrivetrainS {
 	public double getBackRightVelocityMetersPerSec() {
 		return inputs.rightBackVelocityRadPerSec * WHEEL_RADIUS;
 	}
+
 	/** Returns the average velocity in radians/second. */
 	public double getCharacterizationVelocity() {
-		return (inputs.leftFrontVelocityRadPerSec + inputs.rightFrontVelocityRadPerSec + inputs.leftBackVelocityRadPerSec + inputs.rightBackVelocityRadPerSec)
-				/ 4.0;
+		return (inputs.leftFrontVelocityRadPerSec
+				+ inputs.rightFrontVelocityRadPerSec
+				+ inputs.leftBackVelocityRadPerSec
+				+ inputs.rightBackVelocityRadPerSec) / 4.0;
 	}
 
 	private void registerSelfCheckHardware() {
@@ -257,10 +282,15 @@ public class Mecanum extends SubsystemChecker implements DrivetrainS {
 		}
 		return orchestra;
 	}
+
 	@Override
-	public double getCurrent(){
-		return Math.abs(inputs.leftCurrentAmps[0]) + Math.abs(inputs.leftCurrentAmps[1]) + Math.abs(inputs.rightCurrentAmps[0]) + Math.abs(inputs.rightCurrentAmps[1]);
+	public double getCurrent() {
+		return Math.abs(inputs.leftCurrentAmps[0])
+				+ Math.abs(inputs.leftCurrentAmps[1])
+				+ Math.abs(inputs.rightCurrentAmps[0])
+				+ Math.abs(inputs.rightCurrentAmps[1]);
 	}
+
 	@Override
 	public SystemStatus getTrueSystemStatus() { return getSystemStatus(); }
 
@@ -310,7 +340,6 @@ public class Mecanum extends SubsystemChecker implements DrivetrainS {
 
 	@Override
 	public Twist2d getFieldVelocity() { return fieldVelocity; }
-
 
 	@Override
 	public void zeroHeading() {

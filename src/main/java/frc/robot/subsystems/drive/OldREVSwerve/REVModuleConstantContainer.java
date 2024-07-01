@@ -126,14 +126,15 @@ public class REVModuleConstantContainer {
 	public double getModuleMaxSpeed() {
 		return moduleConstantContainerDoubles[1];
 	}
-	/** 
+
+	/**
 	 * @return the gearing of the module drive motor
 	 */
-	public double getDriveMotorGearing(){
+	public double getDriveMotorGearing() {
 		return moduleConstantContainerDoubles[2];
 	}
 
-	public double getTurnMotorGearing(){
+	public double getTurnMotorGearing() {
 		return moduleConstantContainerDoubles[3];
 	}
 
@@ -146,5 +147,4 @@ public class REVModuleConstantContainer {
 	 * @return The translation of the module from the center of the robot
 	 */
 	public Translation2d getTranslation2d() { return moduleTranslation; }
-
 }

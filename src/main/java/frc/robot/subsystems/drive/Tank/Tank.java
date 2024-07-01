@@ -65,6 +65,7 @@ public class Tank extends SubsystemChecker implements DrivetrainS {
 	private Position<DifferentialDriveWheelPositions> wheelPositions;
 	private boolean collisionDetected;
 	private int debounce = 0;
+
 	/** Creates a new Drive. */
 	public Tank(TankIO io) {
 		this.io = io;
@@ -119,12 +120,11 @@ public class Tank extends SubsystemChecker implements DrivetrainS {
 	public void periodic() {
 		io.updateInputs(inputs);
 		Logger.processInputs("Drive", inputs);
-
 		// Update odometry
 		wheelPositions = getPositionsWithTimestamp(getWheelPositions());
-		if (debounce ==1 && isConnected()){
-			poseEstimator.resetPosition(inputs.gyroYaw, wheelPositions.getPositions(),
-			getPose());
+		if (debounce == 1 && isConnected()) {
+			poseEstimator.resetPosition(inputs.gyroYaw,
+					wheelPositions.getPositions(), getPose());
 			debounce = 0;
 		}
 		ChassisSpeeds m_ChassisSpeeds = getChassisSpeeds();
@@ -132,8 +132,8 @@ public class Tank extends SubsystemChecker implements DrivetrainS {
 			// Use the real gyro angle
 			rawGyroRotation = inputs.gyroYaw;
 		} else {
-			rawGyroRotation = rawGyroRotation
-				.plus(new Rotation2d(m_ChassisSpeeds.omegaRadiansPerSecond*.02));
+			rawGyroRotation = rawGyroRotation.plus(
+					new Rotation2d(m_ChassisSpeeds.omegaRadiansPerSecond * .02));
 		}
 		Translation2d linearFieldVelocity = new Translation2d(
 				m_ChassisSpeeds.vxMetersPerSecond,
@@ -235,13 +235,19 @@ public class Tank extends SubsystemChecker implements DrivetrainS {
 		}
 		return orchestra;
 	}
+
 	@Override
-	public double getCurrent(){
-		if (inputs.leftCurrentAmps.length ==1){
-			return Math.abs(inputs.leftCurrentAmps[0]) + Math.abs(inputs.rightCurrentAmps[0]);
+	public double getCurrent() {
+		if (inputs.leftCurrentAmps.length == 1) {
+			return Math.abs(inputs.leftCurrentAmps[0])
+					+ Math.abs(inputs.rightCurrentAmps[0]);
 		}
-		return Math.abs(inputs.leftCurrentAmps[0]) + Math.abs(inputs.leftCurrentAmps[1]) + Math.abs(inputs.rightCurrentAmps[0]) + Math.abs(inputs.rightCurrentAmps[1]);
+		return Math.abs(inputs.leftCurrentAmps[0])
+				+ Math.abs(inputs.leftCurrentAmps[1])
+				+ Math.abs(inputs.rightCurrentAmps[0])
+				+ Math.abs(inputs.rightCurrentAmps[1]);
 	}
+
 	@Override
 	public SystemStatus getTrueSystemStatus() { return getSystemStatus(); }
 

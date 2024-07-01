@@ -28,20 +28,16 @@ public class ModuleIOSim implements ModuleIO {
 	public ModuleIOSim(int index) {
 		switch (index) {
 		case 0:
-			turnAbsoluteInitPosition = new Rotation2d(
-					0);
+			turnAbsoluteInitPosition = new Rotation2d(0);
 			break;
 		case 1:
-			turnAbsoluteInitPosition = new Rotation2d(
-					0);
+			turnAbsoluteInitPosition = new Rotation2d(0);
 			break;
 		case 2:
-			turnAbsoluteInitPosition = new Rotation2d(
-					0);
+			turnAbsoluteInitPosition = new Rotation2d(0);
 			break;
 		default:
-			turnAbsoluteInitPosition = new Rotation2d(
-					0);
+			turnAbsoluteInitPosition = new Rotation2d(0);
 			break;
 		}
 		turnFeedback.enableContinuousInput(-Math.PI, Math.PI);

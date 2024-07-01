@@ -41,17 +41,18 @@ public interface MecanumIO {
 	public default void updateInputs(MecanumIOInputs inputs) {}
 
 	/** Run open loop at the specified voltage. */
-	public default void setVoltage(double frontLeftVolts, double frontRightVolts,double backLeftVolts, double backRightVolts) {}
+	public default void setVoltage(double frontLeftVolts, double frontRightVolts,
+			double backLeftVolts, double backRightVolts) {}
 
 	/** Resets the Gyro */
 	public default void reset() {}
 
 	/** Run closed loop at the specified velocity. */
 	public default void setVelocity(double frontLeftRadPerSec,
-	double frontRightRadPerSec, double backLeftRadPerSec,
-	double backRightRadPerSec, double frontLeftFFVolts,
-	double frontRightFFVolts, double backLeftFFVolts,
-	double backRightFFVolts) {}
+			double frontRightRadPerSec, double backLeftRadPerSec,
+			double backRightRadPerSec, double frontLeftFFVolts,
+			double frontRightFFVolts, double backLeftFFVolts,
+			double backRightFFVolts) {}
 
 	/**
 	 * Get a list of the SelfChecking interface for all hardware in that

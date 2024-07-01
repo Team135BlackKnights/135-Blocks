@@ -37,16 +37,19 @@ public class MecanumIOTalonFXPigeon implements MecanumIO {
 			DriveConstants.kFrontRightDrivePort);
 	private final TalonFX backRight = new TalonFX(
 			DriveConstants.kBackRightDrivePort);
-	private final StatusSignal<Double> frontLeftPosition = frontLeft.getPosition();
-	private final StatusSignal<Double> frontLeftVelocity = frontLeft.getVelocity();
+	private final StatusSignal<Double> frontLeftPosition = frontLeft
+			.getPosition();
+	private final StatusSignal<Double> frontLeftVelocity = frontLeft
+			.getVelocity();
 	private final StatusSignal<Double> frontLeftAppliedVolts = frontLeft
 			.getMotorVoltage();
 	private final StatusSignal<Double> frontLeftCurrent = frontLeft
 			.getSupplyCurrent();
-	private final StatusSignal<Double> frontLeftTemp = frontLeft
-			.getDeviceTemp();
-	private final StatusSignal<Double> frontRightPosition = frontRight.getPosition();
-	private final StatusSignal<Double> frontRightVelocity = frontRight.getVelocity();
+	private final StatusSignal<Double> frontLeftTemp = frontLeft.getDeviceTemp();
+	private final StatusSignal<Double> frontRightPosition = frontRight
+			.getPosition();
+	private final StatusSignal<Double> frontRightVelocity = frontRight
+			.getVelocity();
 	private final StatusSignal<Double> frontRightAppliedVolts = frontRight
 			.getMotorVoltage();
 	private final StatusSignal<Double> frontRightCurrent = frontRight
@@ -59,16 +62,16 @@ public class MecanumIOTalonFXPigeon implements MecanumIO {
 			.getMotorVoltage();
 	private final StatusSignal<Double> backLeftCurrent = backLeft
 			.getSupplyCurrent();
-	private final StatusSignal<Double> backLeftTemp = backLeft
-			.getDeviceTemp();
-	private final StatusSignal<Double> backRightPosition = backRight.getPosition();
-	private final StatusSignal<Double> backRightVelocity = backRight.getVelocity();
+	private final StatusSignal<Double> backLeftTemp = backLeft.getDeviceTemp();
+	private final StatusSignal<Double> backRightPosition = backRight
+			.getPosition();
+	private final StatusSignal<Double> backRightVelocity = backRight
+			.getVelocity();
 	private final StatusSignal<Double> backRightAppliedVolts = backRight
 			.getMotorVoltage();
 	private final StatusSignal<Double> backRightCurrent = backRight
 			.getSupplyCurrent();
-	private final StatusSignal<Double> backRightTemp = backRight
-			.getDeviceTemp();
+	private final StatusSignal<Double> backRightTemp = backRight.getDeviceTemp();
 	private final Pigeon2 pigeon = new Pigeon2(30);
 	private final StatusSignal<Double> yaw = pigeon.getYaw();
 	private final StatusSignal<Double> accelX = pigeon.getAccelerationX();
@@ -102,12 +105,11 @@ public class MecanumIOTalonFXPigeon implements MecanumIO {
 		BaseStatusSignal.setUpdateFrequencyForAll(100.0, frontLeftPosition,
 				frontRightPosition, backLeftPosition, backRightPosition, yaw); // Required for odometry, use faster rate
 		BaseStatusSignal.setUpdateFrequencyForAll(50.0, frontLeftVelocity,
-				frontLeftAppliedVolts, frontLeftCurrent,
-				frontLeftTemp, frontRightVelocity, frontRightAppliedVolts,
-				frontRightCurrent, frontRightTemp,backLeftVelocity,
-				backLeftAppliedVolts, backLeftCurrent,
-				backLeftTemp, backRightVelocity, backRightAppliedVolts,
-				backRightCurrent, backRightTemp);
+				frontLeftAppliedVolts, frontLeftCurrent, frontLeftTemp,
+				frontRightVelocity, frontRightAppliedVolts, frontRightCurrent,
+				frontRightTemp, backLeftVelocity, backLeftAppliedVolts,
+				backLeftCurrent, backLeftTemp, backRightVelocity,
+				backRightAppliedVolts, backRightCurrent, backRightTemp);
 		frontLeft.optimizeBusUtilization();
 		backLeft.optimizeBusUtilization();
 		frontRight.optimizeBusUtilization();
@@ -117,24 +119,22 @@ public class MecanumIOTalonFXPigeon implements MecanumIO {
 
 	@Override
 	public void updateInputs(MecanumIOInputs inputs) {
-		BaseStatusSignal.refreshAll(frontLeftVelocity,
-		frontLeftAppliedVolts, frontLeftCurrent,
-		frontLeftTemp, frontRightVelocity, frontRightAppliedVolts,
-		frontRightCurrent, frontRightTemp,backLeftVelocity,
-		backLeftAppliedVolts, backLeftCurrent,
-		backLeftTemp, backRightVelocity, backRightAppliedVolts,
-		backRightCurrent, backRightTemp,frontLeftPosition,
-		frontRightPosition, backLeftPosition, backRightPosition);
-		inputs.leftFrontPositionRad = Units
-				.rotationsToRadians(frontLeftPosition.getValueAsDouble()) / GEAR_RATIO;
-		inputs.leftFrontVelocityRadPerSec = Units
-				.rotationsToRadians(frontLeftVelocity.getValueAsDouble()) / GEAR_RATIO;
+		BaseStatusSignal.refreshAll(frontLeftVelocity, frontLeftAppliedVolts,
+				frontLeftCurrent, frontLeftTemp, frontRightVelocity,
+				frontRightAppliedVolts, frontRightCurrent, frontRightTemp,
+				backLeftVelocity, backLeftAppliedVolts, backLeftCurrent,
+				backLeftTemp, backRightVelocity, backRightAppliedVolts,
+				backRightCurrent, backRightTemp, frontLeftPosition,
+				frontRightPosition, backLeftPosition, backRightPosition);
+		inputs.leftFrontPositionRad = Units.rotationsToRadians(
+				frontLeftPosition.getValueAsDouble()) / GEAR_RATIO;
+		inputs.leftFrontVelocityRadPerSec = Units.rotationsToRadians(
+				frontLeftVelocity.getValueAsDouble()) / GEAR_RATIO;
 		inputs.leftFrontAppliedVolts = frontLeftAppliedVolts.getValueAsDouble();
-		
-		inputs.leftBackPositionRad = Units
-				.rotationsToRadians(backLeftPosition.getValueAsDouble()) / GEAR_RATIO;
-		inputs.leftBackVelocityRadPerSec = Units
-				.rotationsToRadians(backLeftVelocity.getValueAsDouble()) / GEAR_RATIO;
+		inputs.leftBackPositionRad = Units.rotationsToRadians(
+				backLeftPosition.getValueAsDouble()) / GEAR_RATIO;
+		inputs.leftBackVelocityRadPerSec = Units.rotationsToRadians(
+				backLeftVelocity.getValueAsDouble()) / GEAR_RATIO;
 		inputs.leftBackAppliedVolts = backLeftAppliedVolts.getValueAsDouble();
 		inputs.leftCurrentAmps = new double[] {
 				frontLeftCurrent.getValueAsDouble(),
@@ -142,16 +142,15 @@ public class MecanumIOTalonFXPigeon implements MecanumIO {
 		};
 		inputs.frontLeftDriveTemp = frontLeftTemp.getValueAsDouble();
 		inputs.backLeftDriveTemp = backLeftTemp.getValueAsDouble();
-		inputs.rightFrontPositionRad = Units
-				.rotationsToRadians(frontRightPosition.getValueAsDouble()) / GEAR_RATIO;
-		inputs.rightFrontVelocityRadPerSec = Units
-				.rotationsToRadians(frontRightVelocity.getValueAsDouble()) / GEAR_RATIO;
+		inputs.rightFrontPositionRad = Units.rotationsToRadians(
+				frontRightPosition.getValueAsDouble()) / GEAR_RATIO;
+		inputs.rightFrontVelocityRadPerSec = Units.rotationsToRadians(
+				frontRightVelocity.getValueAsDouble()) / GEAR_RATIO;
 		inputs.rightFrontAppliedVolts = frontRightAppliedVolts.getValueAsDouble();
-
-		inputs.rightBackPositionRad = Units
-				.rotationsToRadians(backRightPosition.getValueAsDouble()) / GEAR_RATIO;
-		inputs.rightBackVelocityRadPerSec = Units
-				.rotationsToRadians(backRightVelocity.getValueAsDouble()) / GEAR_RATIO;
+		inputs.rightBackPositionRad = Units.rotationsToRadians(
+				backRightPosition.getValueAsDouble()) / GEAR_RATIO;
+		inputs.rightBackVelocityRadPerSec = Units.rotationsToRadians(
+				backRightVelocity.getValueAsDouble()) / GEAR_RATIO;
 		inputs.rightBackAppliedVolts = backRightAppliedVolts.getValueAsDouble();
 		inputs.rightCurrentAmps = new double[] {
 				frontRightCurrent.getValueAsDouble(),
@@ -191,22 +190,22 @@ public class MecanumIOTalonFXPigeon implements MecanumIO {
 
 	@Override
 	public void setVelocity(double frontLeftRadPerSec,
-	double frontRightRadPerSec, double backLeftRadPerSec,
-	double backRightRadPerSec, double frontLeftFFVolts,
-	double frontRightFFVolts, double backLeftFFVolts,
-	double backRightFFVolts) {
+			double frontRightRadPerSec, double backLeftRadPerSec,
+			double backRightRadPerSec, double frontLeftFFVolts,
+			double frontRightFFVolts, double backLeftFFVolts,
+			double backRightFFVolts) {
 		frontLeft.setControl(new VelocityVoltage(
-				Units.radiansToRotations(frontLeftRadPerSec * GEAR_RATIO), 0.0, true,
-				frontLeftFFVolts, 0, false, false, false));
+				Units.radiansToRotations(frontLeftRadPerSec * GEAR_RATIO), 0.0,
+				true, frontLeftFFVolts, 0, false, false, false));
 		frontRight.setControl(new VelocityVoltage(
-				Units.radiansToRotations(frontRightRadPerSec * GEAR_RATIO), 0.0, true,
-				frontRightFFVolts, 0, false, false, false));
+				Units.radiansToRotations(frontRightRadPerSec * GEAR_RATIO), 0.0,
+				true, frontRightFFVolts, 0, false, false, false));
 		backLeft.setControl(new VelocityVoltage(
 				Units.radiansToRotations(backLeftRadPerSec * GEAR_RATIO), 0.0, true,
 				backLeftFFVolts, 0, false, false, false));
 		backRight.setControl(new VelocityVoltage(
-				Units.radiansToRotations(backRightRadPerSec * GEAR_RATIO), 0.0, true,
-				backRightFFVolts, 0, false, false, false));
+				Units.radiansToRotations(backRightRadPerSec * GEAR_RATIO), 0.0,
+				true, backRightFFVolts, 0, false, false, false));
 	}
 
 	@Override

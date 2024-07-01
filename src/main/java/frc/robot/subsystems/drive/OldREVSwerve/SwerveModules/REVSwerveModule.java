@@ -74,10 +74,12 @@ public class REVSwerveModule extends SubsystemBase {
 			this.m_moduleNumber = -1;
 			break;
 		}
-		driveEncoderRot2Meter = container.getDriveMotorGearing()*Math.PI;
-		driveEncoderRPM2MeterPerSec = container.getDriveMotorGearing()*Math.PI/60;
-		turningEncoderRot2Rad = container.getTurnMotorGearing()*2*Math.PI;
-		turningEncoderRPM2RadPerSec = container.getTurnMotorGearing()*2*Math.PI/60;
+		driveEncoderRot2Meter = container.getDriveMotorGearing() * Math.PI;
+		driveEncoderRPM2MeterPerSec = container.getDriveMotorGearing() * Math.PI
+				/ 60;
+		turningEncoderRot2Rad = container.getTurnMotorGearing() * 2 * Math.PI;
+		turningEncoderRPM2RadPerSec = container.getTurnMotorGearing() * 2
+				* Math.PI / 60;
 		/*turningFeedForward = new SimpleMotorFeedforward(
 		 turningKpKsKvKa[1], turningKpKsKvKa[2], turningKpKsKvKa[3]);*/
 		driveFeedForward = new SimpleMotorFeedforward(
@@ -90,47 +92,48 @@ public class REVSwerveModule extends SubsystemBase {
 		//absoluteEncoder = new AnalogInput(absoluteEncoderId);
 		//absoluteEncoder = new CANCoder(absoluteEncoderId);
 		//declares motors
-			switch (DriveConstants.robotMotorController) {
-			case NEO_SPARK_MAX:
-				System.err.println("Detected Spark Max");
-				driveMotor = new CANSparkMax(container.getDriveMotorID(),
-						MotorType.kBrushless);
-				turningMotor = new CANSparkMax(container.getTurningMotorID(),
-						MotorType.kBrushless);
-				driveMotorSim = new DCMotorSim(DCMotor.getNEO(1), driveEncoderRot2Meter, .001); //container.getSwerveModuleEncoderConstants().getDriveEncoderRot2Meter()
-				turningMotorSim = new DCMotorSim(DCMotor.getNEO(1), container.getTurnMotorGearing(), .001);
-				break;
-			case VORTEX_SPARK_FLEX:
-				System.err.println("Detected Spark Flex");
-				driveMotor = new CANSparkFlex(container.getDriveMotorID(),
-						MotorType.kBrushless);
-				turningMotor = new CANSparkFlex(container.getTurningMotorID(),
-						MotorType.kBrushless);
-				driveMotorSim = new DCMotorSim(DCMotor.getNeoVortex(1),
-				driveEncoderRot2Meter, .001);
-				turningMotorSim = new DCMotorSim(DCMotor.getNeoVortex(1),
-				container.getTurnMotorGearing(), .001);
-			default:
-				break;
-			}
-			//checks to see if they're inverted
-			driveMotor.setInverted(container.getDriveMotorReversed());
-			turningMotor.setInverted(container.getTurningMotorReversed());
-			//sets the absolute encoder value (called way because we have breakout boards in the motors)
-			absoluteEncoder = turningMotor.getAnalog(Mode.kAbsolute);
-			//relative encoder declarations
-			driveEncoder = driveMotor.getEncoder();
-			turningEncoder = turningMotor.getEncoder();
-			//sets motor idle modes to break
-			driveMotor.setIdleMode(IdleMode.kBrake);
-			turningMotor.setIdleMode(IdleMode.kBrake);
-			//accounts for gear ratios
-			driveEncoder.setPositionConversionFactor(driveEncoderRot2Meter);
-			driveEncoder.setVelocityConversionFactor(driveEncoderRPM2MeterPerSec);
-			turningEncoder.setPositionConversionFactor(turningEncoderRot2Rad);
-			turningEncoder
-					.setVelocityConversionFactor(turningEncoderRPM2RadPerSec);
-			//creates pidController, used exclusively for turning because that has to be precise
+		switch (DriveConstants.robotMotorController) {
+		case NEO_SPARK_MAX:
+			System.err.println("Detected Spark Max");
+			driveMotor = new CANSparkMax(container.getDriveMotorID(),
+					MotorType.kBrushless);
+			turningMotor = new CANSparkMax(container.getTurningMotorID(),
+					MotorType.kBrushless);
+			driveMotorSim = new DCMotorSim(DCMotor.getNEO(1),
+					driveEncoderRot2Meter, .001); //container.getSwerveModuleEncoderConstants().getDriveEncoderRot2Meter()
+			turningMotorSim = new DCMotorSim(DCMotor.getNEO(1),
+					container.getTurnMotorGearing(), .001);
+			break;
+		case VORTEX_SPARK_FLEX:
+			System.err.println("Detected Spark Flex");
+			driveMotor = new CANSparkFlex(container.getDriveMotorID(),
+					MotorType.kBrushless);
+			turningMotor = new CANSparkFlex(container.getTurningMotorID(),
+					MotorType.kBrushless);
+			driveMotorSim = new DCMotorSim(DCMotor.getNeoVortex(1),
+					driveEncoderRot2Meter, .001);
+			turningMotorSim = new DCMotorSim(DCMotor.getNeoVortex(1),
+					container.getTurnMotorGearing(), .001);
+		default:
+			break;
+		}
+		//checks to see if they're inverted
+		driveMotor.setInverted(container.getDriveMotorReversed());
+		turningMotor.setInverted(container.getTurningMotorReversed());
+		//sets the absolute encoder value (called way because we have breakout boards in the motors)
+		absoluteEncoder = turningMotor.getAnalog(Mode.kAbsolute);
+		//relative encoder declarations
+		driveEncoder = driveMotor.getEncoder();
+		turningEncoder = turningMotor.getEncoder();
+		//sets motor idle modes to break
+		driveMotor.setIdleMode(IdleMode.kBrake);
+		turningMotor.setIdleMode(IdleMode.kBrake);
+		//accounts for gear ratios
+		driveEncoder.setPositionConversionFactor(driveEncoderRot2Meter);
+		driveEncoder.setVelocityConversionFactor(driveEncoderRPM2MeterPerSec);
+		turningEncoder.setPositionConversionFactor(turningEncoderRot2Rad);
+		turningEncoder.setVelocityConversionFactor(turningEncoderRPM2RadPerSec);
+		//creates pidController, used exclusively for turning because that has to be precise
 		turningPIDController = new PIDController(360, 0, 0);
 		//makes the value loop around
 		turningPIDController.enableContinuousInput(-Math.PI, Math.PI);
@@ -139,26 +142,22 @@ public class REVSwerveModule extends SubsystemBase {
 				container.getDriveMotorConstantContainer().getD());
 	}
 
-	public double getDrivePosition() {
-			return driveEncoder.getPosition();
-	}
+	public double getDrivePosition() { return driveEncoder.getPosition(); }
 
-	public double getTurningPosition() {
-			return getAbsoluteEncoderRad();
-	}
+	public double getTurningPosition() { return getAbsoluteEncoderRad(); }
 
 	public double getDriveVelocity() {
-			if (Constants.currentMode == Constants.Mode.REAL){
-				return driveEncoder.getVelocity();
-			}
-			return driveMotorSim.getAngularVelocityRPM()/60;
+		if (Constants.currentMode == Constants.Mode.REAL) {
+			return driveEncoder.getVelocity();
+		}
+		return driveMotorSim.getAngularVelocityRPM() / 60;
 	}
 
 	public double getTurningVelocity() {
-			if (Constants.currentMode == Constants.Mode.REAL){
-				return turningEncoder.getVelocity();
-			}
-			return turningMotorSim.getAngularVelocityRPM()/60;
+		if (Constants.currentMode == Constants.Mode.REAL) {
+			return turningEncoder.getVelocity();
+		}
+		return turningMotorSim.getAngularVelocityRPM() / 60;
 		//returns velocity of turning motor
 	}
 
@@ -200,8 +199,8 @@ public class REVSwerveModule extends SubsystemBase {
 	 * the module heading from the absolute encoder)
 	 */
 	public void resetEncoders() {
-			driveEncoder.setPosition(0);
-			turningEncoder.setPosition(getAbsoluteEncoderRad());
+		driveEncoder.setPosition(0);
+		turningEncoder.setPosition(getAbsoluteEncoderRad());
 	}
 
 	public void stop() {
@@ -222,10 +221,9 @@ public class REVSwerveModule extends SubsystemBase {
 	 * 
 	 * @param driveOutput      driveOutput, in METERS
 	 * @param driveFeedforward driveFeedForwards, in Meters
-	 * @param turnOutput       turningOutput, as a percentage 
+	 * @param turnOutput       turningOutput, as a percentage
 	 */
-	public void setMotors(double driveOutput,
-			double turnOutput) {
+	public void setMotors(double driveOutput, double turnOutput) {
 		switch (Constants.currentMode) {
 		case REAL:
 			driveMotor.setVoltage(driveOutput);
@@ -233,7 +231,7 @@ public class REVSwerveModule extends SubsystemBase {
 			break;
 		default:
 			driveMotorSim.setInputVoltage(driveOutput);
-			turningMotorSim.setInputVoltage(turnOutput*12);
+			turningMotorSim.setInputVoltage(turnOutput * 12);
 			break;
 		}
 	}
@@ -254,29 +252,30 @@ public class REVSwerveModule extends SubsystemBase {
 		//creates new swerveModuleState based on drive speed and turn motor position (speed and direction)
 		return new SwerveModuleState(getDriveVelocity(), getHeadingRotation2d());
 	}
+
 	/**
-	 * Updates the module states in sim. DT is set to .02, so call this in periodic or tweak this
+	 * Updates the module states in sim. DT is set to .02, so call this in
+	 * periodic or tweak this
 	 */
-	public void updateModuleStates(){
-		if (Constants.currentMode == Constants.Mode.SIM){
+	public void updateModuleStates() {
+		if (Constants.currentMode == Constants.Mode.SIM) {
 			driveMotorSim.update(.02);
 			turningMotorSim.update(.02);
 			driveEncoder.setPosition(driveMotorSim.getAngularPositionRotations());
-			turningEncoder.setPosition(turningMotorSim.getAngularPositionRotations());
+			turningEncoder
+					.setPosition(turningMotorSim.getAngularPositionRotations());
 		}
-
 	}
 
 	public void setDesiredState(SwerveModuleState state) {
-
 		// Optimizing finds the shortest path to the desired angle
 		state = SwerveModuleState.optimize(state, getState().angle);
 		// Calculate the drive output from the drive PID controller.
-		double driveOutput = drivePIDController.calculate(getDriveVelocity(),state.speedMetersPerSecond);
+		double driveOutput = drivePIDController.calculate(getDriveVelocity(),
+				state.speedMetersPerSecond);
 		final double driveFeedforward = driveFeedForward
 				.calculate(state.speedMetersPerSecond);
 		driveOutput += driveFeedforward;
-
 		// Calculate the turning motor output from the turning PID controller.
 		final double turnOutput = turningPIDController
 				.calculate(getAbsoluteEncoderRad(), state.angle.getRadians());

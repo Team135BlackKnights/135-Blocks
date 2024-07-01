@@ -16,10 +16,14 @@ public class MecanumIOSim implements MecanumIO {
 			.getP();
 	private static final double KD = DriveConstants.TrainConstants.overallDriveMotorConstantContainer
 			.getD();
-	private DCMotorSim frontLeft = new DCMotorSim(DCMotor.getNEO(1), DriveConstants.TrainConstants.kDriveMotorGearRatio, .01);
-	private DCMotorSim frontRight = new DCMotorSim(DCMotor.getNEO(1), DriveConstants.TrainConstants.kDriveMotorGearRatio, .01);
-	private DCMotorSim backLeft = new DCMotorSim(DCMotor.getNEO(1), DriveConstants.TrainConstants.kDriveMotorGearRatio, .01);
-	private DCMotorSim backRight = new DCMotorSim(DCMotor.getNEO(1), DriveConstants.TrainConstants.kDriveMotorGearRatio, .01);
+	private DCMotorSim frontLeft = new DCMotorSim(DCMotor.getNEO(1),
+			DriveConstants.TrainConstants.kDriveMotorGearRatio, .01);
+	private DCMotorSim frontRight = new DCMotorSim(DCMotor.getNEO(1),
+			DriveConstants.TrainConstants.kDriveMotorGearRatio, .01);
+	private DCMotorSim backLeft = new DCMotorSim(DCMotor.getNEO(1),
+			DriveConstants.TrainConstants.kDriveMotorGearRatio, .01);
+	private DCMotorSim backRight = new DCMotorSim(DCMotor.getNEO(1),
+			DriveConstants.TrainConstants.kDriveMotorGearRatio, .01);
 	private double frontLeftAppliedVolts = 0.0;
 	private double frontRightAppliedVolts = 0.0;
 	private double backLeftAppliedVolts = 0.0;
@@ -38,18 +42,22 @@ public class MecanumIOSim implements MecanumIO {
 	@Override
 	public void updateInputs(MecanumIOInputs inputs) {
 		if (closedLoop) {
-			frontLeftAppliedVolts = MathUtil.clamp(frontLeftPID.calculate(
-					frontLeft.getAngularVelocityRadPerSec())
-					+ frontLeftFFVolts, -12.0, 12.0);
-			frontRightAppliedVolts = MathUtil.clamp(frontRightPID.calculate(
-					frontRight.getAngularVelocityRadPerSec())
-					+ frontRightFFVolts, -12.0, 12.0);
-			backLeftAppliedVolts = MathUtil.clamp(backLeftPID.calculate(
-					backLeft.getAngularVelocityRadPerSec())
-						+ backLeftFFVolts, -12.0, 12.0);
-			backRightAppliedVolts = MathUtil.clamp(backRightPID.calculate(
-					backRight.getAngularVelocityRadPerSec())
-						+ backRightFFVolts, -12.0, 12.0);
+			frontLeftAppliedVolts = MathUtil.clamp(
+					frontLeftPID.calculate(frontLeft.getAngularVelocityRadPerSec())
+							+ frontLeftFFVolts,
+					-12.0, 12.0);
+			frontRightAppliedVolts = MathUtil.clamp(
+					frontRightPID.calculate(frontRight.getAngularVelocityRadPerSec())
+							+ frontRightFFVolts,
+					-12.0, 12.0);
+			backLeftAppliedVolts = MathUtil.clamp(
+					backLeftPID.calculate(backLeft.getAngularVelocityRadPerSec())
+							+ backLeftFFVolts,
+					-12.0, 12.0);
+			backRightAppliedVolts = MathUtil.clamp(
+					backRightPID.calculate(backRight.getAngularVelocityRadPerSec())
+							+ backRightFFVolts,
+					-12.0, 12.0);
 			frontLeft.setInputVoltage(frontLeftAppliedVolts);
 			frontRight.setInputVoltage(frontRightAppliedVolts);
 			backLeft.setInputVoltage(backLeftAppliedVolts);
@@ -59,33 +67,39 @@ public class MecanumIOSim implements MecanumIO {
 		frontRight.update(.02);
 		backLeft.update(.02);
 		backRight.update(.02);
-		    // Update gyro simulation (you might want to base this on your robot's movement)
+		// Update gyro simulation (you might want to base this on your robot's movement)
 		//Pigeon2SimState simState = pigeon.getSimState();
 		//double angularVelocity = (frontLeft.getAngularVelocityRadPerSec() - frontRight.getAngularVelocityRadPerSec()
 		//	 + backLeft.getAngularVelocityRadPerSec() - backRight.getAngularVelocityRadPerSec()) / 4.0;
 		//simState.addYaw(Units.radiansToDegrees(angularVelocity));
 		inputs.leftFrontPositionRad = frontLeft.getAngularPositionRad();
-		inputs.leftFrontVelocityRadPerSec = frontLeft.getAngularVelocityRadPerSec() ;
+		inputs.leftFrontVelocityRadPerSec = frontLeft
+				.getAngularVelocityRadPerSec();
 		inputs.leftFrontAppliedVolts = frontLeftAppliedVolts;
 		inputs.leftBackPositionRad = backLeft.getAngularPositionRad();
 		inputs.leftBackVelocityRadPerSec = backLeft.getAngularVelocityRadPerSec();
 		inputs.leftBackAppliedVolts = backLeftAppliedVolts;
-		inputs.leftCurrentAmps = new double[] { frontLeft.getCurrentDrawAmps(), backLeft.getCurrentDrawAmps()
+		inputs.leftCurrentAmps = new double[] { frontLeft.getCurrentDrawAmps(),
+				backLeft.getCurrentDrawAmps()
 		};
 		inputs.rightFrontPositionRad = frontRight.getAngularPositionRad();
-		inputs.rightFrontVelocityRadPerSec = frontRight.getAngularVelocityRadPerSec();
+		inputs.rightFrontVelocityRadPerSec = frontRight
+				.getAngularVelocityRadPerSec();
 		inputs.rightFrontAppliedVolts = frontRightAppliedVolts;
 		inputs.rightBackPositionRad = backRight.getAngularPositionRad();
-		inputs.rightBackVelocityRadPerSec = backRight.getAngularVelocityRadPerSec();
+		inputs.rightBackVelocityRadPerSec = backRight
+				.getAngularVelocityRadPerSec();
 		inputs.rightBackAppliedVolts = backRightAppliedVolts;
-		inputs.rightCurrentAmps = new double[] { frontRight.getCurrentDrawAmps(), backRight.getCurrentDrawAmps()
+		inputs.rightCurrentAmps = new double[] { frontRight.getCurrentDrawAmps(),
+				backRight.getCurrentDrawAmps()
 		};
 		inputs.gyroConnected = false;
 		inputs.gyroYaw = pigeon.getRotation2d();
 	}
 
 	@Override
-	public void setVoltage(double frontLeftVolts, double frontRightVolts,double backLeftVolts, double backRightVolts) {
+	public void setVoltage(double frontLeftVolts, double frontRightVolts,
+			double backLeftVolts, double backRightVolts) {
 		closedLoop = false;
 		frontLeftAppliedVolts = MathUtil.clamp(frontLeftVolts, -12.0, 12.0);
 		frontRightAppliedVolts = MathUtil.clamp(frontRightVolts, -12.0, 12.0);
@@ -99,10 +113,10 @@ public class MecanumIOSim implements MecanumIO {
 
 	@Override
 	public void setVelocity(double frontLeftRadPerSec,
-	double frontRightRadPerSec, double backLeftRadPerSec,
-	double backRightRadPerSec, double frontLeftFFVolts,
-	double frontRightFFVolts, double backLeftFFVolts,
-	double backRightFFVolts) {
+			double frontRightRadPerSec, double backLeftRadPerSec,
+			double backRightRadPerSec, double frontLeftFFVolts,
+			double frontRightFFVolts, double backLeftFFVolts,
+			double backRightFFVolts) {
 		closedLoop = true;
 		frontLeftPID.setSetpoint(frontLeftRadPerSec);
 		frontRightPID.setSetpoint(frontRightRadPerSec);
