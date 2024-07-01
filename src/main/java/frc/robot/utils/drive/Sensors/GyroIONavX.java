@@ -17,15 +17,16 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Queue;
 
-
-
-/** IO implementation for navX
+/**
+ * IO implementation for navX
+ * 
  * @apiNote Needs to be tested
  */
 public class GyroIONavX implements GyroIO {
 	private final AHRS navX = new AHRS(Port.kUSB);
 	private final Queue<Double> yawPositionQueue;
-	private double last_world_linear_accel_x, last_world_linear_accel_y, current_angle_position, last_angle_position = 0;
+	private double last_world_linear_accel_x, last_world_linear_accel_y,
+			current_angle_position, last_angle_position = 0;
 
 	public GyroIONavX(boolean phoenixDrive) {
 		if (phoenixDrive) {
@@ -52,8 +53,8 @@ public class GyroIONavX implements GyroIO {
 		inputs.connected = navX.isConnected();
 		current_angle_position = navX.getAngle();
 		inputs.yawPosition = Rotation2d.fromDegrees(current_angle_position);
-		inputs.yawVelocityRadPerSec = Units
-				.degreesToRadians((current_angle_position-last_angle_position)/250);
+		inputs.yawVelocityRadPerSec = Units.degreesToRadians(
+				(current_angle_position - last_angle_position) / 250);
 		last_angle_position = current_angle_position;
 		inputs.odometryYawPositions = yawPositionQueue.stream()
 				.map((Double value) -> Rotation2d.fromDegrees(value))

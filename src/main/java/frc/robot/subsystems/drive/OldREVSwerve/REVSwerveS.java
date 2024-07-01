@@ -71,11 +71,13 @@ public class REVSwerveS extends SubsystemChecker implements DrivetrainS {
 	ChassisSpeeds m_ChassisSpeeds;
 	static Vector<N3> stateStdDevs = VecBuilder.fill(0.1, 0.1, 0.1);
 	static Vector<N3> visionStdDevs = VecBuilder.fill(1, 1, 1);
-	boolean[] isSkidding = new boolean[]{false,false,false,false};
+	boolean[] isSkidding = new boolean[] { false, false, false, false
+	};
 	private boolean collisionDetected = false;
 	public SwerveDrivePoseEstimator poseEstimator;
 	Position<SwerveModulePosition[]> m_modulePositions;
-	private double m_simYaw, last_world_linear_accel_x, last_world_linear_accel_y;;
+	private double m_simYaw, last_world_linear_accel_x,
+			last_world_linear_accel_y;;
 	Measure<Velocity<Voltage>> rampRate = Volts.of(1).per(Seconds.of(1)); //for going FROM ZERO PER SECOND
 	Measure<Voltage> holdVoltage = Volts.of(8);
 	Measure<Time> timeout = Seconds.of(10);
@@ -153,9 +155,12 @@ public class REVSwerveS extends SubsystemChecker implements DrivetrainS {
 		);
 		registerSelfCheckHardware();
 	}
+
 	/**
-	 * Calculates the translational vectors of each module, and confirms it is within .25 m/s of the median vector.
-	 * If it isn't that module is said to be "Skidding"
+	 * Calculates the translational vectors of each module, and confirms it is
+	 * within .25 m/s of the median vector. If it isn't that module is said to be
+	 * "Skidding"
+	 * 
 	 * @apiNote TEST ON BOT NEEDED
 	 * @param m_ChassisSpeeds
 	 * @return
@@ -165,7 +170,7 @@ public class REVSwerveS extends SubsystemChecker implements DrivetrainS {
 		ChassisSpeeds currentChassisSpeeds = getChassisSpeeds();
 		// Step 1: Create a ChassisSpeeds object with solely the rotation component
 		ChassisSpeeds rotationOnlySpeeds = new ChassisSpeeds(0.0, 0.0,
-			currentChassisSpeeds.omegaRadiansPerSecond+.05);
+				currentChassisSpeeds.omegaRadiansPerSecond + .05);
 		double[] xComponentList = new double[4];
 		double[] yComponentList = new double[4];
 		// Step 2: Convert it into module states with kinematics
@@ -181,32 +186,33 @@ public class REVSwerveS extends SubsystemChecker implements DrivetrainS {
 					* Math.sin(moduleStates[i].angle.getRadians())
 					- rotationalStates[i].speedMetersPerSecond
 							* Math.sin(rotationalStates[i].angle.getRadians());
-			xComponentList[i] = deltaX; 
+			xComponentList[i] = deltaX;
 			yComponentList[i] = deltaY;
 		}
 		Arrays.sort(xComponentList);
 		Arrays.sort(yComponentList);
 		SmartDashboard.putNumberArray("Module Skid X", xComponentList);
 		SmartDashboard.putNumberArray("Module Skid Y", yComponentList);
-
 		double deltaMedianX = (xComponentList[1] + xComponentList[2]) / 2;
 		double deltaMedianY = (yComponentList[1] + yComponentList[2]) / 2;
 		SmartDashboard.putNumber("Skid X Median", deltaMedianX);
 		SmartDashboard.putNumber("Skid Y Median", deltaMedianY);
-
 		boolean[] areModulesSkidding = new boolean[4];
-		for (int i = 0; i < 4; i++){
+		for (int i = 0; i < 4; i++) {
 			double deltaX = xComponentList[i];
 			double deltaY = yComponentList[i];
-			if (Math.abs(deltaX - deltaMedianX) > DriveConstants.SKID_THRESHOLD || Math.abs(deltaY - deltaMedianY) > DriveConstants.SKID_THRESHOLD){
+			if (Math.abs(deltaX - deltaMedianX) > DriveConstants.SKID_THRESHOLD
+					|| Math.abs(
+							deltaY - deltaMedianY) > DriveConstants.SKID_THRESHOLD) {
 				areModulesSkidding[i] = true;
-			}else{
+			} else {
 				areModulesSkidding[i] = false;
 			}
 		}
 		SmartDashboard.putBooleanArray("Module Skids", areModulesSkidding);
 		return areModulesSkidding;
 	}
+
 	@Override
 	public Command sysIdDynamicDrive(SysIdRoutine.Direction direction) {
 		return sysIdRoutineDrive.dynamic(direction);
@@ -267,21 +273,37 @@ public class REVSwerveS extends SubsystemChecker implements DrivetrainS {
 			public void initSendable(SendableBuilder builder) {
 				builder.setSmartDashboardType("SwerveDrive");
 				builder.addDoubleProperty("Front Left Angle",
-						() -> m_swerveModules.get(ModulePosition.FRONT_LEFT).getHeadingRotation2d().getRadians(), null);
-				builder.addDoubleProperty("Front Left Velocity",
-						() -> m_swerveModules.get(ModulePosition.FRONT_LEFT).getDriveVelocity(), null);
+						() -> m_swerveModules.get(ModulePosition.FRONT_LEFT)
+								.getHeadingRotation2d().getRadians(),
+						null);
+				builder.addDoubleProperty(
+						"Front Left Velocity", () -> m_swerveModules
+								.get(ModulePosition.FRONT_LEFT).getDriveVelocity(),
+						null);
 				builder.addDoubleProperty("Front Right Angle",
-						() -> m_swerveModules.get(ModulePosition.FRONT_RIGHT).getHeadingRotation2d().getRadians(), null);
-				builder.addDoubleProperty("Front Right Velocity",
-						() -> m_swerveModules.get(ModulePosition.FRONT_RIGHT).getDriveVelocity(), null);
+						() -> m_swerveModules.get(ModulePosition.FRONT_RIGHT)
+								.getHeadingRotation2d().getRadians(),
+						null);
+				builder.addDoubleProperty(
+						"Front Right Velocity", () -> m_swerveModules
+								.get(ModulePosition.FRONT_RIGHT).getDriveVelocity(),
+						null);
 				builder.addDoubleProperty("Back Left Angle",
-						() -> m_swerveModules.get(ModulePosition.BACK_LEFT).getHeadingRotation2d().getRadians(), null);
-				builder.addDoubleProperty("Back Left Velocity",
-						() -> m_swerveModules.get(ModulePosition.BACK_LEFT).getDriveVelocity(), null);
+						() -> m_swerveModules.get(ModulePosition.BACK_LEFT)
+								.getHeadingRotation2d().getRadians(),
+						null);
+				builder.addDoubleProperty(
+						"Back Left Velocity", () -> m_swerveModules
+								.get(ModulePosition.BACK_LEFT).getDriveVelocity(),
+						null);
 				builder.addDoubleProperty("Back Right Angle",
-						() -> m_swerveModules.get(ModulePosition.BACK_RIGHT).getHeadingRotation2d().getRadians(), null);
-				builder.addDoubleProperty("Back Right Velocity",
-						() -> m_swerveModules.get(ModulePosition.BACK_RIGHT).getDriveVelocity(), null);
+						() -> m_swerveModules.get(ModulePosition.BACK_RIGHT)
+								.getHeadingRotation2d().getRadians(),
+						null);
+				builder.addDoubleProperty(
+						"Back Right Velocity", () -> m_swerveModules
+								.get(ModulePosition.BACK_RIGHT).getDriveVelocity(),
+						null);
 				builder.addDoubleProperty("Robot Angle",
 						() -> Units.degreesToRadians(getHeading()), null);
 			}
@@ -305,13 +327,12 @@ public class REVSwerveS extends SubsystemChecker implements DrivetrainS {
 	public Rotation2d getRotation2d() {
 		return Rotation2d.fromDegrees(getHeading());
 	}
+
 	@Override
-	public boolean[] isSkidding(){
-		return isSkidding;
-	}
+	public boolean[] isSkidding() { return isSkidding; }
+
 	@Override
 	public void periodic() {
-		
 		if (Constants.currentMode == Mode.SIM) {
 			ChassisSpeeds chassisSpeed = kDriveKinematics
 					.toChassisSpeeds(getModuleStates());
@@ -423,20 +444,29 @@ public class REVSwerveS extends SubsystemChecker implements DrivetrainS {
 
 	public void registerSelfCheckHardware() {
 		super.registerHardware("IMU", gyro);
-		super.registerHardware("FrontLeftDrive", m_swerveModules.get(ModulePosition.FRONT_LEFT).driveMotor);
-		super.registerHardware("FrontLeftTurn", m_swerveModules.get(ModulePosition.FRONT_LEFT).turningMotor);
-		super.registerHardware("FrontRightDrive", m_swerveModules.get(ModulePosition.FRONT_RIGHT).driveMotor);
-		super.registerHardware("FrontRightTurn", m_swerveModules.get(ModulePosition.FRONT_RIGHT).turningMotor);
-		super.registerHardware("BackLeftDrive", m_swerveModules.get(ModulePosition.BACK_LEFT).driveMotor);
-		super.registerHardware("BackLeftTurn",  m_swerveModules.get(ModulePosition.BACK_LEFT).turningMotor);
-		super.registerHardware("BackRightDrive", m_swerveModules.get(ModulePosition.BACK_RIGHT).driveMotor);
-		super.registerHardware("BackRightTurn", m_swerveModules.get(ModulePosition.BACK_RIGHT).turningMotor);
+		super.registerHardware("FrontLeftDrive",
+				m_swerveModules.get(ModulePosition.FRONT_LEFT).driveMotor);
+		super.registerHardware("FrontLeftTurn",
+				m_swerveModules.get(ModulePosition.FRONT_LEFT).turningMotor);
+		super.registerHardware("FrontRightDrive",
+				m_swerveModules.get(ModulePosition.FRONT_RIGHT).driveMotor);
+		super.registerHardware("FrontRightTurn",
+				m_swerveModules.get(ModulePosition.FRONT_RIGHT).turningMotor);
+		super.registerHardware("BackLeftDrive",
+				m_swerveModules.get(ModulePosition.BACK_LEFT).driveMotor);
+		super.registerHardware("BackLeftTurn",
+				m_swerveModules.get(ModulePosition.BACK_LEFT).turningMotor);
+		super.registerHardware("BackRightDrive",
+				m_swerveModules.get(ModulePosition.BACK_RIGHT).driveMotor);
+		super.registerHardware("BackRightTurn",
+				m_swerveModules.get(ModulePosition.BACK_RIGHT).turningMotor);
 	}
 
 	@Override
 	public List<ParentDevice> getOrchestraDevices() {
 		return Collections.emptyList();
 	}
+
 	@Override
 	public SystemStatus getTrueSystemStatus() { return getSystemStatus(); }
 
@@ -452,71 +482,99 @@ public class REVSwerveS extends SubsystemChecker implements DrivetrainS {
 
 	@Override
 	protected Command systemCheckCommand() {
-		return Commands.sequence(
-				run(() -> setChassisSpeeds(new ChassisSpeeds(1.5, 0, 0)))
-						.withTimeout(1.0),
-				runOnce(() -> {
-					for (DriveConstants.TrainConstants.ModulePosition position : DriveConstants.TrainConstants.ModulePosition.values()) {
-						// Retrieve the corresponding REVSwerveModule from the hashmap
-						SwerveModuleState module = m_swerveModules.get(position).getState();
-						// Get the name of the current ModulePosition
-						String name = position.name();
-						if (Math.abs(module.speedMetersPerSecond) < 1.3
-								|| Math.abs(module.speedMetersPerSecond) > 1.7) {
-							addFault(
-									"[System Check] Drive motor encoder velocity too slow for "
-											+ name + module.speedMetersPerSecond,false,true);
-						}
-						//angle could be 0, 180, or mod that
-						double angle = module.angle.getDegrees();
-						if (Math.abs(Math.abs(angle) - 0)  >= 10 && Math.abs(Math.abs(angle) - 180)  >= 10) {
-							addFault("[System Check] Turn angle off for " + name
-										+ module.angle.getDegrees(),false,true);
-						}
-					}
-					System.out.println("COMPLETED X 1.5");
-				}), run(() -> setChassisSpeeds(new ChassisSpeeds(0, 1.5, 0)))
-						.withTimeout(1.0),
-				runOnce(() -> {
-					System.out.println("STARTING Y CHECK...");
-					for (DriveConstants.TrainConstants.ModulePosition position : DriveConstants.TrainConstants.ModulePosition.values()) {
-						// Retrieve the corresponding REVSwerveModule from the hashmap
-						SwerveModuleState module = m_swerveModules.get(position).getState();
-						// Get the name of the current ModulePosition
-						String name = position.name();
-						if (Math.abs(module.speedMetersPerSecond) < 1.3
-								|| Math.abs(module.speedMetersPerSecond) > 1.7) {
-							addFault(
-									"[System Check] Drive motor encoder velocity too slow for "
-											+ name + module.speedMetersPerSecond,false,true);
-						}
-						//angle could be 0, 180, or mod that
-						double angle = module.angle.getDegrees();
-						if (Math.abs(Math.abs(angle) - 90)  >= 10 && Math.abs(Math.abs(angle) - 270)  >= 10) {
-							addFault("[System Check] Turn angle off for " + name
-										+ module.angle.getDegrees(),false,true);
-						}
-					}
-				}),
-				run(() -> setChassisSpeeds(new ChassisSpeeds(0, 0, -0.5)))
-						.withTimeout(2.0),
-				run(() -> setChassisSpeeds(new ChassisSpeeds(0, 0, 0.5)))
-						.withTimeout(2.0))
+		return Commands
+				.sequence(run(() -> setChassisSpeeds(new ChassisSpeeds(1.5, 0, 0)))
+						.withTimeout(1.0), runOnce(() -> {
+							for (DriveConstants.TrainConstants.ModulePosition position : DriveConstants.TrainConstants.ModulePosition
+									.values()) {
+								// Retrieve the corresponding REVSwerveModule from the hashmap
+								SwerveModuleState module = m_swerveModules.get(position)
+										.getState();
+								// Get the name of the current ModulePosition
+								String name = position.name();
+								if (Math.abs(module.speedMetersPerSecond) < 1.3
+										|| Math.abs(module.speedMetersPerSecond) > 1.7) {
+									addFault(
+											"[System Check] Drive motor encoder velocity too slow for "
+													+ name + module.speedMetersPerSecond,
+											false, true);
+								}
+								//angle could be 0, 180, or mod that
+								double angle = module.angle.getDegrees();
+								if (Math.abs(Math.abs(angle) - 0) >= 10
+										&& Math.abs(Math.abs(angle) - 180) >= 10) {
+									addFault(
+											"[System Check] Turn angle off for " + name
+													+ module.angle.getDegrees(),
+											false, true);
+								}
+							}
+							System.out.println("COMPLETED X 1.5");
+						}), run(() -> setChassisSpeeds(new ChassisSpeeds(0, 1.5, 0)))
+								.withTimeout(1.0),
+						runOnce(() -> {
+							System.out.println("STARTING Y CHECK...");
+							for (DriveConstants.TrainConstants.ModulePosition position : DriveConstants.TrainConstants.ModulePosition
+									.values()) {
+								// Retrieve the corresponding REVSwerveModule from the hashmap
+								SwerveModuleState module = m_swerveModules.get(position)
+										.getState();
+								// Get the name of the current ModulePosition
+								String name = position.name();
+								if (Math.abs(module.speedMetersPerSecond) < 1.3
+										|| Math.abs(module.speedMetersPerSecond) > 1.7) {
+									addFault(
+											"[System Check] Drive motor encoder velocity too slow for "
+													+ name + module.speedMetersPerSecond,
+											false, true);
+								}
+								//angle could be 0, 180, or mod that
+								double angle = module.angle.getDegrees();
+								if (Math.abs(Math.abs(angle) - 90) >= 10
+										&& Math.abs(Math.abs(angle) - 270) >= 10) {
+									addFault(
+											"[System Check] Turn angle off for " + name
+													+ module.angle.getDegrees(),
+											false, true);
+								}
+							}
+						}),
+						run(() -> setChassisSpeeds(new ChassisSpeeds(0, 0, -0.5)))
+								.withTimeout(2.0),
+						run(() -> setChassisSpeeds(new ChassisSpeeds(0, 0, 0.5)))
+								.withTimeout(2.0))
 				.until(() -> !getFaults().isEmpty()).andThen(
 						runOnce(() -> setChassisSpeeds(new ChassisSpeeds(0, 0, 0))));
 	}
+
 	@Override
 	public HashMap<String, Double> getTemps() {
-		 HashMap<String, Double> tempMap = new HashMap<>();
-		 tempMap.put("FLDriveTemp", m_swerveModules.get(ModulePosition.FRONT_LEFT).driveMotor.getMotorTemperature());
-		 tempMap.put("FLTurnTemp", m_swerveModules.get(ModulePosition.FRONT_LEFT).turningMotor.getMotorTemperature());
-		 tempMap.put("FRDriveTemp", m_swerveModules.get(ModulePosition.FRONT_RIGHT).driveMotor.getMotorTemperature());
-		 tempMap.put("FRTurnTemp", m_swerveModules.get(ModulePosition.FRONT_RIGHT).turningMotor.getMotorTemperature());
-		 tempMap.put("BLDriveTemp", m_swerveModules.get(ModulePosition.BACK_LEFT).driveMotor.getMotorTemperature());
-		 tempMap.put("BLTurnTemp", m_swerveModules.get(ModulePosition.BACK_LEFT).turningMotor.getMotorTemperature());
-		 tempMap.put("BRDriveTemp", m_swerveModules.get(ModulePosition.BACK_RIGHT).driveMotor.getMotorTemperature());
-		 tempMap.put("BRTurnTemp", m_swerveModules.get(ModulePosition.BACK_RIGHT).turningMotor.getMotorTemperature());
-		 return tempMap;
+		HashMap<String, Double> tempMap = new HashMap<>();
+		tempMap.put("FLDriveTemp",
+				m_swerveModules.get(ModulePosition.FRONT_LEFT).driveMotor
+						.getMotorTemperature());
+		tempMap.put("FLTurnTemp",
+				m_swerveModules.get(ModulePosition.FRONT_LEFT).turningMotor
+						.getMotorTemperature());
+		tempMap.put("FRDriveTemp",
+				m_swerveModules.get(ModulePosition.FRONT_RIGHT).driveMotor
+						.getMotorTemperature());
+		tempMap.put("FRTurnTemp",
+				m_swerveModules.get(ModulePosition.FRONT_RIGHT).turningMotor
+						.getMotorTemperature());
+		tempMap.put("BLDriveTemp",
+				m_swerveModules.get(ModulePosition.BACK_LEFT).driveMotor
+						.getMotorTemperature());
+		tempMap.put("BLTurnTemp",
+				m_swerveModules.get(ModulePosition.BACK_LEFT).turningMotor
+						.getMotorTemperature());
+		tempMap.put("BRDriveTemp",
+				m_swerveModules.get(ModulePosition.BACK_RIGHT).driveMotor
+						.getMotorTemperature());
+		tempMap.put("BRTurnTemp",
+				m_swerveModules.get(ModulePosition.BACK_RIGHT).turningMotor
+						.getMotorTemperature());
+		return tempMap;
 	}
 
 	private boolean collisionDetected() {
@@ -534,12 +592,10 @@ public class REVSwerveS extends SubsystemChecker implements DrivetrainS {
 		}
 		return false;
 	}
+
 	@Override
-	public boolean isCollisionDetected() {
-		return collisionDetected;
-	}
+	public boolean isCollisionDetected() { return collisionDetected; }
+
 	@Override
-	public double getCurrent(){
-		return 0;
-	}
+	public double getCurrent() { return 0; }
 }

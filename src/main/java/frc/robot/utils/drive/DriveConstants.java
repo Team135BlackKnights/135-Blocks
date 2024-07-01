@@ -16,6 +16,7 @@ public class DriveConstants {
 	public static MotorVendor robotMotorController = MotorVendor.NEO_SPARK_MAX;
 	public static DriveTrainType driveType = DriveTrainType.SWERVE;
 	public static GyroType gyroType = GyroType.PIGEON;
+
 	/**
 	 * What motors and motorContollers are we using
 	 */
@@ -29,13 +30,16 @@ public class DriveConstants {
 	public enum DriveTrainType {
 		SWERVE, TANK, MECANUM
 	}
+
 	/**
-	 * The Gyro type 
+	 * The Gyro type
+	 * 
 	 * @apiNote NavX Swerve is untested.
 	 */
-	public enum GyroType{
+	public enum GyroType {
 		NAVX, PIGEON
 	}
+
 	public static boolean fieldOriented = true;
 	//135-Blocks was tested on a chassis with all CANSparkMaxes, as well as all Kraken-x60s.
 	public static final double kChassisWidth = Units.inchesToMeters(24.25), // Distance between Left and Right wheels
@@ -47,7 +51,7 @@ public class DriveConstants {
 			kMaxSpeedMetersPerSecond = Units.feetToMeters(15.1), //15.1
 			kMaxTurningSpeedRadPerSec = 3.914667 * 2 * Math.PI, // 1.33655 *2 *Math.PI
 			kTeleDriveMaxAcceleration = Units.feetToMeters(50), // guess
-			kTeleTurningMaxAcceleration = 2 * Math.PI*50, // guess
+			kTeleTurningMaxAcceleration = 2 * Math.PI * 50, // guess
 			// To find these set them to zero, then turn the robot on and manually set the
 			// wheels straight.
 			// The encoder values being read are then your new Offset values
@@ -57,7 +61,9 @@ public class DriveConstants {
 			kBackRightAbsEncoderOffsetRad = 2 * Math.PI - 0.116861,
 			SKID_THRESHOLD = .5, //Meters per second
 			MAX_G = .5;
-	public static PathConstraints pathConstraints = new PathConstraints(kMaxSpeedMetersPerSecond, kTeleDriveMaxAcceleration, kMaxTurningSpeedRadPerSec, kTeleTurningMaxAcceleration);
+	public static PathConstraints pathConstraints = new PathConstraints(
+			kMaxSpeedMetersPerSecond, kTeleDriveMaxAcceleration,
+			kMaxTurningSpeedRadPerSec, kTeleTurningMaxAcceleration);
 	// kP = 0.1, kI = 0, kD = 0, kDistanceMultipler = .2; //for autoLock
 	// Declare the position of each module
 	public static final Translation2d[] kModuleTranslations = {
@@ -78,8 +84,7 @@ public class DriveConstants {
 			kBackRightDrivePort = 12, // 14
 			kBackRightTurningPort = 13, // 24
 			kBackRightAbsEncoderPort = 1, // 4
-			kMaxDriveCurrent = 40,
-			kMaxTurnCurrent = 30;
+			kMaxDriveCurrent = 40, kMaxTurnCurrent = 30;
 	public static boolean kFrontLeftDriveReversed = true,
 			kFrontLeftTurningReversed = true, kFrontLeftAbsEncoderReversed = false,
 			kFrontRightDriveReversed = false, kFrontRightTurningReversed = true,
@@ -87,11 +92,11 @@ public class DriveConstants {
 			kBackLeftTurningReversed = true, kBackLeftAbsEncoderReversed = false,
 			kBackRightDriveReversed = false, kBackRightTurningReversed = true,
 			kBackRightAbsEncoderReversed = false;
-	public static final ModuleLimits moduleLimitsFree =
-      new ModuleLimits(
-          DriveConstants.kMaxSpeedMetersPerSecond,
-          DriveConstants.kTeleDriveMaxAcceleration*4,
-          Units.degreesToRadians(1080.0));
+	public static final ModuleLimits moduleLimitsFree = new ModuleLimits(
+			DriveConstants.kMaxSpeedMetersPerSecond,
+			DriveConstants.kTeleDriveMaxAcceleration * 4,
+			Units.degreesToRadians(1080.0));
+
 	public static class TrainConstants {
 		/**
 		 * Which swerve module it is (SWERVE EXCLUSIVE)
@@ -99,19 +104,20 @@ public class DriveConstants {
 		public enum ModulePosition {
 			FRONT_LEFT, FRONT_RIGHT, BACK_LEFT, BACK_RIGHT
 		}
-		public static final Matrix<N3, N1> odometryStateStdDevs = new Matrix<>(VecBuilder.fill(0.003, 0.003, 0.0002));
+
+		public static final Matrix<N3, N1> odometryStateStdDevs = new Matrix<>(
+				VecBuilder.fill(0.003, 0.003, 0.0002));
 		public static double kWheelDiameter = Units.inchesToMeters(3.873),
 				kDriveMotorGearRatio = 6.75, kTurningMotorGearRatio = 150 / 7,
 				kDriveEncoderRot2Meter = kDriveMotorGearRatio * Math.PI, //Test if wheelDiameter should be here..?
-				kDriveEncoderRPM2MeterPerSec = kDriveEncoderRot2Meter/60,
+				kDriveEncoderRPM2MeterPerSec = kDriveEncoderRot2Meter / 60,
 				kTurningEncoderRot2Rad = kTurningMotorGearRatio * 2 * Math.PI,
-				kTurningEncoderRPM2RadPerSec = kTurningEncoderRot2Rad/60,
-				kT = 1.0 / DCMotor.getKrakenX60Foc(1).KtNMPerAmp,
-				kDeadband = 0.1,weight = Units.lbsToKilograms(45);
+				kTurningEncoderRPM2RadPerSec = kTurningEncoderRot2Rad / 60,
+				kT = 1.0 / DCMotor.getKrakenX60Foc(1).KtNMPerAmp, kDeadband = 0.1,
+				weight = Units.lbsToKilograms(45);
 		public static final MotorConstantContainer overallTurningMotorConstantContainer = new MotorConstantContainer(
 				0.001, 0.001, 0.001, 7, 0.001), //Average the turning motors for these vals.
-				overallDriveMotorConstantContainer = new MotorConstantContainer(
-						.1, .13, 0.001,
-						0.05, 0.000);
+				overallDriveMotorConstantContainer = new MotorConstantContainer(.1,
+						.13, 0.001, 0.05, 0.000);
 	}
 }

@@ -91,7 +91,7 @@ public class RobotContainer {
 	public static Optional<Rotation2d> angleOverrider = Optional.empty();
 	public static double angularSpeed = 0;
 	static JoystickButton xButtonDrive = new JoystickButton(driveController, 3),
-			yButtonDrive = new JoystickButton(driveController, 4), //used for Aim/Drive to pose
+			//yButtonDrive = new JoystickButton(driveController, 4), //used for Aim/Drive to pose
 			aButtonTest = new JoystickButton(testingController, 1),
 			bButtonTest = new JoystickButton(testingController, 2),
 			xButtonTest = new JoystickButton(testingController, 3),
@@ -267,7 +267,11 @@ public class RobotContainer {
 		if (Constants.isCompetition) {
 			PPLibTelemetry.enableCompetitionMode();
 		}
-		PathfindingCommand.warmupCommand().andThen(PathFinder.goToPose(new Pose2d(1.9, 7.7,new Rotation2d(Units.degreesToRadians(90))),DriveConstants.pathConstraints, drivetrainS, false,0))
+		PathfindingCommand.warmupCommand()
+				.andThen(PathFinder.goToPose(
+						new Pose2d(1.9, 7.7,
+								new Rotation2d(Units.degreesToRadians(90))),
+						DriveConstants.pathConstraints, drivetrainS, false, 0))
 				.finallyDo(() -> RobotContainer.field.getObject("target pose")
 						.setPose(new Pose2d(-50, -50, new Rotation2d())))
 				.schedule();
@@ -301,7 +305,7 @@ public class RobotContainer {
 		xButtonDrive
 				.and(aButtonTest.or(bButtonTest).or(xButtonTest).or(yButtonTest)
 						.negate())
-				.onTrue(new InstantCommand(() -> drivetrainS.zeroHeading())); //whileTrue(PathFinder.goToPose(new Pose2d(1.9, 7.7,new Rotation2d(Units.degreesToRadians(90))),DriveConstants.pathConstraints, drivetrainS, false))
+				.onTrue(new InstantCommand(() -> drivetrainS.zeroHeading()));
 		yButtonTest.whileTrue(
 				new RunTest(SysIdRoutine.Direction.kForward, true, drivetrainS));
 		bButtonTest.whileTrue(
@@ -312,7 +316,7 @@ public class RobotContainer {
 				new RunTest(SysIdRoutine.Direction.kReverse, false, drivetrainS));
 
 		//Example Drive To 2024 Amp Pose, Bind to what you need.
-		yButtonDrive
+		/*yButtonDrive
 				.and(aButtonTest.or(bButtonTest).or(xButtonTest).or(yButtonTest)
 						.negate())
 				.whileTrue(PathFinder.goToPose(new Pose2d(1.9, 7.7,new Rotation2d(Units.degreesToRadians(90))),DriveConstants.pathConstraints, drivetrainS, false,0));
@@ -321,11 +325,8 @@ public class RobotContainer {
 		//Example Aim To 2024 Amp Pose, Bind to what you need.
 		//yButtonDrive.and(aButtonTest.or(bButtonTest).or(xButtonTest).or(yButtonTest).negate()).whileTrue(new AimToPose(drivetrainS,new Pose2d(1.9,7.7, new Rotation2d(Units.degreesToRadians(90)))));
 
-		//Example Drive To 2024 Amp Pose, Bind to what you need.
-		//yButtonDrive.and(aButtonTest.or(bButtonTest).or(xButtonTest).or(yButtonTest).negate()).whileTrue(new DriveToPose(drivetrainS, false,new Pose2d(1.9,7.7,new Rotation2d(Units.degreesToRadians(90)))));
 		VisionConstants.Controls.autoIntake.whileTrue(new DriveToAITarget(drivetrainS));
-
-
+		*/
 		//swerve DRIVE tests
 		//When user hits right bumper, go to next test, or wrap back to starting test for SysID.
 		rightBumperTest.onTrue(new InstantCommand(() -> {

@@ -30,15 +30,18 @@ public interface DrivetrainS extends Subsystem {
 	 * @param speeds the speed to set it to
 	 */
 	public static Field2d robotField = new Field2d();
+
 	void setChassisSpeeds(ChassisSpeeds speeds);
 
 	/**
 	 * @return the ChassisSpeeds of the drivetrain
 	 */
 	ChassisSpeeds getChassisSpeeds();
-	default void changeDeadband(double newDeadband){
+
+	default void changeDeadband(double newDeadband) {
 		DriveConstants.TrainConstants.kDeadband = newDeadband;
 	}
+
 	/**
 	 * Reset the drivetrain's odometry to a particular pose
 	 * 
@@ -71,14 +74,17 @@ public interface DrivetrainS extends Subsystem {
 	 * @return the angle of the drivetrain as a rotation2d (in degrees)
 	 */
 	Rotation2d getRotation2d();
-  /** Returns the current yaw velocity (Z rotation) in radians per second. */
-  public default double getYawVelocity(){ return 0;}
-    /**
-   * Returns the measured X, Y, and theta field velocities in meters per sec. The components of the
-   * twist are velocities and NOT changes in position.
-   */
-  public Twist2d getFieldVelocity();
 
+	/** Returns the current yaw velocity (Z rotation) in radians per second. */
+	public default double getYawVelocity() {
+		return 0;
+	}
+
+	/**
+	 * Returns the measured X, Y, and theta field velocities in meters per sec.
+	 * The components of the twist are velocities and NOT changes in position.
+	 */
+	public Twist2d getFieldVelocity();
 
 	/**
 	 * SysID Command for drivetrain characterization
@@ -105,41 +111,54 @@ public interface DrivetrainS extends Subsystem {
 	 * @return if the gyro drivetrain is connected
 	 */
 	boolean isConnected();
+
 	/**
 	 * Checks gyros/accelerometers to check if a sudden movement has occured.
+	 * 
 	 * @return if a collision is detected
 	 */
 	boolean isCollisionDetected();
 
-	HashMap<String, Double>getTemps();
-	default Command getRunnableSystemCheckCommand(){
-		throw new UnsupportedOperationException("Unimplemented method 'getRunnableSystemCheckCommand'");
-	}
-	default SystemStatus getTrueSystemStatus(){
-		throw new UnsupportedOperationException("Unimplemented method 'getTrueSystemStatus'");
+	HashMap<String, Double> getTemps();
 
+	default Command getRunnableSystemCheckCommand() {
+		throw new UnsupportedOperationException(
+				"Unimplemented method 'getRunnableSystemCheckCommand'");
 	}
-	default List<ParentDevice> getDriveOrchestraDevices(){
-		throw new UnsupportedOperationException("Unimplemented method 'getDriveOrchestraDevices'");
+
+	default SystemStatus getTrueSystemStatus() {
+		throw new UnsupportedOperationException(
+				"Unimplemented method 'getTrueSystemStatus'");
 	}
-		/**
-	 * Create a position wrapper which contains the positions, and the timestamps.
-	 * @param <T> The type of position, MechanumWheelPositions or SwerveModulePositions[] or tank's.
+
+	default List<ParentDevice> getDriveOrchestraDevices() {
+		throw new UnsupportedOperationException(
+				"Unimplemented method 'getDriveOrchestraDevices'");
+	}
+
+	/**
+	 * Create a position wrapper which contains the positions, and the
+	 * timestamps.
+	 * 
+	 * @param <T>       The type of position, MechanumWheelPositions or
+	 *                     SwerveModulePositions[] or tank's.
 	 * @param positions with both a timestamp and position.
 	 * @return
 	 */
 	default <T> Position<T> getPositionsWithTimestamp(T positions) {
-        double timestamp = Logger.getTimestamp();
-        return new Position<>(positions, timestamp);
-    }
-	default double getCurrent(){
-		return 0;
+		double timestamp = Logger.getTimestamp();
+		return new Position<>(positions, timestamp);
 	}
-	default boolean[] isSkidding(){
-		return new boolean[]{false,false,false,false};
+
+	default double getCurrent() { return 0; }
+
+	default boolean[] isSkidding() {
+		return new boolean[] { false, false, false, false
+		};
 	}
+
 	@Override
-	default void periodic() {	
+	default void periodic() {
 		robotField.setRobotPose(getPose());
 		// Logging callback for target robot pose
 		PathPlannerLogging.setLogTargetPoseCallback((pose) -> {
@@ -155,6 +174,5 @@ public interface DrivetrainS extends Subsystem {
 			robotField.getObject("path").setPoses(poses);
 		});
 		SmartDashboard.putData(robotField);
-
 	}
 }

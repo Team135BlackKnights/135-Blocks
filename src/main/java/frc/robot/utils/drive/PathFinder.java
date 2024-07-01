@@ -33,8 +33,8 @@ public class PathFinder {
 	 */
 	public static Command goToPose(Pose2d pose, PathConstraints constraints,
 			DrivetrainS drive, boolean isAuto, double endVelocity) {
-		if (isAuto){ //skip accuracy for speed
-					return AutoBuilder.pathfindToPose((pose),constraints, endVelocity)
+		if (isAuto) { //skip accuracy for speed
+			return AutoBuilder.pathfindToPose((pose), constraints, endVelocity)
 					.finallyDo(() -> RobotContainer.field.getObject("target pose")
 							.setPose(new Pose2d(-50, -50, new Rotation2d()))); //the void		));
 		}
@@ -80,29 +80,30 @@ public class PathFinder {
 			List<Pose2d> poseList) {
 		for (int i = 0; i < commands.size(); i++) {
 			JSONObject command = (JSONObject) commands.get(i);
-            String commandType = (String) command.get("type");
-            JSONObject commandData = (JSONObject) command.get("data");
-
-            switch (commandType) {
-                case "sequential":
-                case "deadline":
-                case "parallel":
-					 case "race":
-                    JSONArray nestedCommands = (JSONArray) commandData.get("commands");
-                    parseCommands(nestedCommands, poseList);
-                    break;
-                case "path":
-                    String pathName = (String) commandData.get("pathName");
-                    PathPlannerPath path = PathPlannerPath.fromChoreoTrajectory(pathName);
-                    poseList.addAll(path.getPathPoses());
-                    break;
-                case "named":
-                case "wait":
-                    // Handle named or wait commands if necessary
-                    break;
-                default:
-                    throw new IllegalArgumentException("Unknown command type: " + commandType);
-            }
+			String commandType = (String) command.get("type");
+			JSONObject commandData = (JSONObject) command.get("data");
+			switch (commandType) {
+			case "sequential":
+			case "deadline":
+			case "parallel":
+			case "race":
+				JSONArray nestedCommands = (JSONArray) commandData.get("commands");
+				parseCommands(nestedCommands, poseList);
+				break;
+			case "path":
+				String pathName = (String) commandData.get("pathName");
+				PathPlannerPath path = PathPlannerPath
+						.fromChoreoTrajectory(pathName);
+				poseList.addAll(path.getPathPoses());
+				break;
+			case "named":
+			case "wait":
+				// Handle named or wait commands if necessary
+				break;
+			default:
+				throw new IllegalArgumentException(
+						"Unknown command type: " + commandType);
+			}
 		}
 	}
 }

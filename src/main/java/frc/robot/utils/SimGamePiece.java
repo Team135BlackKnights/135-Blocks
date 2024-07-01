@@ -33,7 +33,6 @@ import java.util.ArrayList;
  */
 public class SimGamePiece {
 	public static int closestPieceIndex;
-
 	//contains all game pieces
 	public static ArrayList<Pose3d> currentPieces = new ArrayList<Pose3d>();
 	//contains the currently held Piece pose. If multiple game pieces can be held, this must be rewritten.
@@ -61,8 +60,8 @@ public class SimGamePiece {
 				Commands.defer(() -> {
 					// get our start pose for the shot, and end pose.
 					final Pose3d startPose = currentPieces.get(index);
-					final Pose3d endPose = new Pose3d(RobotContainer.drivetrainS.getPose())
-							.transformBy(
+					final Pose3d endPose = new Pose3d(
+							RobotContainer.drivetrainS.getPose()).transformBy(
 									Constants.DriveSimConstants.launcherTransform);
 					//set our duration via how long the action will take
 					final double duration = startPose.getTranslation()
@@ -173,25 +172,26 @@ public class SimGamePiece {
 					}
 				}, Set.of()).ignoringDisable(true));
 	}
-	public static Translation2d getClosestGamePiece() {
 
-        Translation2d closestTrans = new Translation2d();
-        double closestPoseDistance = 9999; //hopefully something is closer than 9999 meters
-        for (int i = 0; i < getState().length; i++) {
-            if (getState()[i].getTranslation().toTranslation2d().getDistance(
-					RobotContainer.drivetrainS.getPose().getTranslation()) < closestPoseDistance
-                    && getState()[i].getZ() < Units.inchesToMeters(1.1)) 
-            {
-                closestTrans = getState()[i].getTranslation().toTranslation2d();
-                closestPieceIndex = i;
-                closestPoseDistance = getState()[i].getTranslation().toTranslation2d().getDistance(
-                    RobotContainer.drivetrainS.getPose().getTranslation());
-            }
-        }
-        if (closestPoseDistance == 9999) {
-            resetPieces();
-            return getClosestGamePiece();
-        }
-        return closestTrans;
-    }
+	public static Translation2d getClosestGamePiece() {
+		Translation2d closestTrans = new Translation2d();
+		double closestPoseDistance = 9999; //hopefully something is closer than 9999 meters
+		for (int i = 0; i < getState().length; i++) {
+			if (getState()[i].getTranslation().toTranslation2d()
+					.getDistance(RobotContainer.drivetrainS.getPose()
+							.getTranslation()) < closestPoseDistance
+					&& getState()[i].getZ() < Units.inchesToMeters(1.1)) {
+				closestTrans = getState()[i].getTranslation().toTranslation2d();
+				closestPieceIndex = i;
+				closestPoseDistance = getState()[i].getTranslation()
+						.toTranslation2d().getDistance(
+								RobotContainer.drivetrainS.getPose().getTranslation());
+			}
+		}
+		if (closestPoseDistance == 9999) {
+			resetPieces();
+			return getClosestGamePiece();
+		}
+		return closestTrans;
+	}
 }

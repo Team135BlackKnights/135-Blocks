@@ -71,12 +71,11 @@ public class AimToRotation extends Command {
 		}
 		RobotContainer.currentPath = "AIMTOROTATION";
 		Rotation2d currentRotation = drive.getPose().getRotation();
-		RobotContainer.angleOverrider = Optional
-				.of(angleSupplier.get());
+		RobotContainer.angleOverrider = Optional.of(angleSupplier.get());
 		double thetaVelocity = thetaController.getSetpoint().velocity
 				+ thetaController.calculate(currentRotation.getRadians(),
-				angleSupplier.get().getRadians()); //Go to target rotation using FF.
-		if (Constants.currentMatchState == Constants.FRCMatchState.TELEOP){
+						angleSupplier.get().getRadians()); //Go to target rotation using FF.
+		if (Constants.currentMatchState == Constants.FRCMatchState.TELEOP) {
 			RobotContainer.angularSpeed = thetaVelocity;
 		}
 	}
@@ -89,7 +88,6 @@ public class AimToRotation extends Command {
 		drive.changeDeadband(.1); // Go back to normal deadband
 		drive.stopModules();
 	}
-
 
 	@Override
 	public boolean isFinished() { return false; }

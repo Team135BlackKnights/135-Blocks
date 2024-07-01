@@ -7,6 +7,7 @@ import com.ctre.phoenix6.hardware.TalonFX;
 import com.kauailabs.navx.frc.AHRS;
 import com.revrobotics.CANSparkBase;
 
+import au.grapplerobotics.LaserCan;
 import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.motorcontrol.PWMMotorController;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -26,161 +27,156 @@ import java.util.List;
 import org.littletonrobotics.junction.Logger;
 
 public abstract class SubsystemChecker extends SubsystemBase {
+	public enum SystemStatus {
+		OK, WARNING, ERROR
+	}
 
+	private final List<SubsystemFault> faults = new ArrayList<>();
+	private final List<SelfChecking> hardware = new ArrayList<>();
+	private final String statusTable;
+	private final boolean checkErrors;
 
+	public SubsystemChecker() {
+		this.statusTable = "SystemStatus/" + this.getName();
+		Command systemCheck = getSystemCheckCommand();
+		systemCheck.setName(getName() + "Check");
+		SmartDashboard.putData(statusTable + "/SystemCheck", systemCheck);
+		Logger.recordOutput(statusTable + "/CheckRan", false);
+		checkErrors = RobotBase.isReal();
+		setupCallbacks();
+	}
 
-  public enum SystemStatus {
-    OK,
-    WARNING,
-    ERROR
-  }
+	public SubsystemChecker(String name) {
+		this.setName(name);
+		this.statusTable = "SystemStatus/" + name;
+		Command systemCheck = getSystemCheckCommand();
+		systemCheck.setName(getName() + "Check");
+		SmartDashboard.putData(statusTable + "/SystemCheck", systemCheck);
+		Logger.recordOutput(statusTable + "/CheckRan", false);
+		checkErrors = RobotBase.isReal();
+		setupCallbacks();
+	}
 
-  private final List<SubsystemFault> faults = new ArrayList<>();
-  private final List<SelfChecking> hardware = new ArrayList<>();
-  private final String statusTable;
-  private final boolean checkErrors;
+	public Command getSystemCheckCommand() {
+		return Commands.sequence(Commands.runOnce(() -> {
+			Logger.recordOutput(statusTable + "/CheckRan", false);
+			clearFaults();
+			publishStatus();
+		}), systemCheckCommand(), Commands.runOnce(() -> {
+			publishStatus();
+			Logger.recordOutput(statusTable + "/CheckRan", true);
+		}));
+	}
 
-  public SubsystemChecker() {
-    this.statusTable = "SystemStatus/" + this.getName();
-    Command systemCheck = getSystemCheckCommand();
-    systemCheck.setName(getName() + "Check");
-    SmartDashboard.putData(statusTable + "/SystemCheck", systemCheck);
-    Logger.recordOutput(statusTable + "/CheckRan", false);
-    checkErrors = RobotBase.isReal();
+	public abstract List<ParentDevice> getOrchestraDevices();
 
-    setupCallbacks();
-  }
+	public abstract double getCurrent();
 
-  public SubsystemChecker(String name) {
-    this.setName(name);
-    this.statusTable = "SystemStatus/" + name;
-    Command systemCheck = getSystemCheckCommand();
-    systemCheck.setName(getName() + "Check");
-    SmartDashboard.putData(statusTable + "/SystemCheck", systemCheck);
-    Logger.recordOutput(statusTable + "/CheckRan", false);
-    checkErrors = RobotBase.isReal();
+	private void setupCallbacks() {
+		Robot.addPeriodic(this::checkForFaults, 0.25);
+		Robot.addPeriodic(this::publishStatus, 1.0);
+	}
 
-    setupCallbacks();
-  }
+	private void publishStatus() {
+		SystemStatus status = getSystemStatus();
+		Logger.recordOutput(statusTable + "/Status", status.name());
+		Logger.recordOutput(statusTable + "/SystemOK", status == SystemStatus.OK);
+		String[] faultStrings = new String[this.faults.size()];
+		for (int i = 0; i < this.faults.size(); i++) {
+			SubsystemFault fault = this.faults.get(i);
+			faultStrings[i] = String.format("[%.2f] %s", fault.timestamp,
+					fault.description);
+		}
+		Logger.recordOutput(statusTable + "/Faults", faultStrings);
+		if (faultStrings.length > 0) {
+			Logger.recordOutput(statusTable + "/LastFault",
+					faultStrings[faultStrings.length - 1]);
+		} else {
+			Logger.recordOutput(statusTable + "/LastFault", "");
+		}
+	}
 
-  public Command getSystemCheckCommand() {
-    return Commands.sequence(
-        Commands.runOnce(
-            () -> {
-              Logger.recordOutput(statusTable + "/CheckRan", false);
-              clearFaults();
-              publishStatus();
-            }),
-        systemCheckCommand(),
-        Commands.runOnce(
-            () -> {
-              publishStatus();
-              Logger.recordOutput(statusTable + "/CheckRan", true);
-            }));
-  }
+	protected void addFault(SubsystemFault fault) {
+		faults.remove(fault);
+		faults.add(fault);
+	}
 
-  public abstract List<ParentDevice> getOrchestraDevices();
-  public abstract double getCurrent();
-  private void setupCallbacks() {
-    Robot.addPeriodic(this::checkForFaults, 0.25);
-    Robot.addPeriodic(this::publishStatus, 1.0);
-  }
+	protected void addFault(String description, boolean isWarning) {
+		this.addFault(new SubsystemFault(description, isWarning));
+	}
 
-  private void publishStatus() {
-    SystemStatus status = getSystemStatus();
-    Logger.recordOutput(statusTable + "/Status", status.name());
-    Logger.recordOutput(statusTable + "/SystemOK", status == SystemStatus.OK);
+	protected void addFault(String description, boolean isWarning,
+			boolean sticky) {
+		this.addFault(new SubsystemFault(description, isWarning, sticky));
+	}
 
-    String[] faultStrings = new String[this.faults.size()];
-    for (int i = 0; i < this.faults.size(); i++) {
-      SubsystemFault fault = this.faults.get(i);
-      faultStrings[i] = String.format("[%.2f] %s", fault.timestamp, fault.description);
-    }
-    Logger.recordOutput(statusTable + "/Faults", faultStrings);
+	protected void addFault(String description) {
+		this.addFault(description, false);
+	}
 
-    if (faultStrings.length > 0) {
-      Logger.recordOutput(statusTable + "/LastFault", faultStrings[faultStrings.length - 1]);
-    } else {
-      Logger.recordOutput(statusTable + "/LastFault", "");
-    }
-  }
+	public List<SubsystemFault> getFaults() { return this.faults; }
 
-  protected void addFault(SubsystemFault fault) {
-    faults.remove(fault);
-    faults.add(fault);
-  }
+	public void clearFaults() { this.faults.clear(); }
 
-  protected void addFault(String description, boolean isWarning) {
-    this.addFault(new SubsystemFault(description, isWarning));
-  }
+	public SystemStatus getSystemStatus() {
+		SystemStatus worstStatus = SystemStatus.OK;
+		for (SubsystemFault f : this.faults) {
+			if (f.sticky || f.timestamp > Logger.getTimestamp() - 10) {
+				if (f.isWarning) {
+					if (worstStatus != SystemStatus.ERROR) {
+						worstStatus = SystemStatus.WARNING;
+					}
+				} else {
+					worstStatus = SystemStatus.ERROR;
+				}
+			}
+		}
+		return worstStatus;
+	}
 
-  protected void addFault(String description, boolean isWarning, boolean sticky) {
-    this.addFault(new SubsystemFault(description, isWarning, sticky));
-  }
+	public void registerHardware(String label, TalonFX talon) {
+		hardware.add(new SelfCheckingTalonFX(label, talon));
+	}
 
-  protected void addFault(String description) {
-    this.addFault(description, false);
-  }
+	public void registerHardware(String label, PWMMotorController pwmMotor) {
+		hardware.add(new SelfCheckingPWMMotor(label, pwmMotor));
+	}
 
-  public List<SubsystemFault> getFaults() {
-    return this.faults;
-  }
+	public void registerHardware(String label, CANSparkBase sparkBase) {
+		hardware.add(new SelfCheckingSparkBase(label, sparkBase));
+	}
 
-  public void clearFaults() {
-    this.faults.clear();
-  }
+	public void registerHardware(String label, AHRS navX) {
+		hardware.add(new SelfCheckingNavX2(label, navX));
+	}
 
-  public SystemStatus getSystemStatus() {
-    SystemStatus worstStatus = SystemStatus.OK;
+	public void registerHardware(String label, Pigeon2 pigeon2) {
+		hardware.add(new SelfCheckingPigeon2(label, pigeon2));
+	}
 
-    for (SubsystemFault f : this.faults) {
-      if (f.sticky || f.timestamp > Logger.getTimestamp() - 10) {
-        if (f.isWarning) {
-          if (worstStatus != SystemStatus.ERROR) {
-            worstStatus = SystemStatus.WARNING;
-          }
-        } else {
-          worstStatus = SystemStatus.ERROR;
-        }
-      }
-    }
-    return worstStatus;
-  }
+	public void registerHardware(String label, CANcoder canCoder) {
+		hardware.add(new SelfCheckingCANCoder(label, canCoder));
+	}
 
-  public void registerHardware(String label, TalonFX talon) {
-    hardware.add(new SelfCheckingTalonFX(label, talon));
-  }
+	public void registerHardware(String label, LaserCan laserCan) {
+		hardware.add(new SelfCheckingLaserCAN(label, laserCan));
+	}
 
-  public void registerHardware(String label, PWMMotorController pwmMotor) {
-    hardware.add(new SelfCheckingPWMMotor(label, pwmMotor));
-  }
-  public void registerHardware(String label, CANSparkBase sparkBase) {
-	hardware.add(new SelfCheckingSparkBase(label, sparkBase));
- }
-  public void registerHardware(String label, AHRS navX){
-	hardware.add(new SelfCheckingNavX2(label, navX));
-  }
-  public void registerHardware(String label, Pigeon2 pigeon2) {
-    hardware.add(new SelfCheckingPigeon2(label, pigeon2));
-  }
+	public void registerAllHardware(List<SelfChecking> selfCheckingDevices) {
+		hardware.addAll(selfCheckingDevices);
+	}
 
-  public void registerHardware(String label, CANcoder canCoder) {
-    hardware.add(new SelfCheckingCANCoder(label, canCoder));
-  }
-  public void registerAllHardware(List<SelfChecking> selfCheckingDevices){
-	 hardware.addAll(selfCheckingDevices);
-  }
-  // Command to run a full systems check
-  protected abstract Command systemCheckCommand();
+	// Command to run a full systems check
+	protected abstract Command systemCheckCommand();
 
-  // Method to check for faults while the robot is operating normally
-  private void checkForFaults() {
-    if (checkErrors) {
-      for (SelfChecking device : hardware) {
-        for (SubsystemFault fault : device.checkForFaults()) {
-          addFault(fault);
-        }
-      }
-    }
-  }
+	// Method to check for faults while the robot is operating normally
+	private void checkForFaults() {
+		if (checkErrors) {
+			for (SelfChecking device : hardware) {
+				for (SubsystemFault fault : device.checkForFaults()) {
+					addFault(fault);
+				}
+			}
+		}
+	}
 }
