@@ -325,8 +325,8 @@ public class RobotContainer {
 		//Example Aim To 2024 Amp Pose, Bind to what you need.
 		//yButtonDrive.and(aButtonTest.or(bButtonTest).or(xButtonTest).or(yButtonTest).negate()).whileTrue(new AimToPose(drivetrainS,new Pose2d(1.9,7.7, new Rotation2d(Units.degreesToRadians(90)))));
 
-		VisionConstants.Controls.autoIntake.whileTrue(new DriveToAITarget(drivetrainS));
 		*/
+		VisionConstants.Controls.autoIntake.whileTrue(new DriveToAITarget(drivetrainS));
 		//swerve DRIVE tests
 		//When user hits right bumper, go to next test, or wrap back to starting test for SysID.
 		rightBumperTest.onTrue(new InstantCommand(() -> {
