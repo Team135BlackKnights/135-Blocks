@@ -229,7 +229,7 @@ public class Vision extends SubsystemChecker {
 		double distWeight = Math.pow(lowestDist / 2.0, 2.0);
 		double avgDistWeight = Math.pow(avgDist / 3.5, 2.0);
 		double poseWeight = Math.pow(avgPoseAmbiguity / 0.2, 2.0);
-		double weighAverageWeight = Math.pow(weighAverage, 2.0);
+		double weighAverageWeight = 1-weighAverage;
 		return VisionConstants.std_dev_multiplier
 				* (distWeight + poseWeight + weighAverageWeight + avgDistWeight)
 				/ (numTags * 2);
@@ -244,7 +244,7 @@ public class Vision extends SubsystemChecker {
 		double distWeight = Math.pow(lowestDist / 2.0, 2.0);
 		double avgDistWeight = Math.pow(avgDist / 3.5, 2.0);
 		double poseWeight = Math.pow(avgPoseAmbiguity / 0.2, 2.0);
-		double weighAverageWeight = Math.pow(weighAverage, 2.0);
+		double weighAverageWeight = Math.pow(1-weighAverage, 2.0);
 		return VisionConstants.std_dev_multiplier
 				* (distWeight + poseWeight + weighAverageWeight + avgDistWeight)
 				/ (numTags * 2);
@@ -267,11 +267,6 @@ public class Vision extends SubsystemChecker {
 		if (moduleSkids[0] || moduleSkids[1] || moduleSkids[2]
 				|| moduleSkids[3]) {
 			return Math.max(0.05, stdDev);
-		}
-		if (tagCount == 1) {
-			return Math.max(0.35, stdDev);
-		} else if (tagCount == 2) {
-			return Math.max(0.2, stdDev);
 		}
 		// Add more adjustments as needed
 		return Math.max(0.02, stdDev); // Minimum threshold
